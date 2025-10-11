@@ -1,6 +1,27 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+<script src="https://unpkg.com/skinview3d/bundle.js"></script>
+  let viewer;
+
+document.getElementById('skin-upload').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(evt){
+      if (viewer) viewer.dispose();
+      viewer = new skinview3d.SkinViewer({
+        canvas: document.getElementById("skin-canvas"),
+        width: 300,
+        height: 400,
+        skin: evt.target.result
+      });
+      viewer.controls.enableZoom = false;
+      viewer.animation = new skinview3d.WalkingAnimation();
+    };
+    reader.readAsDataURL(file);
+  }
+});
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Оценка Minecraft-скинов</title>
@@ -139,7 +160,7 @@
 
   <div class="upload-section">
     <input type="file" id="skin-upload" accept="image/png, image/jpeg" />
-    <img id="skin-preview" src="" alt="Превью скина" style="display:none;" />
+    <canvas id="skin-canvas" width="300" height="400"></canvas>
   </div>
 
   <div class="criterion">
