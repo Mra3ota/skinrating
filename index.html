@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Оценка Minecraft-скинов</title>
+<style>
+  body {
+    background-color: #0e0e12;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    height: 100vh;
+    margin: 0;
+    padding: 40px;
+  }
+
+  .container {
+    background: #15151c;
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 800px;
+    width: 100%;
+    box-shadow: 0 0 30px rgba(0,0,0,0.4);
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 1.8em;
+    margin-bottom: 20px;
+  }
+
+  .upload-section {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  input[type=file] {
+    background: #1e1e27;
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #2f2f3b;
+    color: #fff;
+    cursor: pointer;
+  }
+
+  img {
+    display: block;
+    margin: 15px auto;
+    max-width: 200px;
+    border-radius: 8px;
+  }
+
+  .criterion {
+    margin-bottom: 20px;
+  }
+
+  .criterion label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    background: linear-gradient(90deg, #007bff, #8a2be2);
+    height: 6px;
+    border-radius: 6px;
+    outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #8a2be2;
+  }
+
+  .score-display {
+    background: #1e1e27;
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-top: 25px;
+  }
+
+  textarea {
+    width: 100%;
+    min-height: 100px;
+    background: #1b1b23;
+    color: #fff;
+    border: 1px solid #2f2f3b;
+    border-radius: 8px;
+    padding: 10px;
+    resize: vertical;
+    margin-bottom: 15px;
+  }
+
+  .reset-button, .submit-button {
+    background: #8a2be2;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    margin-right: 10px;
+  }
+
+  .reset-button:hover, .submit-button:hover {
+    background: #9b4dff;
+  }
+
+  .reviews {
+    margin-top: 40px;
+  }
+
+  .review-item {
+    background: #1b1b23;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎨 Оценка Minecraft-скина</h1>
+
+  <div class="upload-section">
+    <input type="file" id="skin-upload" accept="image/png, image/jpeg" />
+    <img id="skin-preview" src="" alt="Превью скина" style="display:none;" />
+  </div>
+
+  <div class="criterion">
+    <label for="line">Рифмы / Образы <span id="line-value">5</span></label>
+    <input type="range" id="line" min="1" max="10" value="5">
+  </div>
+
+  <div class="criterion">
+    <label for="structure">Структура / Ритмика <span id="structure-value">5</span></label>
+    <input type="range" id="structure" min="1" max="10" value="5">
+  </div>
+
+  <div class="criterion">
+    <label for="style">Реализация стиля <span id="style-value">5</span></label>
+    <input type="range" id="style" min="1" max="10" value="5">
+  </div>
+
+  <div class="criterion">
+    <label for="charisma">Индивидуальность / Харизма <span id="charisma-value">5</span></label>
+    <input type="range" id="charisma" min="1" max="10" value="5">
+  </div>
+
+  <div class="criterion">
+    <label for="vibe">Атмосфера / Вайб <span id="vibe-value">5</span></label>
+    <input type="range" id="vibe" min="1" max="10" value="5">
+  </div>
+
+  <div class="score-display" id="total">Итог: 0 / 90</div>
+
+  <textarea id="title" placeholder="Заголовок рецензии"></textarea>
+  <textarea id="text" placeholder="Текст рецензии (от 300 до 8500 символов)"></textarea>
+
+  <button class="reset-button" id="reset">Очистить</button>
+  <button class="submit-button" id="submit">Сохранить</button>
+
+  <div class="reviews" id="reviews"></div>
+</div>
+
+<script>
+const ranges = ['line', 'structure', 'style', 'charisma', 'vibe'];
+const values = {
+  line: 5, structure: 5, style: 5, charisma: 5, vibe: 5
+};
+
+function calculateTotal() {
+  const sum = Object.values(values).reduce((a,b)=>a+b,0);
+  document.getElementById('total').textContent = `Итог: ${sum * 2} / 90`;
+}
+
+ranges.forEach(id => {
+  const input = document.getElementById(id);
+  const label = document.getElementById(`${id}-value`);
+  input.addEventListener('input', () => {
+    values[id] = parseInt(input.value);
+    label.textContent = input.value;
+    calculateTotal();
+  });
+});
+
+calculateTotal();
+
+document.getElementById('reset').addEventListener('click', () => {
+  ranges.forEach(id => {
+    values[id] = 5;
+    const input = document.getElementById(id);
+    const label = document.getElementById(`${id}-value`);
+    input.value = 5;
+    label.textContent = 5;
+  });
+  document.getElementById('title').value = '';
+  document.getElementById('text').value = '';
+  document.getElementById('skin-upload').value = '';
+  document.getElementById('skin-preview').style.display = 'none';
+  calculateTotal();
+});
+
+document.getElementById('skin-upload').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(evt){
+      const img = document.getElementById('skin-preview');
+      img.src = evt.target.result;
+      img.style.display = 'block';
+    }
+    reader.readAsDataURL(file);
+  }
+});
+
+document.getElementById('submit').addEventListener('click', () => {
+  const title = document.getElementById('title').value.trim();
+  const text = document.getElementById('text').value.trim();
+  if(!title || !text){
+    alert('Введите заголовок и текст рецензии.');
+    return;
+  }
+
+  const reviewDiv = document.createElement('div');
+  reviewDiv.classList.add('review-item');
+  reviewDiv.innerHTML = `<h3>${title}</h3><p>${text}</p><small>Оценка: ${Object.values(values).reduce((a,b)=>a+b,0)*2}/90</small>`;
+  document.getElementById('reviews').prepend(reviewDiv);
+});
+</script>
+</body>
+</html>
