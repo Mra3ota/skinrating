@@ -4,7 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Оценка Minecraft-скинов</title>
-<script src="https://cdn.jsdelivr.net/npm/skinview3d@3.0.1/bundles/skinview3d.min.js"></script>
 <style>
   body {
     background-color: #0e0e12;
@@ -68,11 +67,10 @@
     background: #9b4dff;
   }
 
-  #skin-viewer {
-    width: 100%;
-    max-width: 400px;
+  #skin-viewer-container {
+    width: 400px;
     height: 400px;
-    margin: 0 auto;
+    margin: 20px auto;
     background: #1b1b23;
     border-radius: 12px;
     border: 2px solid #2f2f3b;
@@ -208,6 +206,7 @@
 
   .review-item p {
     line-height: 1.6;
+    white-space: pre-wrap;
   }
 
   .info-text {
@@ -215,6 +214,17 @@
     color: #888;
     font-size: 0.9em;
     margin-top: 10px;
+  }
+
+  .skin-preview {
+    max-width: 256px;
+    margin: 20px auto;
+    display: none;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    border: 2px solid #2f2f3b;
+    border-radius: 8px;
   }
 </style>
 </head>
@@ -228,13 +238,15 @@
     </div>
     <div class="info-text">Загрузите PNG файл скина (64x64 или 64x32)</div>
     
-    <div id="skin-viewer"></div>
+    <img id="skin-preview" class="skin-preview" alt="Предпросмотр скина">
+    
+    <div id="skin-viewer-container"></div>
     
     <div class="viewer-controls" id="viewer-controls">
       <button class="control-btn active" data-animation="walk">🚶 Ходьба</button>
       <button class="control-btn" data-animation="run">🏃 Бег</button>
       <button class="control-btn" data-animation="idle">🧍 Стоять</button>
-      <button class="control-btn" data-animation="rotate">🔄 Вращение</button>
+      <button class="control-btn" data-animation="fly">✈️ Полёт</button>
     </div>
   </div>
 
@@ -266,7 +278,7 @@
   <div class="score-display" id="total">Итог: 25 / 90</div>
 
   <textarea id="title" placeholder="Заголовок рецензии"></textarea>
-  <textarea id="text" placeholder="Текст рецензии (от 300 до 8500 символов)"></textarea>
+  <textarea id="text" placeholder="Текст рецензии (до 8500 символов)"></textarea>
 
   <button class="reset-button" id="reset">Очистить</button>
   <button class="submit-button" id="submit">Сохранить</button>
@@ -274,9 +286,11 @@
   <div class="reviews" id="reviews"></div>
 </div>
 
-<script>
+<script type="module">
+import * as skinview3d from 'https://cdn.skypack.dev/skinview3d@3.0.1';
+
 let skinViewer = null;
-let currentAnimation = 'walk';
+let currentSkinUrl = null;
 
 const ranges = ['line', 'palette', 'shade', 'style', 'vibe'];
 const values = {
@@ -310,38 +324,46 @@ ranges.forEach(id => {
 calculateTotal();
 
 // Инициализация 3D просмотрщика
-function initSkinViewer() {
-  const container = document.getElementById('skin-viewer');
+function initSkinViewer(skinUrl) {
+  const container = document.getElementById('skin-viewer-container');
   
-  if (skinViewer) {
-    skinViewer.dispose();
+  try {
+    // Очищаем контейнер
+    container.innerHTML = '';
+    
+    if (skinViewer) {
+      skinViewer.dispose();
+    }
+    
+    // Создаем новый viewer
+    skinViewer = new skinview3d.SkinViewer({
+      canvas: container,
+      width: 400,
+      height: 400,
+      skin: skinUrl
+    });
+    
+    // Настройка камеры
+    skinViewer.camera.position.z = 50;
+    skinViewer.zoom = 0.8;
+    
+    // Добавляем анимацию ходьбы по умолчанию
+    skinViewer.animation = new skinview3d.WalkingAnimation();
+    
+    // Включаем управление мышью
+    const control = skinview3d.createOrbitControls(skinViewer);
+    control.enableRotate = true;
+    control.enableZoom = true;
+    control.enablePan = false;
+    
+    container.style.display = 'block';
+    
+    console.log('3D viewer успешно создан!');
+    
+  } catch (error) {
+    console.error('Ошибка создания 3D viewer:', error);
+    alert('Не удалось создать 3D просмотр. Используйте 2D превью выше.');
   }
-  
-  skinViewer = new skinview3d.SkinViewer({
-    canvas: container,
-    width: container.clientWidth,
-    height: 400,
-    skin: null,
-    background: '#1b1b23'
-  });
-  
-  // Настройка камеры
-  skinViewer.camera.rotation.x = -0.5;
-  skinViewer.camera.rotation.y = 0.5;
-  skinViewer.camera.rotation.z = 0.1;
-  skinViewer.camera.position.z = 60;
-  
-  // Добавляем анимацию ходьбы по умолчанию
-  skinViewer.animation = new skinview3d.WalkingAnimation();
-  skinViewer.animation.speed = 0.5;
-  
-  // Включаем управление мышью
-  let control = skinview3d.createOrbitControls(skinViewer);
-  control.enableRotate = true;
-  control.enableZoom = true;
-  control.enablePan = false;
-  
-  container.style.display = 'block';
 }
 
 // Загрузка скина
@@ -350,15 +372,20 @@ document.getElementById('skin-upload').addEventListener('change', function(e) {
   if (file) {
     const reader = new FileReader();
     reader.onload = function(evt) {
-      if (!skinViewer) {
-        initSkinViewer();
+      currentSkinUrl = evt.target.result;
+      
+      // Показываем 2D превью
+      const preview = document.getElementById('skin-preview');
+      preview.src = currentSkinUrl;
+      preview.style.display = 'block';
+      
+      // Инициализируем 3D viewer
+      try {
+        initSkinViewer(currentSkinUrl);
+        document.getElementById('viewer-controls').style.display = 'flex';
+      } catch (error) {
+        console.error('Ошибка загрузки 3D:', error);
       }
-      
-      // Загружаем скин в 3D viewer
-      skinViewer.loadSkin(evt.target.result);
-      
-      // Показываем контролы
-      document.getElementById('viewer-controls').style.display = 'flex';
     }
     reader.readAsDataURL(file);
   }
@@ -367,7 +394,6 @@ document.getElementById('skin-upload').addEventListener('change', function(e) {
 // Управление анимациями
 document.querySelectorAll('.control-btn').forEach(btn => {
   btn.addEventListener('click', function() {
-    // Убираем active класс у всех кнопок
     document.querySelectorAll('.control-btn').forEach(b => b.classList.remove('active'));
     this.classList.add('active');
     
@@ -375,22 +401,23 @@ document.querySelectorAll('.control-btn').forEach(btn => {
     
     if (!skinViewer) return;
     
-    switch(animation) {
-      case 'walk':
-        skinViewer.animation = new skinview3d.WalkingAnimation();
-        skinViewer.animation.speed = 0.5;
-        break;
-      case 'run':
-        skinViewer.animation = new skinview3d.RunningAnimation();
-        skinViewer.animation.speed = 0.8;
-        break;
-      case 'idle':
-        skinViewer.animation = new skinview3d.IdleAnimation();
-        break;
-      case 'rotate':
-        skinViewer.animation = new skinview3d.RotatingAnimation();
-        skinViewer.animation.speed = 1;
-        break;
+    try {
+      switch(animation) {
+        case 'walk':
+          skinViewer.animation = new skinview3d.WalkingAnimation();
+          break;
+        case 'run':
+          skinViewer.animation = new skinview3d.RunningAnimation();
+          break;
+        case 'idle':
+          skinViewer.animation = new skinview3d.IdleAnimation();
+          break;
+        case 'fly':
+          skinViewer.animation = new skinview3d.FlyingAnimation();
+          break;
+      }
+    } catch (error) {
+      console.error('Ошибка смены анимации:', error);
     }
   });
 });
@@ -408,10 +435,13 @@ document.getElementById('reset').addEventListener('click', () => {
   document.getElementById('text').value = '';
   document.getElementById('skin-upload').value = '';
   
-  // Скрываем viewer
+  document.getElementById('skin-preview').style.display = 'none';
+  document.getElementById('skin-viewer-container').style.display = 'none';
+  document.getElementById('viewer-controls').style.display = 'none';
+  
   if (skinViewer) {
-    document.getElementById('skin-viewer').style.display = 'none';
-    document.getElementById('viewer-controls').style.display = 'none';
+    skinViewer.dispose();
+    skinViewer = null;
   }
   
   calculateTotal();
@@ -427,8 +457,8 @@ document.getElementById('submit').addEventListener('click', () => {
     return;
   }
   
-  if (text.length < 300 || text.length > 8500) {
-    alert('Текст рецензии должен быть от 300 до 8500 символов.');
+  if (text.length > 8500) {
+    alert('Текст рецензии не должен превышать 8500 символов.');
     return;
   }
 
@@ -448,17 +478,10 @@ document.getElementById('submit').addEventListener('click', () => {
   `;
   document.getElementById('reviews').prepend(reviewDiv);
   
-  // Очищаем поля после сохранения
   document.getElementById('title').value = '';
   document.getElementById('text').value = '';
-});
-
-// Адаптивность viewer при изменении размера окна
-window.addEventListener('resize', () => {
-  if (skinViewer) {
-    const container = document.getElementById('skin-viewer');
-    skinViewer.width = container.clientWidth;
-  }
+  
+  alert('Рецензия сохранена!');
 });
 </script>
 </body>
