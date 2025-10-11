@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Оценка Minecraft-скинов</title>
+<title>Оценка Minecraft-скинов (3D)</title>
+<script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
 <style>
   body {
     background-color: #0e0e12;
@@ -15,8 +16,8 @@
     min-height: 100vh;
     margin: 0;
     padding: 40px 20px;
+    box-sizing: border-box;
   }
-
   .container {
     background: #15151c;
     border-radius: 16px;
@@ -25,24 +26,9 @@
     width: 100%;
     box-shadow: 0 0 30px rgba(0,0,0,0.4);
   }
-
-  h1 {
-    text-align: center;
-    font-size: 1.8em;
-    margin-bottom: 20px;
-  }
-
-  .upload-section {
-    text-align: center;
-    margin-bottom: 30px;
-  }
-
-  .file-input-wrapper {
-    position: relative;
-    display: inline-block;
-    margin-bottom: 20px;
-  }
-
+  h1 { text-align: center; font-size: 1.8em; margin-bottom: 20px; }
+  .upload-section { text-align: center; margin-bottom: 30px; }
+  .file-input-wrapper { position: relative; display: inline-block; margin-bottom: 20px; }
   input[type=file] {
     background: #1e1e27;
     border-radius: 8px;
@@ -52,7 +38,6 @@
     cursor: pointer;
     font-size: 0.95em;
   }
-
   input[type=file]::-webkit-file-upload-button {
     background: #8a2be2;
     color: #fff;
@@ -62,61 +47,18 @@
     cursor: pointer;
     margin-right: 10px;
   }
-
-  input[type=file]::-webkit-file-upload-button:hover {
-    background: #9b4dff;
-  }
-
-  #skin-viewer-container {
-    width: 400px;
+  input[type=file]::-webkit-file-upload-button:hover { background: #9b4dff; }
+  .skin-preview {
+    width: 300px;
     height: 400px;
     margin: 20px auto;
-    background: #1b1b23;
-    border-radius: 12px;
+    display: block;
     border: 2px solid #2f2f3b;
-    display: none;
+    border-radius: 8px;
+    background: repeating-conic-gradient(#2a2a35 0% 25%, #1e1e27 0% 50%) 50% / 20px 20px;
   }
-
-  .viewer-controls {
-    display: none;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 15px;
-    flex-wrap: wrap;
-  }
-
-  .control-btn {
-    background: #1e1e27;
-    color: #fff;
-    border: 1px solid #2f2f3b;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: all 0.2s;
-  }
-
-  .control-btn:hover {
-    background: #2a2a35;
-    border-color: #8a2be2;
-  }
-
-  .control-btn.active {
-    background: #8a2be2;
-    border-color: #8a2be2;
-  }
-
-  .criterion {
-    margin-bottom: 20px;
-  }
-
-  .criterion label {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    font-weight: 600;
-  }
-
+  .criterion { margin-bottom: 20px; }
+  .criterion label { display: flex; justify-content: space-between; margin-bottom: 8px; font-weight: 600; }
   input[type=range] {
     width: 100%;
     -webkit-appearance: none;
@@ -125,27 +67,12 @@
     border-radius: 6px;
     outline: none;
   }
-
   input[type=range]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    background: #fff;
-    border-radius: 50%;
-    cursor: pointer;
+    width: 20px; height: 20px;
+    background: #fff; border-radius: 50%; cursor: pointer;
     border: 2px solid #8a2be2;
   }
-
-  input[type=range]::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    background: #fff;
-    border-radius: 50%;
-    cursor: pointer;
-    border: 2px solid #8a2be2;
-  }
-
   .score-display {
     background: #1e1e27;
     border-radius: 10px;
@@ -155,7 +82,6 @@
     font-weight: bold;
     margin-top: 25px;
   }
-
   textarea {
     width: 100%;
     min-height: 100px;
@@ -169,7 +95,6 @@
     font-family: inherit;
     box-sizing: border-box;
   }
-
   .reset-button, .submit-button {
     background: #8a2be2;
     color: #fff;
@@ -181,16 +106,11 @@
     margin-right: 10px;
     transition: all 0.2s;
   }
-
   .reset-button:hover, .submit-button:hover {
     background: #9b4dff;
     transform: translateY(-1px);
   }
-
-  .reviews {
-    margin-top: 40px;
-  }
-
+  .reviews { margin-top: 40px; }
   .review-item {
     background: #1b1b23;
     border-radius: 8px;
@@ -198,82 +118,29 @@
     margin-bottom: 15px;
     border-left: 3px solid #8a2be2;
   }
-
-  .review-item h3 {
-    margin-top: 0;
-    color: #8a2be2;
-  }
-
-  .review-item p {
-    line-height: 1.6;
-    white-space: pre-wrap;
-  }
-
-  .info-text {
-    text-align: center;
-    color: #888;
-    font-size: 0.9em;
-    margin-top: 10px;
-  }
-
-  .skin-preview {
-    max-width: 256px;
-    margin: 20px auto;
-    display: none;
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    border: 2px solid #2f2f3b;
-    border-radius: 8px;
-  }
+  .review-item h3 { margin-top: 0; color: #8a2be2; }
+  .review-item p { line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+  .review-item small { display: block; margin-top: 10px; color: #aaa; }
+  .info-text { text-align: center; color: #888; font-size: 0.9em; margin-top: 10px; }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>🎨 Оценка Minecraft-скина</h1>
+  <h1>🎨 Оценка Minecraft-скина (3D)</h1>
 
   <div class="upload-section">
     <div class="file-input-wrapper">
       <input type="file" id="skin-upload" accept="image/png" />
     </div>
     <div class="info-text">Загрузите PNG файл скина (64x64 или 64x32)</div>
-    
-    <img id="skin-preview" class="skin-preview" alt="Предпросмотр скина">
-    
-    <div id="skin-viewer-container"></div>
-    
-    <div class="viewer-controls" id="viewer-controls">
-      <button class="control-btn active" data-animation="walk">🚶 Ходьба</button>
-      <button class="control-btn" data-animation="run">🏃 Бег</button>
-      <button class="control-btn" data-animation="idle">🧍 Стоять</button>
-      <button class="control-btn" data-animation="fly">✈️ Полёт</button>
-    </div>
+    <canvas id="skin-viewer" width="300" height="400" class="skin-preview"></canvas>
   </div>
 
-  <div class="criterion">
-    <label for="line">Лайн / Образ <span id="line-value">5</span></label>
-    <input type="range" id="line" min="1" max="10" value="5">
-  </div>
-
-  <div class="criterion">
-    <label for="palette">Палитра <span id="palette-value">5</span></label>
-    <input type="range" id="palette" min="1" max="10" value="5">
-  </div>
-
-  <div class="criterion">
-    <label for="shade">Реализация / Шейд <span id="shade-value">5</span></label>
-    <input type="range" id="shade" min="1" max="10" value="5">
-  </div>
-
-  <div class="criterion">
-    <label for="style">Айдентика / Стилистика <span id="style-value">5</span></label>
-    <input type="range" id="style" min="1" max="10" value="5">
-  </div>
-
-  <div class="criterion">
-    <label for="vibe">Общее впечатление / Вайб <span id="vibe-value">5</span></label>
-    <input type="range" id="vibe" min="1" max="10" value="5">
-  </div>
+  <div class="criterion"><label for="line">Лайн / Образ <span id="line-value">5</span></label><input type="range" id="line" min="1" max="10" value="5"></div>
+  <div class="criterion"><label for="palette">Палитра <span id="palette-value">5</span></label><input type="range" id="palette" min="1" max="10" value="5"></div>
+  <div class="criterion"><label for="shade">Реализация / Шейд <span id="shade-value">5</span></label><input type="range" id="shade" min="1" max="10" value="5"></div>
+  <div class="criterion"><label for="style">Айдентика / Стилистика <span id="style-value">5</span></label><input type="range" id="style" min="1" max="10" value="5"></div>
+  <div class="criterion"><label for="vibe">Общее впечатление / Вайб <span id="vibe-value">5</span></label><input type="range" id="vibe" min="1" max="10" value="5"></div>
 
   <div class="score-display" id="total">Итог: 25 / 90</div>
 
@@ -286,202 +153,95 @@
   <div class="reviews" id="reviews"></div>
 </div>
 
-<script type="module">
-import * as skinview3d from 'https://cdn.skypack.dev/skinview3d@3.0.1';
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const ranges = ['line', 'palette', 'shade', 'style', 'vibe'];
+  const values = { line: 5, palette: 5, shade: 5, style: 5, vibe: 5 };
+  const vibeMultiplier = { 1:1.0, 2:1.0675, 3:1.1349, 4:1.2024, 5:1.2699, 6:1.3373, 7:1.4048, 8:1.4723, 9:1.5397, 10:1.6072 };
+  let viewer;
 
-let skinViewer = null;
-let currentSkinUrl = null;
-
-const ranges = ['line', 'palette', 'shade', 'style', 'vibe'];
-const values = {
-  line: 5, palette: 5, shade: 5, style: 5, vibe: 5
-};
-
-// таблица множителей вайба по 90-балльной системе
-const vibeMultiplier = {
-  1: 1.0000, 2: 1.0675, 3: 1.1349, 4: 1.2024, 5: 1.2699,
-  6: 1.3373, 7: 1.4048, 8: 1.4723, 9: 1.5397, 10: 1.6072
-};
-
-function calculateTotal() {
-  const baseSum = values.line + values.palette + values.shade + values.style;
-  const scaled = baseSum * 1.4;
-  const multiplier = vibeMultiplier[values.vibe] || 1;
-  const total = Math.round(scaled * multiplier);
-  document.getElementById('total').textContent = `Итог: ${total} / 90`;
-}
-
-ranges.forEach(id => {
-  const input = document.getElementById(id);
-  const label = document.getElementById(`${id}-value`);
-  input.addEventListener('input', () => {
-    values[id] = parseInt(input.value);
-    label.textContent = input.value;
-    calculateTotal();
-  });
-});
-
-calculateTotal();
-
-// Инициализация 3D просмотрщика
-function initSkinViewer(skinUrl) {
-  const container = document.getElementById('skin-viewer-container');
-  
-  try {
-    // Очищаем контейнер
-    container.innerHTML = '';
-    
-    if (skinViewer) {
-      skinViewer.dispose();
-    }
-    
-    // Создаем новый viewer
-    skinViewer = new skinview3d.SkinViewer({
-      canvas: container,
-      width: 400,
-      height: 400,
-      skin: skinUrl
-    });
-    
-    // Настройка камеры
-    skinViewer.camera.position.z = 50;
-    skinViewer.zoom = 0.8;
-    
-    // Добавляем анимацию ходьбы по умолчанию
-    skinViewer.animation = new skinview3d.WalkingAnimation();
-    
-    // Включаем управление мышью
-    const control = skinview3d.createOrbitControls(skinViewer);
-    control.enableRotate = true;
-    control.enableZoom = true;
-    control.enablePan = false;
-    
-    container.style.display = 'block';
-    
-    console.log('3D viewer успешно создан!');
-    
-  } catch (error) {
-    console.error('Ошибка создания 3D viewer:', error);
-    alert('Не удалось создать 3D просмотр. Используйте 2D превью выше.');
+  function calculateTotal() {
+    const baseSum = values.line + values.palette + values.shade + values.style;
+    const scaled = baseSum * 1.4;
+    const multiplier = vibeMultiplier[values.vibe] || 1;
+    const total = Math.round(scaled * multiplier);
+    document.getElementById('total').textContent = `Итог: ${total} / 90`;
   }
-}
 
-// Загрузка скина
-document.getElementById('skin-upload').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = function(evt) {
-      currentSkinUrl = evt.target.result;
-      
-      // Показываем 2D превью
-      const preview = document.getElementById('skin-preview');
-      preview.src = currentSkinUrl;
-      preview.style.display = 'block';
-      
-      // Инициализируем 3D viewer
-      try {
-        initSkinViewer(currentSkinUrl);
-        document.getElementById('viewer-controls').style.display = 'flex';
-      } catch (error) {
-        console.error('Ошибка загрузки 3D:', error);
-      }
-    }
-    reader.readAsDataURL(file);
-  }
-});
-
-// Управление анимациями
-document.querySelectorAll('.control-btn').forEach(btn => {
-  btn.addEventListener('click', function() {
-    document.querySelectorAll('.control-btn').forEach(b => b.classList.remove('active'));
-    this.classList.add('active');
-    
-    const animation = this.dataset.animation;
-    
-    if (!skinViewer) return;
-    
-    try {
-      switch(animation) {
-        case 'walk':
-          skinViewer.animation = new skinview3d.WalkingAnimation();
-          break;
-        case 'run':
-          skinViewer.animation = new skinview3d.RunningAnimation();
-          break;
-        case 'idle':
-          skinViewer.animation = new skinview3d.IdleAnimation();
-          break;
-        case 'fly':
-          skinViewer.animation = new skinview3d.FlyingAnimation();
-          break;
-      }
-    } catch (error) {
-      console.error('Ошибка смены анимации:', error);
-    }
-  });
-});
-
-// Кнопка сброса
-document.getElementById('reset').addEventListener('click', () => {
   ranges.forEach(id => {
-    values[id] = 5;
     const input = document.getElementById(id);
     const label = document.getElementById(`${id}-value`);
-    input.value = 5;
-    label.textContent = 5;
+    input.addEventListener('input', () => {
+      values[id] = parseInt(input.value);
+      label.textContent = input.value;
+      calculateTotal();
+    });
   });
-  document.getElementById('title').value = '';
-  document.getElementById('text').value = '';
-  document.getElementById('skin-upload').value = '';
-  
-  document.getElementById('skin-preview').style.display = 'none';
-  document.getElementById('skin-viewer-container').style.display = 'none';
-  document.getElementById('viewer-controls').style.display = 'none';
-  
-  if (skinViewer) {
-    skinViewer.dispose();
-    skinViewer = null;
-  }
-  
+
+  document.getElementById('skin-upload').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = evt => {
+        const skinDataUrl = evt.target.result;
+        if (!viewer) {
+          viewer = new skinview3d.SkinViewer({
+            canvas: document.getElementById('skin-viewer'),
+            width: 300,
+            height: 400,
+            skin: skinDataUrl
+          });
+          viewer.zoom = 0.9;
+          viewer.autoRotate = true;
+          viewer.autoRotateSpeed = 0.6;
+          viewer.animation = new skinview3d.WalkingAnimation();
+        } else {
+          viewer.loadSkin(skinDataUrl);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  document.getElementById('reset').addEventListener('click', () => {
+    ranges.forEach(id => {
+      values[id] = 5;
+      const input = document.getElementById(id);
+      const label = document.getElementById(`${id}-value`);
+      input.value = 5;
+      label.textContent = 5;
+    });
+    document.getElementById('title').value = '';
+    document.getElementById('text').value = '';
+    document.getElementById('skin-upload').value = '';
+    if (viewer) viewer.loadSkin('');
+    calculateTotal();
+  });
+
+  document.getElementById('submit').addEventListener('click', () => {
+    const title = document.getElementById('title').value.trim();
+    const text = document.getElementById('text').value.trim();
+    if (!title || !text) return alert('Введите заголовок и текст рецензии.');
+    if (text.length > 8500) return alert('Текст рецензии не должен превышать 8500 символов.');
+
+    const baseSum = values.line + values.palette + values.shade + values.style;
+    const scaled = baseSum * 1.4;
+    const multiplier = vibeMultiplier[values.vibe] || 1;
+    const total = Math.round(scaled * multiplier);
+
+    const reviewDiv = document.createElement('div');
+    reviewDiv.classList.add('review-item');
+    const safeTitle = title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    reviewDiv.innerHTML = `<h3>${safeTitle}</h3><p>${safeText}</p><small>Оценка: ${total} / 90 | Лайн: ${values.line} | Палитра: ${values.palette} | Шейд: ${values.shade} | Стиль: ${values.style} | Вайб: ${values.vibe}</small>`;
+    document.getElementById('reviews').prepend(reviewDiv);
+
+    document.getElementById('title').value = '';
+    document.getElementById('text').value = '';
+  });
+
   calculateTotal();
-});
-
-// Кнопка сохранения
-document.getElementById('submit').addEventListener('click', () => {
-  const title = document.getElementById('title').value.trim();
-  const text = document.getElementById('text').value.trim();
-  
-  if (!title || !text) {
-    alert('Введите заголовок и текст рецензии.');
-    return;
-  }
-  
-  if (text.length > 8500) {
-    alert('Текст рецензии не должен превышать 8500 символов.');
-    return;
-  }
-
-  const baseSum = values.line + values.palette + values.shade + values.style;
-  const scaled = baseSum * 1.4;
-  const multiplier = vibeMultiplier[values.vibe] || 1;
-  const total = Math.round(scaled * multiplier);
-
-  const reviewDiv = document.createElement('div');
-  reviewDiv.classList.add('review-item');
-  reviewDiv.innerHTML = `
-    <h3>${title}</h3>
-    <p>${text}</p>
-    <small>Оценка: ${total} / 90 | 
-    Лайн: ${values.line} | Палитра: ${values.palette} | 
-    Шейд: ${values.shade} | Стиль: ${values.style} | Вайб: ${values.vibe}</small>
-  `;
-  document.getElementById('reviews').prepend(reviewDiv);
-  
-  document.getElementById('title').value = '';
-  document.getElementById('text').value = '';
-  
-  alert('Рецензия сохранена!');
 });
 </script>
 </body>
