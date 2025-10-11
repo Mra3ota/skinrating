@@ -143,27 +143,27 @@
   </div>
 
   <div class="criterion">
-    <label for="line">Рифмы / Образы <span id="line-value">5</span></label>
+    <label for="line">Лайн / Образ <span id="line-value">5</span></label>
     <input type="range" id="line" min="1" max="10" value="5">
   </div>
 
   <div class="criterion">
-    <label for="structure">Структура / Ритмика <span id="structure-value">5</span></label>
-    <input type="range" id="structure" min="1" max="10" value="5">
+    <label for="palette">Палитра <span id="palette-value">5</span></label>
+    <input type="range" id="palette" min="1" max="10" value="5">
   </div>
 
   <div class="criterion">
-    <label for="style">Реализация стиля <span id="style-value">5</span></label>
+    <label for="shade">Реализация / Шейд <span id="shade-value">5</span></label>
+    <input type="range" id="shade" min="1" max="10" value="5">
+  </div>
+
+  <div class="criterion">
+    <label for="style">Айдентика / Стилистика <span id="style-value">5</span></label>
     <input type="range" id="style" min="1" max="10" value="5">
   </div>
 
   <div class="criterion">
-    <label for="charisma">Индивидуальность / Харизма <span id="charisma-value">5</span></label>
-    <input type="range" id="charisma" min="1" max="10" value="5">
-  </div>
-
-  <div class="criterion">
-    <label for="vibe">Атмосфера / Вайб <span id="vibe-value">5</span></label>
+    <label for="vibe">Общее впечатление / Вайб <span id="vibe-value">5</span></label>
     <input type="range" id="vibe" min="1" max="10" value="5">
   </div>
 
@@ -179,14 +179,23 @@
 </div>
 
 <script>
-const ranges = ['line', 'structure', 'style', 'charisma', 'vibe'];
+const ranges = ['line', 'palette', 'shade', 'style', 'vibe'];
 const values = {
-  line: 5, structure: 5, style: 5, charisma: 5, vibe: 5
+  line: 5, palette: 5, shade: 5, style: 5, vibe: 5
+};
+
+// таблица множителей вайба по 90-балльной системе
+const vibeMultiplier = {
+  1: 1.0000, 2: 1.0675, 3: 1.1349, 4: 1.2024, 5: 1.2699,
+  6: 1.3373, 7: 1.4048, 8: 1.4723, 9: 1.5397, 10: 1.6072
 };
 
 function calculateTotal() {
-  const sum = Object.values(values).reduce((a,b)=>a+b,0);
-  document.getElementById('total').textContent = `Итог: ${sum * 2} / 90`;
+  const baseSum = values.line + values.palette + values.shade + values.style;
+  const scaled = baseSum * 1.4;
+  const multiplier = vibeMultiplier[values.vibe] || 1;
+  const total = Math.round(scaled * multiplier);
+  document.getElementById('total').textContent = `Итог: ${total} / 90`;
 }
 
 ranges.forEach(id => {
@@ -237,9 +246,14 @@ document.getElementById('submit').addEventListener('click', () => {
     return;
   }
 
+  const baseSum = values.line + values.palette + values.shade + values.style;
+  const scaled = baseSum * 1.4;
+  const multiplier = vibeMultiplier[values.vibe] || 1;
+  const total = Math.round(scaled * multiplier);
+
   const reviewDiv = document.createElement('div');
   reviewDiv.classList.add('review-item');
-  reviewDiv.innerHTML = `<h3>${title}</h3><p>${text}</p><small>Оценка: ${Object.values(values).reduce((a,b)=>a+b,0)*2}/90</small>`;
+  reviewDiv.innerHTML = `<h3>${title}</h3><p>${text}</p><small>Оценка: ${total} / 90</small>`;
   document.getElementById('reviews').prepend(reviewDiv);
 });
 </script>
