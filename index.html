@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Оценка Minecraft-скинов (3D)</title>
+<title>Оценка скина</title>
 <script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
 <style>
   body {
@@ -26,7 +26,21 @@
     width: 100%;
     box-shadow: 0 0 30px rgba(0,0,0,0.4);
   }
-  h1 { text-align: center; font-size: 1.8em; margin-bottom: 20px; }
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 25px;
+  }
+  header img {
+    height: 42px;
+    width: auto;
+  }
+  header h1 {
+    font-size: 1.9em;
+    margin: 0;
+  }
   .upload-section { text-align: center; margin-bottom: 30px; }
   .file-input-wrapper { position: relative; display: inline-block; margin-bottom: 20px; }
   input[type=file] {
@@ -126,7 +140,11 @@
 </head>
 <body>
 <div class="container">
-  <h1>🎨 Оценка Minecraft-скина (3D)</h1>
+
+  <header>
+    <img src="assets/МММ_ЛОГО_БЕЛОЕ.png" alt="Логотип группы">
+    <h1>🎨 Оценка скина</h1>
+  </header>
 
   <div class="upload-section">
     <div class="file-input-wrapper">
@@ -192,9 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
             skin: skinDataUrl
           });
           viewer.zoom = 0.9;
-         viewer.zoom = 0.9;
-         viewer.autoRotate = false; 
-        viewer.animation = null;  
+          viewer.autoRotate = false; 
+          viewer.animation = null;  
         } else {
           viewer.loadSkin(skinDataUrl);
         }
@@ -246,3 +263,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
