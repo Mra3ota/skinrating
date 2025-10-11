@@ -193,8 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           viewer.zoom = 0.9;
           viewer.autoRotate = true;
-          viewer.autoRotateSpeed = 0.6;
-          viewer.animation = new skinview3d.WalkingAnimation();
+          viewer.autoRotateSpeed = 0.4;
+          viewer.animation = null();
         } else {
           viewer.loadSkin(skinDataUrl);
         }
