@@ -421,7 +421,10 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Пожалуйста, введите заголовок и текст рецензии');
       return;
     }
-
+if (!window.uploadedSkin) {
+  alert('Пожалуйста, загрузите файл скина перед отправкой рецензии.');
+  return;
+}
     submitBtn.disabled = true;
     submitBtn.textContent = 'Сохранение...';
 
