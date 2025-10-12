@@ -51,13 +51,14 @@
     textarea { width:100%; min-height:80px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:10px; resize:vertical; margin-bottom:12px; font-family:inherit; box-sizing:border-box; }
     .reset-button, .submit-button { background:#8a2be2; color:#fff; border:none; padding:10px 20px; border-radius:8px; font-size:1em; cursor:pointer; margin-right:8px; transition:all .15s; }
     .reset-button:hover, .submit-button:hover { background:#9b4dff; transform:translateY(-1px); }
+    .reset-button:disabled, .submit-button:disabled { background:#555; cursor:not-allowed; }
     .reviews { margin-top:30px; }
     .review-item { background:#1b1b23; border-radius:8px; padding:12px; margin-bottom:12px; border-left:3px solid #8a2be2; }
     .review-item h3 { margin-top:0; color:#8a2be2; }
     .criteria { background:#1e1e27; border-radius:8px; padding:8px 10px; margin:10px 0; font-size:0.9em; line-height:1.6; }
     .criteria small { display:block; color:#ccc; }
-    .review-item img { max-width:120px; margin-top:10px; border-radius:8px; border:1px solid #2f2f3b; cursor:pointer; }
-    .review-item img:hover { border-color:#8a2be2; }
+    .review-item .skin-thumb { max-width:120px; margin-top:10px; border-radius:8px; border:1px solid #2f2f3b; cursor:pointer; display:block; }
+    .review-item .skin-thumb:hover { border-color:#8a2be2; }
     .info-text { text-align:center; color:#888; font-size:0.85em; margin-top:8px; }
     .loading { text-align:center; color:#8a2be2; padding:20px; }
     .error { color:#f88; padding:10px; border-radius:6px; background:#2a1a2a; text-align:center; }
@@ -66,7 +67,7 @@
 <body>
   <div class="container">
     <header>
-      <img src="assets/МММ_ЛОГО_ОРИГИНАЛ.png" alt="Логотип">
+      <img src="assets/МММ_ЛОГО_ОРИГИНАЛ.png" alt="Логотип" onerror="this.style.display='none'">
       <h1>Оценка скина</h1>
     </header>
 
@@ -147,27 +148,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Восстановление скина из sessionStorage (вместо localStorage для безопасности в Claude)
-  try {
-    const savedSkin = sessionStorage.getItem('lastSkin');
-    if (savedSkin) {
-      uploadedSkin = savedSkin;
-      window.uploadedSkin = uploadedSkin;
-      viewer = new skinview3d.SkinViewer({
-        canvas: document.getElementById('skin-viewer'),
-        width: 300,
-        height: 400,
-        skin: uploadedSkin
-      });
-      viewer.zoom = 0.9;
-      viewer.autoRotate = false;
-    }
-  } catch (err) {
-    console.log('SessionStorage недоступен или ошибка инициализации:', err);
-  }
-
   // Загрузка файла
-  document.getElementById('skin-upload').addEventListener('change', e => {
+  document.getElementById('skin-upload').addEventListener('change', async e => {
     const file = e.target.files?.[0];
     if (!file) return;
     
@@ -176,16 +158,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
+    // Сохраняем data URL скина в window.uploadedSkin (base64)
+    
     const reader = new FileReader();
     reader.onload = evt => {
       uploadedSkin = evt.target.result;
       window.uploadedSkin = uploadedSkin;
-      
-      try {
-        sessionStorage.setItem('lastSkin', uploadedSkin);
-      } catch (err) {
-        console.log('Не удалось сохранить скин:', err);
-      }
       
       try {
         if (!viewer) {
@@ -202,12 +180,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } catch (err) {
         console.error('Ошибка при загрузке скина:', err);
-        alert('Ошибка при предпросмотре скина. Убедитесь, что это корректный файл скина Minecraft.');
       }
     };
     
     reader.onerror = () => {
-      alert('Ошибка при чтении файла. Попробуйте другой PNG.');
+      alert('Ошибка при чтении файла.');
     };
     
     reader.readAsDataURL(file);
@@ -215,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Кнопка сброса
   document.getElementById('reset').addEventListener('click', () => {
-    // Сброс слайдеров
     ranges.forEach(id => {
       values[id] = 5;
       const el = document.getElementById(id);
@@ -224,29 +200,18 @@ document.addEventListener('DOMContentLoaded', () => {
       if (label) label.textContent = '5';
     });
     
-    // Очистка текстовых полей
     document.getElementById('title').value = '';
     document.getElementById('text').value = '';
     document.getElementById('skin-upload').value = '';
     
-    // Очистка скина
     uploadedSkin = null;
     window.uploadedSkin = null;
-    
-    try {
-      sessionStorage.removeItem('lastSkin');
-    } catch(e) {
-      // игнорируем
-    }
 
-    // Очистка canvas
     if (viewer) {
       try {
         viewer.dispose();
         viewer = null;
-      } catch(e) {
-        // игнорируем
-      }
+      } catch(e) {}
     }
     
     const canvas = document.getElementById('skin-viewer');
@@ -258,82 +223,82 @@ document.addEventListener('DOMContentLoaded', () => {
     calculateTotal();
   });
 
-  // Начальный расчет
   calculateTotal();
 });
 </script>
+
 
 <!-- Firebase Module -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import {
-    getFirestore, 
-    collection, 
-    addDoc, 
-    getDocs, 
-    query, 
-    orderBy, 
+    getFirestore,
+    collection,
+    addDoc,
+    getDocs,
+    query,
+    orderBy,
     serverTimestamp,
     limit
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-  import { 
-    getStorage, 
-    ref, 
-    uploadString, 
-    getDownloadURL 
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
     authDomain: "skinsrzt.firebaseapp.com",
-    databaseURL: "https://skinsrzt-default-rtdb.firebaseio.com",
     projectId: "skinsrzt",
     storageBucket: "skinsrzt.appspot.com",
     messagingSenderId: "1084042281569",
-    appId: "1:1084042281569:web:25872944cf7dac7fd66020",
-    measurementId: "G-YSFQLYDWJC"
+    appId: "1:1084042281569:web:25872944cf7dac7fd66020"
   };
 
-  // Инициализация Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const storage = getStorage(app);
+  // Инициализация Firebase (только Firestore)
+  let app, db;
+  try {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+  } catch (err) {
+    console.error("Ошибка инициализации Firebase:", err);
+    document.getElementById('reviews').innerHTML = '<div class="error">Не удалось инициализировать базу данных.</div>';
+  }
 
-  // Функция экранирования HTML
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = String(str || '');
-    return div.innerHTML.replace(/\n/g, '<br>');
+  // Утилита: экранирование HTML для вывода
+  function escapeHtml(unsafe) {
+    if (!unsafe && unsafe !== 0) return '';
+    return String(unsafe)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
   // Загрузка рецензий
   async function loadReviews() {
     const container = document.getElementById('reviews');
-    
+
     try {
       container.innerHTML = '<div class="loading">Загрузка рецензий...</div>';
-      
+
       const q = query(
-        collection(db, "reviews"), 
+        collection(db, "reviews"),
         orderBy("createdAt", "desc"),
-        limit(50) // Ограничиваем количество для производительности
+        limit(50)
       );
-      
+
       const snapshot = await getDocs(q);
-      
+
       if (snapshot.empty) {
         container.innerHTML = '<div class="info-text">Пока нет рецензий. Будьте первым!</div>';
         return;
       }
-      
+
       container.innerHTML = '';
-      
+
       snapshot.forEach(doc => {
         const r = doc.data();
         const reviewDiv = document.createElement('div');
         reviewDiv.classList.add('review-item');
-        
-        // Безопасная обработка даты
+
         let createdStr = '';
         if (r.createdAt) {
           try {
@@ -343,8 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
             createdStr = '';
           }
         }
-        
-        // Формирование HTML рецензии
+
         let reviewHTML = `
           <h3>${escapeHtml(r.title || 'Без заголовка')}</h3>
           <p>${escapeHtml(r.text || '')}</p>
@@ -357,26 +321,23 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <small><b>Итоговая оценка:</b> ${r.total ?? '-'} / 90</small>
         `;
-        
+
         if (createdStr) {
           reviewHTML += `<br><small>Дата: ${createdStr}</small>`;
         }
-        
-        if (r.skinUrl) {
-          reviewHTML += `<br><img src="${escapeHtml(r.skinUrl)}" alt="Превью скина" loading="lazy" />`;
+
+        // Показываем base64 скин напрямую, если он есть
+        if (r.skinData) {
+          reviewHTML += `<br><img src="${escapeHtml(r.skinData)}" class="skin-thumb" alt="Скин" onerror="this.style.display='none'"/>`;
         }
-        
+
         reviewDiv.innerHTML = reviewHTML;
         container.appendChild(reviewDiv);
       });
-      
+
     } catch (err) {
       console.error('Ошибка при загрузке рецензий:', err);
-      container.innerHTML = `
-        <div class="error">
-          Ошибка загрузки рецензий. Проверьте подключение к интернету и обновите страницу.
-        </div>
-      `;
+      container.innerHTML = `<div class="error">Ошибка загрузки. Попробуйте обновить страницу.</div>`;
     }
   }
 
@@ -388,26 +349,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('submit');
     const titleEl = document.getElementById('title');
     const textEl = document.getElementById('text');
-    
+
     const title = titleEl.value.trim();
     const text = textEl.value.trim();
-    
+
     if (!title || !text) {
       alert('Пожалуйста, введите заголовок и текст рецензии');
       return;
     }
-    
-    if (text.length > 8500) {
-      alert('Текст рецензии слишком длинный (максимум 8500 символов)');
-      return;
-    }
-    
-    // Отключаем кнопку на время отправки
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'Сохранение...';
-    
+
     try {
-      // Получаем текущие значения критериев
       const values = {
         line: parseInt(document.getElementById('line').value, 10),
         palette: parseInt(document.getElementById('palette').value, 10),
@@ -415,38 +369,17 @@ document.addEventListener('DOMContentLoaded', () => {
         style: parseInt(document.getElementById('style').value, 10),
         vibe: parseInt(document.getElementById('vibe').value, 10)
       };
-      
-      // Рассчитываем итоговую оценку
+
+      // вычисление итоговой оценки (как в UI)
       const vibeMultiplier = {
         1: 1, 2: 1.0675, 3: 1.1349, 4: 1.2024, 5: 1.2699,
         6: 1.3373, 7: 1.4048, 8: 1.4723, 9: 1.5397, 10: 1.6072
       };
-      
-      const baseSum = values.line + values.palette + values.shade + values.style;
+      const baseSum = Number(values.line) + Number(values.palette) + Number(values.shade) + Number(values.style);
       const scaled = baseSum * 1.4;
-      const multiplier = vibeMultiplier[values.vibe] || 1;
+      const multiplier = vibeMultiplier[Number(values.vibe)] || 1;
       const total = Math.round(scaled * multiplier);
-      
-      let skinUrl = null;
-      
-      // Загружаем скин в Storage, если он есть
-      if (window.uploadedSkin) {
-        try {
-          const skinId = `skin-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const skinRef = ref(storage, `skins/${skinId}.png`);
-          
-          // Удаляем префикс data:image/png;base64, если есть
-          const base64Data = window.uploadedSkin.split(',')[1] || window.uploadedSkin;
-          
-          await uploadString(skinRef, window.uploadedSkin, 'data_url');
-          skinUrl = await getDownloadURL(skinRef);
-        } catch (uploadErr) {
-          console.error('Ошибка загрузки скина:', uploadErr);
-          // Продолжаем без скина
-        }
-      }
-      
-      // Сохраняем рецензию в Firestore
+
       const reviewData = {
         title: title,
         text: text,
@@ -456,31 +389,42 @@ document.addEventListener('DOMContentLoaded', () => {
         shade: values.shade,
         style: values.style,
         vibe: values.vibe,
-        skinUrl: skinUrl,
         createdAt: serverTimestamp()
       };
-      
-      await addDoc(collection(db, "reviews"), reviewData);
-      
+
+      // Проверка и добавление base64 скина (если есть)
+      // Firestore имеет ограничение ~1 MiB на документ. Отклоняем большие изображения.
+      if (window.uploadedSkin) {
+        const dataUrl = window.uploadedSkin;
+        const parts = dataUrl.split(',');
+        const base64 = parts[1] || '';
+        const byteSize = Math.ceil((base64.length * 3) / 4); // приблизительный размер в байтах
+        const MAX_BYTES = 900000; // 900 KB - запас перед лимитом Firestore
+
+        if (byteSize > MAX_BYTES) {
+          alert('Ошибка: скин слишком большой для сохранения в Firestore (≈' + byteSize + ' байт). Пожалуйста, уменьшите размер или используйте другой скин.');
+          throw new Error('Скин слишком большой для Firestore');
+        }
+
+        reviewData.skinData = dataUrl;
+      }
+
+      const docRef = await addDoc(collection(db, "reviews"), reviewData);
+      console.log('Документ сохранен с ID:', docRef.id);
+
       alert('✅ Рецензия успешно сохранена!');
-      
-      // Очищаем форму
-      titleEl.value = '';
-      textEl.value = '';
-      
-      // Перезагружаем список рецензий
+
+      // Перезагружаем список
       await loadReviews();
-      
+
     } catch (err) {
       console.error('Ошибка при сохранении:', err);
-      alert('❌ Ошибка при сохранении рецензии. Попробуйте еще раз.\n' + err.message);
+      alert('❌ Ошибка: ' + (err.message || err));
     } finally {
-      // Восстанавливаем кнопку
       submitBtn.disabled = false;
       submitBtn.textContent = 'Сохранить';
     }
   });
 </script>
-
 </body>
 </html>
