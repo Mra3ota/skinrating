@@ -62,72 +62,42 @@
     .info-text { text-align:center; color:#888; font-size:0.85em; margin-top:8px; }
     .loading { text-align:center; color:#8a2be2; padding:20px; }
     .error { color:#f88; padding:10px; border-radius:6px; background:#2a1a2a; text-align:center; }
-    #contest {
-  margin-top: 40px;
-  padding: 20px;
+#contest {
+  margin: 20px auto 30px auto;
+  padding: 15px 20px;
+  max-width: 600px;
   text-align: center;
   background-color: #111;
-  border-radius: 16px;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
-}
-#contest {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-top: 40px;
-  padding: 30px 15px;
-  background: linear-gradient(145deg, #0e0e0e, #181818);
-  border-radius: 20px;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
 }
 
-.contest-content {
-  max-width: 500px;
-  text-align: center;
-}
-
-#contest h2 {
+#contest h3 {
   color: #fff;
-  margin-bottom: 10px;
-  font-size: 1.5em;
+  margin-bottom: 8px;
+  font-size: 1.2em;
 }
 
 #contest p {
-  color: #bbb;
-  margin-bottom: 20px;
-  line-height: 1.4;
+  color: #ccc;
+  margin-bottom: 12px;
+  font-size: 0.95em;
 }
 
 .contest-btn {
   display: inline-block;
-  padding: 12px 24px;
-  background: #ff0066;
+  padding: 8px 18px;
+  background-color: #ff0066;
   color: #fff;
-  border-radius: 12px;
+  border-radius: 10px;
   text-decoration: none;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  transition: transform 0.2s, background 0.2s;
+  font-weight: 600;
+  transition: 0.2s;
 }
 
 .contest-btn:hover {
-  background: #ff3388;
+  background-color: #ff3388;
   transform: scale(1.05);
-}
-
-@media (max-width: 600px) {
-  #contest {
-    padding: 20px 10px;
-    margin-top: 25px;
-  }
-
-  #contest h2 {
-    font-size: 1.2em;
-  }
-
-  .contest-btn {
-    padding: 10px 18px;
-  }
 }
   </style>
 
@@ -175,6 +145,13 @@
     <button class="reset-button" id="reset">Очистить</button>
     <button class="submit-button" id="submit">Сохранить</button>
 
+     <section id="contest" class="centered-block">
+  <div class="contest-content">
+    <h2>Хэллоуинский Конкурс от MMM</h2>
+    <p>Отправь свой скин и заработай до 2000 РУБЛЕЙ</p>
+    <a href="https://t.me/MeatMakers/17" target="_blank" class="contest-btn">Участвовать</a>
+  </div>
+</section>
     <div class="reviews" id="reviews">
       <div class="loading">Загрузка рецензий...</div>
     </div>
@@ -513,12 +490,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 </script>
- <section id="contest" class="centered-block">
-  <div class="contest-content">
-    <h2>Хэллоуинский Конкурс от MMM</h2>
-    <p>Отправь свой скин и заработай до 2000 РУБЛЕЙ</p>
-    <a href="https://t.me/MeatMakers/17" target="_blank" class="contest-btn">Участвовать</a>
-  </div>
-</section>
+
 </body>
 </html>
