@@ -70,30 +70,64 @@
   border-radius: 16px;
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
 }
+#contest {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+  padding: 30px 15px;
+  background: linear-gradient(145deg, #0e0e0e, #181818);
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
+}
+
+.contest-content {
+  max-width: 500px;
+  text-align: center;
+}
 
 #contest h2 {
   color: #fff;
   margin-bottom: 10px;
-  font-size: 1.4em;
+  font-size: 1.5em;
 }
 
 #contest p {
-  color: #ccc;
-  margin-bottom: 15px;
+  color: #bbb;
+  margin-bottom: 20px;
+  line-height: 1.4;
 }
 
 .contest-btn {
   display: inline-block;
-  padding: 10px 20px;
-  background-color: #ff0066;
+  padding: 12px 24px;
+  background: #ff0066;
   color: #fff;
-  border-radius: 10px;
+  border-radius: 12px;
   text-decoration: none;
-  transition: 0.2s;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  transition: transform 0.2s, background 0.2s;
 }
 
 .contest-btn:hover {
-  background-color: #ff3399;
+  background: #ff3388;
+  transform: scale(1.05);
+}
+
+@media (max-width: 600px) {
+  #contest {
+    padding: 20px 10px;
+    margin-top: 25px;
+  }
+
+  #contest h2 {
+    font-size: 1.2em;
+  }
+
+  .contest-btn {
+    padding: 10px 18px;
+  }
 }
   </style>
 
@@ -479,10 +513,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 </script>
-  <section id="contest">
-  <h2>Хэлоуниский конкурс от MMM</h2>
-  <p>Отправь свой скин и получи шанс заработать до 2000 РУБЛЕЙ!</p>
-  <a href="https://t.me/MeatMakers/17" target="_blank" class="contest-btn">Участвовать</a>
+ <section id="contest" class="centered-block">
+  <div class="contest-content">
+    <h2>🎨 Конкурс от MMM</h2>
+    <p>Отправь свой скин и получи шанс попасть на обложку группы!</p>
+    <a href="https://t.me/MeatMakers/17" target="_blank" class="contest-btn">Участвовать</a>
+  </div>
 </section>
 </body>
 </html>
