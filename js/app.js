@@ -18,10 +18,16 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-/*
-  вставь сюда firebaseConfig из твоего index.html
-  если у тебя уже есть config в index.html — просто скопируй объект сюда
-*/
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
+  authDomain: "skinsrzt.firebaseapp.com",
+  projectId: "skinsrzt",
+  storageBucket: "skinsrzt.appspot.com",
+  messagingSenderId: "1084042281569",
+  appId: "1:1084042281569:web:25872944cf7dac7fd66020"
+};
+
 const firebaseConfig = {
   apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
   authDomain: "skinsrzt.firebaseapp.com",
