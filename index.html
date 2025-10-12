@@ -237,7 +237,27 @@ document.addEventListener('DOMContentLoaded', () => {
     calculateTotal();
   });
 
-  document.getElementById('submit').addEventListener('click', () => {
+document.getElementById('submit').addEventListener('click', async () => {
+  const title = document.getElementById('title').value.trim();
+  const text = document.getElementById('text').value.trim();
+  if (!title || !text) return alert('Введите заголовок и текст рецензии.');
+
+  const baseSum = values.line + values.palette + values.shade + values.style;
+  const scaled = baseSum * 1.4;
+  const multiplier = vibeMultiplier[values.vibe] || 1;
+  const total = Math.round(scaled * multiplier);
+
+  // 🟢 Сохраняем рецензию в Firebase
+  await addDoc(collection(db, "reviews"), {
+    title,
+    text,
+    total,
+    skin: viewer?.skinUrl || null,
+    createdAt: new Date()
+  });
+
+  alert("Рецензия сохранена!");
+});
     const title = document.getElementById('title').value.trim();
     const text = document.getElementById('text').value.trim();
     if (!title || !text) return alert('Введите заголовок и текст рецензии.');
@@ -263,6 +283,59 @@ document.addEventListener('DOMContentLoaded', () => {
   calculateTotal();
 });
 </script>
+  <script type="module">
+  // Firebase SDK
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+  const firebaseConfig = {
+    /// Import the functions you need from the SDKs you need
+
+import { initializeApp } from "firebase/app";
+
+import { getAnalytics } from "firebase/analytics";
+
+// TODO: Add SDKs for Firebase products that you want to use
+
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+
+// Your web app's Firebase configuration
+
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
+
+  authDomain: "skinsrzt.firebaseapp.com",
+
+  databaseURL: "https://skinsrzt-default-rtdb.firebaseio.com",
+
+  projectId: "skinsrzt",
+
+  storageBucket: "skinsrzt.firebasestorage.app",
+
+  messagingSenderId: "1084042281569",
+
+  appId: "1:1084042281569:web:25872944cf7dac7fd66020",
+
+  measurementId: "G-YSFQLYDWJC"
+
+};
+
+
+// Initialize Firebase
+
+const app = initializeApp(firebaseConfig);
+
+const analytics = getAnalytics(app);
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+</script>
+
 </body>
 </html>
 
