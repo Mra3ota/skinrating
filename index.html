@@ -99,6 +99,21 @@
   background-color: #ff3388;
   transform: scale(1.05);
 }
+    .disclaimer {
+  margin: 10px 0 16px 0;
+  background: #1e1e27;
+  border: 1px solid #2f2f3b;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #bbb;
+  font-size: 0.85em;
+  line-height: 1.5;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+.disclaimer b {
+  color: #ff4d4d;
+}
   </style>
 
 </head>
@@ -141,6 +156,12 @@
 
     <textarea id="title" placeholder="Заголовок рецензии" maxlength="200"></textarea>
     <textarea id="text" placeholder="Текст рецензии (до 8500 символов)" maxlength="8500"></textarea>
+  <p class="disclaimer">
+   <b>ДИСКЛЕЙМЕР!</b><br>
+  Все рецензии без осмысленного текста и оценки — а также состоящие из случайного набора букв,
+  оскорблений, шуток и т.д. — будут <b>удалены администрацией</b>.
+</p>
+
 
     <button class="reset-button" id="reset">Очистить</button>
     <button class="submit-button" id="submit">Сохранить</button>
