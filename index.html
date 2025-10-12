@@ -62,15 +62,50 @@
     .info-text { text-align:center; color:#888; font-size:0.85em; margin-top:8px; }
     .loading { text-align:center; color:#8a2be2; padding:20px; }
     .error { color:#f88; padding:10px; border-radius:6px; background:#2a1a2a; text-align:center; }
+    #contest {
+  margin-top: 40px;
+  padding: 20px;
+  text-align: center;
+  background-color: #111;
+  border-radius: 16px;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+}
+
+#contest h2 {
+  color: #fff;
+  margin-bottom: 10px;
+  font-size: 1.4em;
+}
+
+#contest p {
+  color: #ccc;
+  margin-bottom: 15px;
+}
+
+.contest-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #ff0066;
+  color: #fff;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.contest-btn:hover {
+  background-color: #ff3399;
+}
   </style>
+
 </head>
 <body>
   <div class="container">
     <header>
-      <img src="assets/МММ_ЛОГО_ОРИГИНАЛ.png" alt="Логотип" onerror="this.style.display='none'">
-      <h1>Оценка скина</h1>
-    </header>
-
+  <a href="https://t.me/MeatMakers" target="_blank">
+    <img src="assets/МММ_ЛОГО_ОРИГИНАЛ.png" alt="Логотип" onerror="this.style.display='none'">
+  </a>
+  <h1>Оценка скина</h1>
+</header>
     <div class="upload-section">
       <input type="file" id="skin-upload" accept="image/png" />
       <div class="info-text">Загрузите PNG файл скина (64x64 или 64x32)</div>
@@ -327,9 +362,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Показываем base64 скин напрямую, если он есть
-        if (r.skinData) {
-          reviewHTML += `<br><img src="${escapeHtml(r.skinData)}" class="skin-thumb" alt="Скин" onerror="this.style.display='none'"/>`;
-        }
+ if (r.skinData) {
+  const viewerId = `viewer_${doc.id}`;
+  reviewHTML += `<br><canvas id="${viewerId}" width="150" height="200" class="skin-thumb"></canvas>`;
+  setTimeout(() => {
+    try {
+      const viewer = new skinview3d.SkinViewer({
+        canvas: document.getElementById(viewerId),
+        width: 150,
+        height: 200,
+        skin: r.skinData
+      });
+      viewer.zoom = 0.9;
+      viewer.autoRotate = true;
+      const control = skinview3d.createOrbitControls(viewer);
+      control.enableZoom = false;
+      control.enableRotate = true;
+    } catch (e) {
+      console.error('Ошибка при создании 3D предпросмотра:', e);
+    }
+  }, 300);
+}
 
         reviewDiv.innerHTML = reviewHTML;
         container.appendChild(reviewDiv);
@@ -426,5 +479,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 </script>
+  <section id="contest">
+  <h2>Хэлоуниский конкурс от MMM</h2>
+  <p>Отправь свой скин и получи шанс заработать до 2000 РУБЛЕЙ!</p>
+  <a href="https://t.me/MeatMakers/17" target="_blank" class="contest-btn">Участвовать</a>
+</section>
 </body>
 </html>
