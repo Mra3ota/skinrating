@@ -26,17 +26,17 @@
     width: 100%;
     box-shadow: 0 0 30px rgba(0,0,0,0.4);
   }
-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 25px;
-}
-header img {
-  height: 80px;
-  width: auto;
+  header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 25px;
+  }
+  header img {
+    height: 80px;
+    width: auto;
   }
   header h1 {
     font-size: 1.9em;
@@ -137,53 +137,53 @@ header img {
   .review-item p { line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
   .review-item small { display: block; margin-top: 10px; color: #aaa; }
   .info-text { text-align: center; color: #888; font-size: 0.9em; margin-top: 10px; }
+  .review-item img { display: block; margin-top: 5px; border: 1px solid #2f2f3b; border-radius: 4px; }
 </style>
 </head>
 <body>
 <div class="container">
 
-<header style="flex-direction: column; gap: 45px;">
+<header>
   <img src="assets/МММ_ЛОГО_ОРИГИНАЛ.png" alt="Логотип группы">
   <h1>Оценка скина</h1>
+</header>
 
-  </header>
-
-  <div class="upload-section">
-    <div class="file-input-wrapper">
-      <input type="file" id="skin-upload" accept="image/png" />
-    </div>
-    <div class="info-text">Загрузите PNG файл скина (64x64 или 64x32)</div>
-    <canvas id="skin-viewer" width="300" height="400" class="skin-preview"></canvas>
+<div class="upload-section">
+  <div class="file-input-wrapper">
+    <input type="file" id="skin-upload" accept="image/png" />
   </div>
+  <div class="info-text">Загрузите PNG файл скина (64x64 или 64x32)</div>
+  <canvas id="skin-viewer" width="300" height="400" class="skin-preview"></canvas>
+</div>
 
-  <div class="criterion"><label for="line">Лайн / Образ <span id="line-value">5</span></label><input type="range" id="line" min="1" max="10" value="5"></div>
-  <div class="criterion"><label for="palette">Палитра <span id="palette-value">5</span></label><input type="range" id="palette" min="1" max="10" value="5"></div>
-  <div class="criterion"><label for="shade">Реализация / Шейд <span id="shade-value">5</span></label><input type="range" id="shade" min="1" max="10" value="5"></div>
-  <div class="criterion"><label for="style">Айдентика / Стилистика <span id="style-value">5</span></label><input type="range" id="style" min="1" max="10" value="5"></div>
-  <div class="criterion"><label for="vibe">Общее впечатление / Вайб <span id="vibe-value">5</span></label><input type="range" id="vibe" min="1" max="10" value="5"></div>
+<div class="criterion"><label for="line">Лайн / Образ <span id="line-value">5</span></label><input type="range" id="line" min="1" max="10" value="5"></div>
+<div class="criterion"><label for="palette">Палитра <span id="palette-value">5</span></label><input type="range" id="palette" min="1" max="10" value="5"></div>
+<div class="criterion"><label for="shade">Реализация / Шейд <span id="shade-value">5</span></label><input type="range" id="shade" min="1" max="10" value="5"></div>
+<div class="criterion"><label for="style">Айдентика / Стилистика <span id="style-value">5</span></label><input type="range" id="style" min="1" max="10" value="5"></div>
+<div class="criterion"><label for="vibe">Общее впечатление / Вайб <span id="vibe-value">5</span></label><input type="range" id="vibe" min="1" max="10" value="5"></div>
 
-  <div class="score-display" id="total">Итог: 25 / 90</div>
+<div class="score-display" id="total">Итог: 25 / 90</div>
 
-  <textarea id="title" placeholder="Заголовок рецензии"></textarea>
-  <textarea id="text" placeholder="Текст рецензии (до 8500 символов)"></textarea>
+<textarea id="title" placeholder="Заголовок рецензии"></textarea>
+<textarea id="text" placeholder="Текст рецензии (до 8500 символов)"></textarea>
 
-  <button class="reset-button" id="reset">Очистить</button>
-  <button class="submit-button" id="submit">Сохранить</button>
+<button class="reset-button" id="reset">Очистить</button>
+<button class="submit-button" id="submit">Сохранить</button>
 
-  <div class="reviews" id="reviews"></div>
+<div class="reviews" id="reviews"></div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const ranges = ['line', 'palette', 'shade', 'style', 'vibe'];
-  const values = { line: 5, palette: 5, shade: 5, style: 5, vibe: 5 };
-  const vibeMultiplier = { 1:1.0, 2:1.0675, 3:1.1349, 4:1.2024, 5:1.2699, 6:1.3373, 7:1.4048, 8:1.4723, 9:1.5397, 10:1.6072 };
+  const ranges = ['line','palette','shade','style','vibe'];
+  const values = {line:5,palette:5,shade:5,style:5,vibe:5};
+  const vibeMultiplier = {1:1,2:1.0675,3:1.1349,4:1.2024,5:1.2699,6:1.3373,7:1.4048,8:1.4723,9:1.5397,10:1.6072};
   let viewer;
 
   function calculateTotal() {
     const baseSum = values.line + values.palette + values.shade + values.style;
     const scaled = baseSum * 1.4;
-    const multiplier = vibeMultiplier[values.vibe] || 1;
+    const multiplier = vibeMultiplier[values.vibe];
     const total = Math.round(scaled * multiplier);
     document.getElementById('total').textContent = `Итог: ${total} / 90`;
   }
@@ -200,11 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('skin-upload').addEventListener('change', e => {
     const file = e.target.files[0];
-    if (file) {
+    if(file) {
       const reader = new FileReader();
       reader.onload = evt => {
         const skinDataUrl = evt.target.result;
-        if (!viewer) {
+        if(!viewer) {
           viewer = new skinview3d.SkinViewer({
             canvas: document.getElementById('skin-viewer'),
             width: 300,
@@ -212,8 +212,8 @@ document.addEventListener('DOMContentLoaded', () => {
             skin: skinDataUrl
           });
           viewer.zoom = 0.9;
-          viewer.autoRotate = false; 
-          viewer.animation = null;  
+          viewer.autoRotate = false;
+          viewer.animation = null;
         } else {
           viewer.loadSkin(skinDataUrl);
         }
@@ -223,119 +223,87 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('reset').addEventListener('click', () => {
-    ranges.forEach(id => {
-      values[id] = 5;
-      const input = document.getElementById(id);
-      const label = document.getElementById(`${id}-value`);
-      input.value = 5;
-      label.textContent = 5;
+    ranges.forEach(id=>{
+      values[id]=5;
+      document.getElementById(id).value=5;
+      document.getElementById(`${id}-value`).textContent=5;
     });
-    document.getElementById('title').value = '';
-    document.getElementById('text').value = '';
-    document.getElementById('skin-upload').value = '';
-    if (viewer) viewer.loadSkin('');
+    document.getElementById('title').value='';
+    document.getElementById('text').value='';
+    document.getElementById('skin-upload').value='';
+    if(viewer) viewer.loadSkin('');
     calculateTotal();
-  });
-
-document.getElementById('submit').addEventListener('click', async () => {
-  const title = document.getElementById('title').value.trim();
-  const text = document.getElementById('text').value.trim();
-  if (!title || !text) return alert('Введите заголовок и текст рецензии.');
-
-  const baseSum = values.line + values.palette + values.shade + values.style;
-  const scaled = baseSum * 1.4;
-  const multiplier = vibeMultiplier[values.vibe] || 1;
-  const total = Math.round(scaled * multiplier);
-
-  // 🟢 Сохраняем рецензию в Firebase
-  await addDoc(collection(db, "reviews"), {
-    title,
-    text,
-    total,
-    skin: viewer?.skinUrl || null,
-    createdAt: new Date()
-  });
-
-  alert("Рецензия сохранена!");
-});
-    const title = document.getElementById('title').value.trim();
-    const text = document.getElementById('text').value.trim();
-    if (!title || !text) return alert('Введите заголовок и текст рецензии.');
-    if (text.length > 8500) return alert('Текст рецензии не должен превышать 8500 символов.');
-
-    const baseSum = values.line + values.palette + values.shade + values.style;
-    const scaled = baseSum * 1.4;
-    const multiplier = vibeMultiplier[values.vibe] || 1;
-    const total = Math.round(scaled * multiplier);
-
-    const reviewDiv = document.createElement('div');
-    reviewDiv.classList.add('review-item');
-    const safeTitle = title.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const safeText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-    reviewDiv.innerHTML = `<h3>${safeTitle}</h3><p>${safeText}</p><small>Оценка: ${total} / 90 | Лайн: ${values.line} | Палитра: ${values.palette} | Шейд: ${values.shade} | Стиль: ${values.style} | Вайб: ${values.vibe}</small>`;
-    document.getElementById('reviews').prepend(reviewDiv);
-
-    document.getElementById('title').value = '';
-    document.getElementById('text').value = '';
   });
 
   calculateTotal();
 });
 </script>
-  <script type="module">
-  // Firebase SDK
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-  const firebaseConfig = {
-    /// Import the functions you need from the SDKs you need
-
-import { initializeApp } from "firebase/app";
-
-import { getAnalytics } from "firebase/analytics";
-
-// TODO: Add SDKs for Firebase products that you want to use
-
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-
-// Your web app's Firebase configuration
-
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+<!-- Firebase Module -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 const firebaseConfig = {
-
   apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
-
   authDomain: "skinsrzt.firebaseapp.com",
-
-  databaseURL: "https://skinsrzt-default-rtdb.firebaseio.com",
-
   projectId: "skinsrzt",
-
-  storageBucket: "skinsrzt.firebasestorage.app",
-
+  storageBucket: "skinsrzt.appspot.com",
   messagingSenderId: "1084042281569",
-
-  appId: "1:1084042281569:web:25872944cf7dac7fd66020",
-
-  measurementId: "G-YSFQLYDWJC"
-
+  appId: "1:1084042281569:web:25872944cf7dac7fd66020"
 };
 
-
-// Initialize Firebase
-
 const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-const analytics = getAnalytics(app);
+// Загрузка рецензий
+async function loadReviews() {
+  const q = query(collection(db,"reviews"), orderBy("createdAt","desc"));
+  const snapshot = await getDocs(q);
+  snapshot.forEach(doc=>{
+    const r = doc.data();
+    const reviewDiv = document.createElement('div');
+    reviewDiv.classList.add('review-item');
+    reviewDiv.innerHTML = `<h3>${r.title}</h3>
+      <p>${r.text}</p>
+      <small>Оценка: ${r.total} / 90</small>
+      ${r.skin ? `<img src="${r.skin}" width="50"/>` : ''}`;
+    document.getElementById('reviews').appendChild(reviewDiv);
+  });
+}
+loadReviews();
+
+// Сохранение рецензии
+document.getElementById('submit').addEventListener('click', async () => {
+  const title = document.getElementById('title').value.trim();
+  const text = document.getElementById('text').value.trim();
+  if(!title || !text) return alert("Введите заголовок и текст");
+
+  const values = {
+    line: parseInt(document.getElementById('line').value),
+    palette: parseInt(document.getElementById('palette').value),
+    shade: parseInt(document.getElementById('shade').value),
+    style: parseInt(document.getElementById('style').value),
+    vibe: parseInt(document.getElementById('vibe').value)
   };
+  const vibeMultiplier = {1:1,2:1.0675,3:1.1349,4:1.2024,5:1.2699,6:1.3373,7:1.4048,8:1.4723,9:1.5397,10:1.6072};
+  const total = Math.round((values.line + values.palette + values.shade + values.style)*1.4*vibeMultiplier[values.vibe]);
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  try {
+    await addDoc(collection(db,"reviews"),{
+      title,
+      text,
+      total,
+      skin: window.viewer?.skinUrl || null,
+      createdAt: new Date()
+    });
+    alert("Рецензия сохранена!");
+    location.reload(); // обновляем страницу, чтобы показать рецензии
+  } catch(err) {
+    console.error(err);
+    alert("Ошибка при сохранении!");
+  }
+});
 </script>
-
 </body>
 </html>
-
