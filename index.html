@@ -359,12 +359,18 @@ window.uploadedSkin = uploadedSkin;
     const total = Math.round((values.line + values.palette + values.shade + values.style)*1.4*vibeMultiplier[values.vibe]);
 
     try {
-      await addDoc(collection(db,"reviews"),{
-        title,
-        text,
-        total,
-        skin: window.uploadedSkin || null,
-        createdAt: serverTimestamp()
+    await addDoc(collection(db, "reviews"), {
+  title,
+  text,
+  total,
+  line: values.line,
+  palette: values.palette,
+  shade: values.shade,
+  style: values.style,
+  vibe: values.vibe,
+  skin: window.uploadedSkin || null,
+  createdAt: serverTimestamp()
+});
       });
       alert("Рецензия сохранена!");
       location.reload();
