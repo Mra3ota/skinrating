@@ -1,3 +1,4 @@
+николати, [12.10.2025 4:50]
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -47,13 +48,6 @@
       text-align: center;
       margin-bottom: 20px;
     }
-    .file-input-wrapper {
-      position: relative;
-      display: inline-block;
-      margin-bottom: 10px;
-      max-width: 100%;
-      overflow: hidden;
-    }
     input[type=file] {
       background: #1e1e27;
       border-radius: 8px;
@@ -86,9 +80,7 @@
       border-radius: 8px;
       background: repeating-conic-gradient(#2a2a35 0% 25%, #1e1e27 0% 50%) 50% / 20px 20px;
     }
-    .criterion {
-      margin-bottom: 15px;
-    }
+    .criterion { margin-bottom: 15px; }
     .criterion label {
       display: flex;
       justify-content: space-between;
@@ -159,51 +151,14 @@
       margin-bottom: 12px;
       border-left: 3px solid #8a2be2;
     }
-    .review-item h3 {
-      margin-top: 0;
-      color: #8a2be2;
-    }
-    .review-item p {
-      line-height: 1.5;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    .review-item small {
-      display: block;
-      margin-top: 8px;
-      color: #aaa;
-    }
+    .review-item h3 { margin-top: 0; color: #8a2be2; }
+    .criteria small { display: block; color: #ccc; }
     .review-item img {
-      display: block;
-      margin-top: 5px;
+      max-width: 120px;
+      margin-top: 10px;
+      border-radius: 8px;
       border: 1px solid #2f2f3b;
-      border-radius: 4px;
-      max-width: 80px;
     }
-    .info-text {
-      text-align: center;
-      color: #888;
-      font-size: 0.85em;
-      margin-top: 8px;
-    }
-    .criteria {
-  background: #1e1e27;
-  border-radius: 8px;
-  padding: 8px 10px;
-  margin: 10px 0;
-  font-size: 0.9em;
-  line-height: 1.6;
-}
-.criteria small {
-  display: block;
-  color: #ccc;
-}
-.review-item img {
-  max-width: 120px;
-  margin-top: 10px;
-  border-radius: 8px;
-  border: 1px solid #2f2f3b;
-}
   </style>
 </head>
 <body>
@@ -213,34 +168,18 @@
     <h1>Оценка скина</h1>
   </header>
 
-  <div class="upload-section">
-    <div class="file-input-wrapper">
-      <input type="file" id="skin-upload" accept="image/png" />
-    </div>
+николати, [12.10.2025 4:50]
+<div class="upload-section">
+    <input type="file" id="skin-upload" accept="image/png" />
     <div class="info-text">Загрузите PNG файл скина (64x64 или 64x32)</div>
     <canvas id="skin-viewer" class="skin-preview"></canvas>
   </div>
 
-  <div class="criterion">
-    <label for="line">Лайн / Образ <span id="line-value">5</span></label>
-    <input type="range" id="line" min="1" max="10" value="5">
-  </div>
-  <div class="criterion">
-    <label for="palette">Палитра <span id="palette-value">5</span></label>
-    <input type="range" id="palette" min="1" max="10" value="5">
-  </div>
-  <div class="criterion">
-    <label for="shade">Реализация / Шейд <span id="shade-value">5</span></label>
-    <input type="range" id="shade" min="1" max="10" value="5">
-  </div>
-  <div class="criterion">
-    <label for="style">Айдентика / Стилистика <span id="style-value">5</span></label>
-    <input type="range" id="style" min="1" max="10" value="5">
-  </div>
-  <div class="criterion">
-    <label for="vibe">Общее впечатление / Вайб <span id="vibe-value">5</span></label>
-    <input type="range" id="vibe" min="1" max="10" value="5">
-  </div>
+  <div class="criterion"><label for="line">Лайн / Образ <span id="line-value">5</span></label><input type="range" id="line" min="1" max="10" value="5"></div>
+  <div class="criterion"><label for="palette">Палитра <span id="palette-value">5</span></label><input type="range" id="palette" min="1" max="10" value="5"></div>
+  <div class="criterion"><label for="shade">Реализация / Шейд <span id="shade-value">5</span></label><input type="range" id="shade" min="1" max="10" value="5"></div>
+  <div class="criterion"><label for="style">Айдентика / Стилистика <span id="style-value">5</span></label><input type="range" id="style" min="1" max="10" value="5"></div>
+  <div class="criterion"><label for="vibe">Общее впечатление / Вайб <span id="vibe-value">5</span></label><input type="range" id="vibe" min="1" max="10" value="5"></div>
 
   <div class="score-display" id="total">Итог: 25 / 90</div>
 
@@ -260,19 +199,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const vibeMultiplier = {1:1,2:1.0675,3:1.1349,4:1.2024,5:1.2699,6:1.3373,7:1.4048,8:1.4723,9:1.5397,10:1.6072};
   let viewer;
   let uploadedSkin = null;
-  window.uploadedSkin = null;
 
   function calculateTotal() {
     const baseSum = values.line + values.palette + values.shade + values.style;
     const scaled = baseSum * 1.4;
     const multiplier = vibeMultiplier[values.vibe];
     const total = Math.round(scaled * multiplier);
-    document.getElementById('total').textContent = `Итог: ${total} / 90`;
+    document.getElementById('total').textContent = Итог: ${total} / 90;
   }
 
   ranges.forEach(id => {
     const input = document.getElementById(id);
-    const label = document.getElementById(`${id}-value`);
+    const label = document.getElementById(${id}-value);
     input.addEventListener('input', () => {
       values[id] = parseInt(input.value);
       label.textContent = input.value;
@@ -280,13 +218,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  const savedSkin = localStorage.getItem("lastSkin");
+  if (savedSkin) {
+    uploadedSkin = savedSkin;
+    window.uploadedSkin = savedSkin;
+    viewer = new skinview3d.SkinViewer({
+      canvas: document.getElementById('skin-viewer'),
+      width: 300,
+      height: 400,
+      skin: savedSkin
+    });
+    viewer.zoom = 0.9;
+    viewer.autoRotate = false;
+  }
+
   document.getElementById('skin-upload').addEventListener('change', e => {
     const file = e.target.files[0];
     if(file) {
       const reader = new FileReader();
       reader.onload = evt => {
-     uploadedSkin = evt.target.result;
-window.uploadedSkin = uploadedSkin;
+        uploadedSkin = evt.target.result;
+        window.uploadedSkin = uploadedSkin;
+        localStorage.setItem("lastSkin", uploadedSkin);
         if(!viewer) {
           viewer = new skinview3d.SkinViewer({
             canvas: document.getElementById('skin-viewer'),
@@ -308,12 +261,13 @@ window.uploadedSkin = uploadedSkin;
     ranges.forEach(id=>{
       values[id]=5;
       document.getElementById(id).value=5;
-      document.getElementById(`${id}-value`).textContent=5;
+      document.getElementById(${id}-value).textContent=5;
     });
     document.getElementById('title').value='';
     document.getElementById('text').value='';
     document.getElementById('skin-upload').value='';
     uploadedSkin = null;
+    localStorage.removeItem("lastSkin");
     calculateTotal();
   });
 
@@ -321,17 +275,13 @@ window.uploadedSkin = uploadedSkin;
 });
 </script>
 
+николати, [12.10.2025 4:50]
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { 
-    getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp 
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-  import { 
-    getStorage, ref, uploadString, getDownloadURL 
-  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
-  // --- Firebase конфигурация ---
   const firebaseConfig = {
     apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
     authDomain: "skinsrzt.firebaseapp.com",
@@ -347,7 +297,6 @@ window.uploadedSkin = uploadedSkin;
   const db = getFirestore(app);
   const storage = getStorage(app);
 
-  // --- Загрузка отзывов из Firestore ---
   async function loadReviews() {
     const container = document.getElementById('reviews');
     container.innerHTML = '';
@@ -376,7 +325,6 @@ window.uploadedSkin = uploadedSkin;
   }
   loadReviews();
 
-  // --- Сохранение новой рецензии ---
   document.getElementById('submit').addEventListener('click', async () => {
     const title = document.getElementById('title').value.trim();
     const text = document.getElementById('text').value.trim();
@@ -395,7 +343,6 @@ window.uploadedSkin = uploadedSkin;
 
     let skinUrl = null;
     try {
-      // если скин загружен — отправляем в Firebase Storage
       if (window.uploadedSkin) {
         const skinId = crypto.randomUUID();
         const skinRef = ref(storage, skins/${skinId}.png);
@@ -403,16 +350,11 @@ window.uploadedSkin = uploadedSkin;
         skinUrl = await getDownloadURL(skinRef);
       }
 
-      // сохраняем рецензию в Firestore
       await addDoc(collection(db, "reviews"), {
         title,
         text,
         total,
-        line: values.line,
-        palette: values.palette,
-        shade: values.shade,
-        style: values.style,
-        vibe: values.vibe,
+        ...values,
         skinUrl,
         createdAt: serverTimestamp()
       });
