@@ -306,8 +306,14 @@ window.uploadedSkin = uploadedSkin;
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { 
+    getFirestore, collection, addDoc, getDocs, query, orderBy, serverTimestamp 
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { 
+    getStorage, ref, uploadString, getDownloadURL 
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
+  // --- Firebase конфигурация ---
   const firebaseConfig = {
     apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
     authDomain: "skinsrzt.firebaseapp.com",
@@ -321,32 +327,42 @@ window.uploadedSkin = uploadedSkin;
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+  const storage = getStorage(app);
 
-  // Загружаем отзывы
+  // --- Загрузка отзывов из Firestore ---
   async function loadReviews() {
-    const q = query(collection(db,"reviews"), orderBy("createdAt","desc"));
+    const container = document.getElementById('reviews');
+    container.innerHTML = '';
+    const q = query(collection(db, "reviews"), orderBy("createdAt", "desc"));
     const snapshot = await getDocs(q);
-    snapshot.forEach(doc=>{
+    snapshot.forEach(doc => {
       const r = doc.data();
       const reviewDiv = document.createElement('div');
       reviewDiv.classList.add('review-item');
-      reviewDiv.innerHTML = `
+      reviewDiv.innerHTML = 
         <h3>${r.title}</h3>
         <p>${r.text}</p>
-        <small>Оценка: ${r.total} / 90</small>
-        ${r.createdAt ? `<small>${r.createdAt.toDate().toLocaleString()}</small>` : ""}
-        ${r.skin ? `<img src="${r.skin}" />` : ''}
-      `;
-      document.getElementById('reviews').appendChild(reviewDiv);
+        <div class="criteria">
+          <small>Лайн / Образ: ${r.line ?? '-'}</small>
+          <small>Палитра: ${r.palette ?? '-'}</small>
+          <small>Реализация / Шейд: ${r.shade ?? '-'}</small>
+          <small>Айдентика / Стилистика: ${r.style ?? '-'}</small>
+          <small>Общее впечатление / Вайб: ${r.vibe ?? '-'}</small>
+        </div>
+        <small><b>Итоговая оценка:</b> ${r.total ?? '-'} / 90</small><br>
+        ${r.createdAt ? <small>${r.createdAt.toDate().toLocaleString()}</small> : ""}
+        ${r.skinUrl ? <img src="${r.skinUrl}" /> : ""}
+      ;
+      container.appendChild(reviewDiv);
     });
   }
   loadReviews();
 
-  // Сохраняем отзыв
+  // --- Сохранение новой рецензии ---
   document.getElementById('submit').addEventListener('click', async () => {
     const title = document.getElementById('title').value.trim();
     const text = document.getElementById('text').value.trim();
-    if (!title || !text) return alert("Введите заголовок и текст");
+    if (!title || !text) return alert("Введите заголовок и текст рецензии");
 
     const values = {
       line: parseInt(document.getElementById('line').value),
@@ -355,28 +371,40 @@ window.uploadedSkin = uploadedSkin;
       style: parseInt(document.getElementById('style').value),
       vibe: parseInt(document.getElementById('vibe').value)
     };
-    const vibeMultiplier = {1:1,2:1.0675,3:1.1349,4:1.2024,5:1.2699,6:1.3373,7:1.4048,8:1.4723,9:1.5397,10:1.6072};
-    const total = Math.round((values.line + values.palette + values.shade + values.style)*1.4*vibeMultiplier[values.vibe]);
 
- try {
-  await addDoc(collection(db, "reviews"), {
-    title,
-    text,
-    total,
-    line: values.line,
-    palette: values.palette,
-    shade: values.shade,
-    style: values.style,
-    vibe: values.vibe,
-    skin: window.uploadedSkin || null,
-    createdAt: serverTimestamp()
-  });
-  alert("Рецензия сохранена!");
-  location.reload();
-} catch (err) {
-  console.error(err);
-  alert("Ошибка при сохранении!");
-}
+    const vibeMultiplier = {1:1,2:1.0675,3:1.1349,4:1.2024,5:1.2699,6:1.3373,7:1.4048,8:1.4723,9:1.5397,10:1.6072};
+    const total = Math.round((values.line + values.palette + values.shade + values.style) * 1.4 * vibeMultiplier[values.vibe]);
+
+    let skinUrl = null;
+    try {
+      // если скин загружен — отправляем в Firebase Storage
+      if (window.uploadedSkin) {
+        const skinId = crypto.randomUUID();
+        const skinRef = ref(storage, skins/${skinId}.png);
+        await uploadString(skinRef, window.uploadedSkin, 'data_url');
+        skinUrl = await getDownloadURL(skinRef);
+      }
+
+      // сохраняем рецензию в Firestore
+      await addDoc(collection(db, "reviews"), {
+        title,
+        text,
+        total,
+        line: values.line,
+        palette: values.palette,
+        shade: values.shade,
+        style: values.style,
+        vibe: values.vibe,
+        skinUrl,
+        createdAt: serverTimestamp()
+      });
+
+      alert("✅ Рецензия успешно сохранена!");
+      location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("❌ Ошибка при сохранении рецензии!");
+    }
   });
 </script>
 </body>
