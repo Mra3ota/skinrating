@@ -242,6 +242,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const vibeMultiplier = {1:1,2:1.0675,3:1.1349,4:1.2024,5:1.2699,6:1.3373,7:1.4048,8:1.4723,9:1.5397,10:1.6072};
   let viewer;
   let uploadedSkin = null;
+  window.uploadedSkin = null;
 
   function calculateTotal() {
     const baseSum = values.line + values.palette + values.shade + values.style;
@@ -266,7 +267,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if(file) {
       const reader = new FileReader();
       reader.onload = evt => {
-        uploadedSkin = evt.target.result;
+     uploadedSkin = evt.target.result;
+window.uploadedSkin = uploadedSkin;
         if(!viewer) {
           viewer = new skinview3d.SkinViewer({
             canvas: document.getElementById('skin-viewer'),
