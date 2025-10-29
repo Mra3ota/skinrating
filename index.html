@@ -803,7 +803,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetWidth = Math.max(220, Math.min(isMobile ? 360 : 420, parentWidth));
                 const targetHeight = Math.round(targetWidth * 1.35);
                 off.width = targetWidth; off.height = targetHeight;
-                const v = new skinview3d.SkinViewer({ canvas: off, width: targetWidth, height: targetHeight, skin: r.skinData });
+                // Создаём viewer с буфером, чтобы toDataURL работал стабильно
+                const v = new skinview3d.SkinViewer({ canvas: off, width: targetWidth, height: targetHeight, preserveDrawingBuffer: true });
+                // Непрозрачный фон, иначе может казаться пустым
+                try { v.renderer.setClearColor(0x15151c, 1); } catch(_) {}
+                // Явно ждём загрузки скина
+                try { await v.loadSkin(r.skinData); } catch(_) { /* оставим заглушку */ }
                 v.zoom = 0.95; v.autoRotate = false;
                 try {
                   const walk = new skinview3d.WalkingAnimation(v);
@@ -812,7 +817,8 @@ document.addEventListener('DOMContentLoaded', () => {
                   v.camera.position.set(0, 24, 46);
                   v.camera.lookAt(0, 18, 0);
                 } catch(e) { try { v.playerObject.rotation.y = -0.4; } catch(_) {} }
-                await new Promise(res => setTimeout(res, 140));
+                // Дожидаемся пары кадров рендера, чтобы текстуры гарантированно применились
+                await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
                 img.src = off.toDataURL('image/png');
                 try { v.dispose(); } catch(e){}
               } catch(e) {
