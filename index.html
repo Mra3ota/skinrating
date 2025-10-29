@@ -76,7 +76,7 @@
     .review-item { display:flex; gap:16px; align-items:flex-start; }
     .review-body { flex: 1 1 60%; }
     .review-preview { flex: 1 1 40%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
-    .review-preview .skin-thumb { display:block; width: 220px; height: 220px; object-fit: contain; margin: 0 auto; border:1px solid transparent; border-radius:12px; background:
+    .review-preview .skin-thumb { display:block; width: 385px; height: 385px; object-fit: contain; margin: 0 auto; border:1px solid transparent; border-radius:12px; background:
       linear-gradient(#1b1b23,#1b1b23) padding-box,
       var(--grad) border-box; }
     .review-hint { color:#888; font-size:0.8em; margin-top:6px; }
@@ -788,8 +788,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const off = document.createElement('canvas');
                 // динамический рендер под ширину правой колонки
                 const targetEl = document.getElementById(`viewer_${doc.id}`);
-                const targetWidth = Math.max(220, Math.min(420, (targetEl?.parentElement?.clientWidth || 260)));
-                const targetHeight = Math.round(targetWidth * 1.25);
+                const targetWidth = Math.max(385, Math.min(560, (targetEl?.parentElement?.clientWidth || 400)));
+                const targetHeight = targetWidth; // квадратный кадр под увеличенную рамку
                 off.width = targetWidth; off.height = targetHeight;
                 const v = new skinview3d.SkinViewer({ canvas: off, width: targetWidth, height: targetHeight, skin: r.skinData });
                 v.zoom = 0.95; v.autoRotate = false;
