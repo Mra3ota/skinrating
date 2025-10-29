@@ -76,14 +76,15 @@
     .review-item { display:flex; gap:16px; align-items:flex-start; }
     .review-body { flex: 1 1 60%; }
     .review-preview { flex: 1 1 40%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
-    /* Превью скина в правой колонке: не квадратное, адаптивное */
-    .review-preview .skin-thumb { display:block; width: 385px; height: auto; max-height: 560px; object-fit: contain; margin: 0 auto; border:1px solid transparent; border-radius:12px; background:
+    /* Превью скина в правой колонке: не квадратное, адаптивное (уменьшено ~в 1.5 раза) */
+    .review-preview .skin-thumb { display:block; width: clamp(220px, 35vw, 256px); height: auto; max-height: 360px; object-fit: contain; margin: 0 auto; border:1px solid transparent; border-radius:12px; background:
       linear-gradient(#1b1b23,#1b1b23) padding-box,
       var(--grad) border-box; }
     .review-hint { color:#888; font-size:0.8em; margin-top:6px; }
     @media (max-width: 720px) {
       .review-item { flex-direction:column; }
       .review-preview { order: -1; }
+      .review-preview .skin-thumb { width: clamp(200px, 85vw, 320px); max-height: 300px; }
     }
     .criteria { background:#1e1e27; border-radius:8px; padding:8px 10px; margin:10px 0; font-size:0.9em; line-height:1.6; }
     .criteria small { display:block; color:#ccc; }
@@ -768,51 +769,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Всегда используем статичное 3D‑превью (снимок кадра SkinViewer),
         // а полноэкранное 3D показываем в модалке по клику
-        if (r.skinData) {
-          const viewerId = `viewer_${doc.id}`;
-          // добавим IMG и подсказку в колонку превью
-          reviewHTML = reviewHTML.replace('<div class="review-preview">\n            <!-- preview вставится ниже -->', `<div class=\"review-preview\">\n            <img id=\"${viewerId}\" alt=\"skin\" class=\"skin-thumb\" style=\"opacity:0.95;\">\n            <div class=\"review-hint\">Нажмите на скин для просмотра</div>`);
-        }
+        // IMG добавим программно после вставки шаблона
 
         reviewDiv.innerHTML = reviewHTML;
         container.appendChild(reviewDiv);
-        // Привяжем клик по превью (canvas или img)
+
+        // Добавляем IMG в колонку превью программно (надёжнее, чем через string.replace)
         if (r.skinData) {
-          const el = document.getElementById(`viewer_${doc.id}`);
-          if (el) {
-            el.style.cursor = 'pointer';
-            el.addEventListener('click', () => {
-              if (window.openSkinModal) window.openSkinModal(r.skinData);
-            });
-            // Показываем исходный скин сразу, чтобы не оставался пустой квадрат
-            try { el.src = r.skinData; } catch(_) {}
+          const previewCol = reviewDiv.querySelector('.review-preview');
+          if (previewCol) {
+            const img = document.createElement('img');
+            img.className = 'skin-thumb';
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            img.alt = 'skin';
+            img.style.opacity = '0.95';
+            // мгновенная заглушка — исходный skinData
+            try { img.src = r.skinData; } catch(_) {}
+            img.addEventListener('click', () => { if (window.openSkinModal) window.openSkinModal(r.skinData); });
+            const hint = document.createElement('div');
+            hint.className = 'review-hint';
+            hint.textContent = 'Нажмите на скин для просмотра';
+            previewCol.appendChild(img);
+            previewCol.appendChild(hint);
+
             // Генерация статичного 3D‑кадра в очереди, чтобы не перегружать устройство
             window.mobilePreviewQueue = (window.mobilePreviewQueue || Promise.resolve()).then(async () => {
               try {
                 const off = document.createElement('canvas');
-                // динамический рендер под ширину правой колонки
-                const targetEl = document.getElementById(`viewer_${doc.id}`);
-                const targetWidth = Math.max(385, Math.min(560, (targetEl?.parentElement?.clientWidth || 400)));
-                // Делаем превью не квадратным (чуть выше ширины)
+                // динамический рендер под ширину родителя, но меньше на мобилках
+                const parentWidth = previewCol.clientWidth || 400;
+                const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+                const targetWidth = Math.max(220, Math.min(isMobile ? 360 : 420, parentWidth));
                 const targetHeight = Math.round(targetWidth * 1.35);
                 off.width = targetWidth; off.height = targetHeight;
                 const v = new skinview3d.SkinViewer({ canvas: off, width: targetWidth, height: targetHeight, skin: r.skinData });
                 v.zoom = 0.95; v.autoRotate = false;
-                // Задаём позу "шаг" и ждём кадр
                 try {
                   const walk = new skinview3d.WalkingAnimation(v);
                   walk.speed = 1.0; walk.paused = true; walk.progress = 0.30;
-                  // Ракурс ближе к фронту, как на NameMC
                   v.playerObject.rotation.y = -0.4;
                   v.camera.position.set(0, 24, 46);
                   v.camera.lookAt(0, 18, 0);
                 } catch(e) { try { v.playerObject.rotation.y = -0.4; } catch(_) {} }
                 await new Promise(res => setTimeout(res, 140));
-                el.src = off.toDataURL('image/png');
+                img.src = off.toDataURL('image/png');
                 try { v.dispose(); } catch(e){}
               } catch(e) {
-                // Если рендер не удался, оставляем исходную картинку
-                try { el.src = r.skinData; } catch(_) {}
+                // fallback: оставляем исходный skinData
+                try { img.src = r.skinData; } catch(_) {}
               }
             });
           }
