@@ -74,9 +74,9 @@
     .review-item { background:#1b1b23; border-radius:8px; padding:12px; margin-bottom:12px; border-left:3px solid var(--accent); }
     .review-item h3 { margin-top:0; color:#8a2be2; }
     .review-item { display:flex; gap:16px; align-items:flex-start; }
-    .review-body { flex: 1 1 auto; }
-    .review-preview { flex: 0 0 180px; text-align:center; }
-    .review-preview .skin-thumb { width:150px; height:auto; }
+    .review-body { flex: 1 1 60%; }
+    .review-preview { flex: 1 1 40%; text-align:center; }
+    .review-preview .skin-thumb { width:100%; height:auto; max-width:100%; }
     .review-hint { color:#888; font-size:0.8em; margin-top:6px; }
     @media (max-width: 720px) {
       .review-item { flex-direction:column; }
@@ -102,12 +102,10 @@
       box-shadow: 0 0 10px rgba(138,43,226,0.15);
     }
 
-    /* Preview gradient border (square) */
-    .review-preview { order:-1; flex: 0 0 260px; text-align:center; }
-    .thumb-wrap { width:100%; aspect-ratio:1/1; border:1px solid transparent; border-radius:14px; background:
+    /* Preview border gradient */
+    .review-preview .skin-thumb { border:1px solid transparent; border-radius:10px; background:
       linear-gradient(#1b1b23,#1b1b23) padding-box,
-      var(--grad) border-box; display:flex; align-items:center; justify-content:center; }
-    .thumb-wrap img { width:92%; height:92%; object-fit:contain; border-radius:8px; }
+      var(--grad) border-box; }
     /* Фиксированная панель авторизации справа */
     @media (min-width: 1100px) {
       body.with-auth-sidebar { padding-right: 340px; }
@@ -183,7 +181,6 @@
   </a>
   <h1>Оценка скина</h1>
 </header>
-    
     <section class="auth" id="auth-section" style="margin:10px 0 16px 0; background:#1e1e27; border:1px solid #2f2f3b; border-radius:10px; padding:10px 14px; position:fixed; right:20px; top:20px; width:300px; z-index:1000;">
       <div id="auth-status" class="info-text" style="margin-bottom:8px;">Вы не вошли. Войдите или зарегистрируйтесь, чтобы сохранять рецензии.</div>
       <div id="auth-controls" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
@@ -757,8 +754,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <small><b>Итоговая оценка:</b> ${r.total ?? '-'} / 90</small>
           </div>
           <div class="review-preview">
-            <div class="thumb-wrap"><img id="__placeholder__" alt="skin" class="skin-thumb"></div>
-            <div class="review-hint">Нажмите на скин для просмотра</div>
+            <!-- preview вставится ниже -->
           </div>
         `;
 
@@ -770,8 +766,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // а полноэкранное 3D показываем в модалке по клику
         if (r.skinData) {
           const viewerId = `viewer_${doc.id}`;
-          // заменим плейсхолдер на реальный id
-          reviewHTML = reviewHTML.replace('__placeholder__', viewerId);
+          // добавим IMG и подсказку в колонку превью
+          reviewHTML = reviewHTML.replace('<div class="review-preview">\n            <!-- preview вставится ниже -->', `<div class=\"review-preview\">\n            <img id=\"${viewerId}\" alt=\"skin\" class=\"skin-thumb\" style=\"width:150px; height:auto; opacity:0.95;\">\n            <div class=\"review-hint\">Нажмите на скин для просмотра</div>`);
         }
 
         reviewDiv.innerHTML = reviewHTML;
@@ -788,18 +784,22 @@ document.addEventListener('DOMContentLoaded', () => {
             window.mobilePreviewQueue = (window.mobilePreviewQueue || Promise.resolve()).then(async () => {
               try {
                 const off = document.createElement('canvas');
-                off.width = 220; off.height = 220;
-                const v = new skinview3d.SkinViewer({ canvas: off, width: 220, height: 220, skin: r.skinData });
+                // динамический рендер под ширину правой колонки
+                const targetEl = document.getElementById(`viewer_${doc.id}`);
+                const targetWidth = Math.max(220, Math.min(420, (targetEl?.parentElement?.clientWidth || 260)));
+                const targetHeight = Math.round(targetWidth * 1.25);
+                off.width = targetWidth; off.height = targetHeight;
+                const v = new skinview3d.SkinViewer({ canvas: off, width: targetWidth, height: targetHeight, skin: r.skinData });
                 v.zoom = 0.95; v.autoRotate = false;
                 // Задаём позу "шаг" и ждём кадр
                 try {
                   const walk = new skinview3d.WalkingAnimation(v);
-                  walk.speed = 1.0; walk.paused = true; walk.progress = 0.28;
-                  // Ракурс как на NameMC: сильный поворот влево и немного сверху
-                  v.playerObject.rotation.y = -1.2;
-                  v.camera.position.set(0, 26, 42);
+                  walk.speed = 1.0; walk.paused = true; walk.progress = 0.30;
+                  // Ракурс ближе к фронту, как на NameMC
+                  v.playerObject.rotation.y = -0.4;
+                  v.camera.position.set(0, 24, 46);
                   v.camera.lookAt(0, 18, 0);
-                } catch(e) { try { v.playerObject.rotation.y = -0.6; } catch(_) {} }
+                } catch(e) { try { v.playerObject.rotation.y = -0.4; } catch(_) {} }
                 await new Promise(res => setTimeout(res, 140));
                 el.src = off.toDataURL('image/png');
                 try { v.dispose(); } catch(e){}
@@ -854,7 +854,9 @@ document.addEventListener('DOMContentLoaded', () => {
     modalOverlay.style.display = 'flex';
     try {
       modalViewer = new skinview3d.SkinViewer({ canvas: modalCanvas, width: modalCanvas.width, height: modalCanvas.height, skin: skinData });
-      modalViewer.zoom = 0.9; modalViewer.autoRotate = true;
+      modalViewer.zoom = 0.95; modalViewer.autoRotate = false;
+      // Ходьба в модалке
+      try { const walk = new skinview3d.WalkingAnimation(modalViewer); walk.speed = 1.0; } catch(e) {}
       const control = skinview3d.createOrbitControls(modalViewer);
       control.enableZoom = true; control.enableRotate = true;
     } catch(e) { console.error('Не удалось открыть модальное превью', e); }
