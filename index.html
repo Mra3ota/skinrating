@@ -125,6 +125,17 @@
   </a>
   <h1>Оценка скина</h1>
 </header>
+    <section class="auth" id="auth-section" style="margin:10px 0 16px 0; background:#1e1e27; border:1px solid #2f2f3b; border-radius:10px; padding:10px 14px;">
+      <div id="auth-status" class="info-text" style="margin-bottom:8px;">Вы не вошли. Войдите или зарегистрируйтесь, чтобы сохранять рецензии.</div>
+      <div id="auth-controls" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <input id="auth-email" type="email" placeholder="Email" style="flex:1; min-width:180px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
+        <input id="auth-password" type="password" placeholder="Пароль" style="flex:1; min-width:140px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
+        <button id="auth-login" class="submit-button" style="margin-right:0;">Войти</button>
+        <button id="auth-register" class="reset-button" style="margin-right:0;">Регистрация</button>
+        <button id="auth-logout" class="reset-button" style="display:none; margin-right:0;">Выйти</button>
+      </div>
+      <div id="auth-error" class="error" style="display:none; margin-top:8px;"></div>
+    </section>
     <div class="upload-section">
       <input type="file" id="skin-upload" accept="image/png" />
       <div class="info-text">Загрузите PNG файл скина (64x64 или 64x32)</div>
@@ -156,6 +167,9 @@
 
     <textarea id="title" placeholder="Заголовок рецензии" maxlength="200"></textarea>
     <textarea id="text" placeholder="Текст рецензии (до 8500 символов)" maxlength="8500"></textarea>
+    <div id="text-warning" class="info-text" style="display:none; text-align:left; margin-top:-6px;">
+      Минимум 30 символов в тексте рецензии.
+    </div>
   <p class="disclaimer">
    <b>ДИСКЛЕЙМЕР!</b><br>
   Все рецензии без осмысленного текста и оценки — а также состоящие из случайного набора букв,
@@ -164,7 +178,7 @@
 
 
     <button class="reset-button" id="reset">Очистить</button>
-    <button class="submit-button" id="submit">Сохранить</button>
+    <button class="submit-button" id="submit" disabled>Сохранить</button>
 
      <section id="contest" class="centered-block">
   <div class="contest-content">
@@ -192,6 +206,35 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Делаем uploadedSkin доступным глобально для Firebase
   window.uploadedSkin = null;
+
+    // Элементы формы и управление доступностью кнопки "Сохранить"
+    const submitBtn = document.getElementById('submit');
+    const titleEl = document.getElementById('title');
+    const textEl = document.getElementById('text');
+    const textWarning = document.getElementById('text-warning');
+    const MIN_TEXT_LEN = 30;
+
+    function isNonEmpty(str) {
+      return !!(str && String(str).trim().length > 0);
+    }
+
+    function updateSubmitState() {
+      const hasSkin = !!window.uploadedSkin;
+      const hasTitle = isNonEmpty(titleEl?.value);
+      const textVal = textEl?.value || '';
+      const hasText = isNonEmpty(textVal);
+      const textLongEnough = textVal.trim().length >= MIN_TEXT_LEN;
+      const isAuthed = !!window.currentUserUid;
+
+      if (textWarning) {
+        textWarning.style.display = (!textLongEnough ? 'block' : 'none');
+      }
+
+      if (submitBtn) submitBtn.disabled = !(hasSkin && hasTitle && hasText && textLongEnough && isAuthed);
+    }
+
+    // Делаем доступным для модуля (Auth) вызывать пересчёт состояния
+    window.updateSubmitState = updateSubmitState;
 
   function calculateTotal() {
     const baseSum = Number(values.line) + Number(values.palette) + Number(values.shade) + Number(values.style);
@@ -248,6 +291,9 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         console.error('Ошибка при загрузке скина:', err);
       }
+
+      // Обновляем доступность кнопки после успешной загрузки скина
+      updateSubmitState();
     };
     
     reader.onerror = () => {
@@ -288,9 +334,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     calculateTotal();
+
+    // После сброса снова блокируем кнопку сохранения
+    updateSubmitState();
   });
 
   calculateTotal();
+  
+  // Отслеживаем ввод текста для включения/выключения кнопки
+  if (titleEl) titleEl.addEventListener('input', updateSubmitState);
+  if (textEl) textEl.addEventListener('input', updateSubmitState);
+  
+  // Устанавливаем корректное начальное состояние кнопки
+  updateSubmitState();
 });
 </script>
 
@@ -308,6 +364,13 @@ document.addEventListener('DOMContentLoaded', () => {
     serverTimestamp,
     limit
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
@@ -319,14 +382,94 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Инициализация Firebase (только Firestore)
-  let app, db;
+  let app, db, auth;
   try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
+    auth = getAuth(app);
   } catch (err) {
     console.error("Ошибка инициализации Firebase:", err);
     document.getElementById('reviews').innerHTML = '<div class="error">Не удалось инициализировать базу данных.</div>';
   }
+
+  // Элементы Auth UI
+  const authStatus = document.getElementById('auth-status');
+  const authError = document.getElementById('auth-error');
+  const authEmail = document.getElementById('auth-email');
+  const authPassword = document.getElementById('auth-password');
+  const authLoginBtn = document.getElementById('auth-login');
+  const authRegisterBtn = document.getElementById('auth-register');
+  const authLogoutBtn = document.getElementById('auth-logout');
+  const authControls = document.getElementById('auth-controls');
+
+  function setAuthError(message) {
+    if (!authError) return;
+    if (message) {
+      authError.textContent = message;
+      authError.style.display = 'block';
+    } else {
+      authError.textContent = '';
+      authError.style.display = 'none';
+    }
+  }
+
+  // Следим за состоянием входа
+  if (auth) {
+    onAuthStateChanged(auth, (user) => {
+      window.currentUserUid = user ? user.uid : null;
+      if (user) {
+        if (authStatus) authStatus.textContent = `Вход выполнен: ${user.email || 'пользователь'}`;
+        if (authLogoutBtn) authLogoutBtn.style.display = 'inline-block';
+        if (authLoginBtn) authLoginBtn.style.display = 'inline-block';
+        if (authRegisterBtn) authRegisterBtn.style.display = 'inline-block';
+        if (authEmail) authEmail.style.display = 'none';
+        if (authPassword) authPassword.style.display = 'none';
+      } else {
+        if (authStatus) authStatus.textContent = 'Вы не вошли. Войдите или зарегистрируйтесь, чтобы сохранять рецензии.';
+        if (authLogoutBtn) authLogoutBtn.style.display = 'none';
+        if (authLoginBtn) authLoginBtn.style.display = 'inline-block';
+        if (authRegisterBtn) authRegisterBtn.style.display = 'inline-block';
+        if (authEmail) authEmail.style.display = 'inline-block';
+        if (authPassword) authPassword.style.display = 'inline-block';
+      }
+      if (window.updateSubmitState) try { window.updateSubmitState(); } catch(e) {}
+      setAuthError('');
+    });
+  }
+
+  // Обработчики кнопок входа/регистрации/выхода
+  if (authLoginBtn) authLoginBtn.addEventListener('click', async () => {
+    setAuthError('');
+    try {
+      const email = authEmail?.value?.trim();
+      const password = authPassword?.value || '';
+      if (!email || !password) return setAuthError('Введите email и пароль.');
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      setAuthError(e?.message || 'Ошибка входа');
+    }
+  });
+
+  if (authRegisterBtn) authRegisterBtn.addEventListener('click', async () => {
+    setAuthError('');
+    try {
+      const email = authEmail?.value?.trim();
+      const password = authPassword?.value || '';
+      if (!email || !password) return setAuthError('Введите email и пароль.');
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      setAuthError(e?.message || 'Ошибка регистрации');
+    }
+  });
+
+  if (authLogoutBtn) authLogoutBtn.addEventListener('click', async () => {
+    setAuthError('');
+    try {
+      await signOut(auth);
+    } catch (e) {
+      setAuthError(e?.message || 'Ошибка выхода');
+    }
+  });
 
   // Утилита: экранирование HTML для вывода
   function escapeHtml(unsafe) {
@@ -442,6 +585,14 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Пожалуйста, введите заголовок и текст рецензии');
       return;
     }
+    if (text.trim().length < 30) {
+      alert('Текст рецензии должен быть не короче 30 символов.');
+      return;
+    }
+    if (!window.currentUserUid) {
+      alert('Пожалуйста, войдите в аккаунт, чтобы сохранять рецензии.');
+      return;
+    }
 if (!window.uploadedSkin) {
   alert('Пожалуйста, загрузите файл скина перед отправкой рецензии.');
   return;
@@ -477,6 +628,7 @@ if (!window.uploadedSkin) {
         shade: values.shade,
         style: values.style,
         vibe: values.vibe,
+        userId: window.currentUserUid,
         createdAt: serverTimestamp()
       };
 
