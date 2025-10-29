@@ -431,7 +431,8 @@ document.addEventListener('DOMContentLoaded', () => {
     query,
     orderBy,
     serverTimestamp,
-    limit
+    limit,
+    startAfter
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
   import { doc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
   import {
@@ -441,7 +442,9 @@ document.addEventListener('DOMContentLoaded', () => {
     createUserWithEmailAndPassword,
     signOut,
     GoogleAuthProvider,
-    signInWithPopup
+    signInWithPopup,
+    signInWithRedirect,
+    getRedirectResult
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
   const firebaseConfig = {
@@ -520,6 +523,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Следим за состоянием входа
   if (auth) {
+    // Обрабатываем результат редиректа (iOS Safari)
+    getRedirectResult(auth).catch(e => {
+      if (e && e.code) setAuthError(`Firebase: ${e.code}`);
+    });
+
     onAuthStateChanged(auth, (user) => {
       window.currentUserUid = user ? user.uid : null;
       if (user) {
@@ -596,7 +604,19 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (e) {
-      setAuthError(e?.message || 'Ошибка входа через Google');
+      // На iOS Safari и в случаях блокировки всплывающего окна используем редирект
+      const code = e?.code || '';
+      const shouldRedirect = code.includes('popup') || code.includes('operation-not-supported');
+      if (shouldRedirect) {
+        try {
+          await signInWithRedirect(auth, googleProvider);
+          return;
+        } catch (er) {
+          setAuthError(er?.message || 'Ошибка входа через Google (redirect)');
+        }
+      } else {
+        setAuthError(e?.message || 'Ошибка входа через Google');
+      }
     }
   });
 
@@ -707,35 +727,11 @@ document.addEventListener('DOMContentLoaded', () => {
           reviewHTML += `<br><small>Дата: ${createdStr}</small>`;
         }
 
-        // Показываем skin: на мобильных создаём не больше N 3D-просмотрщиков, остальным — статичное изображение
+        // Всегда используем статичное 3D‑превью (снимок кадра SkinViewer),
+        // а полноэкранное 3D показываем в модалке по клику
         if (r.skinData) {
           const viewerId = `viewer_${doc.id}`;
-          if (isMobile && mobileViewerCount >= MAX_MOBILE_VIEWERS) {
-            reviewHTML += `<br><img id="${viewerId}" src="${r.skinData}" alt="skin" class="skin-thumb" style="width:150px; height:auto;">`;
-          } else {
-            reviewHTML += `<br><canvas id="${viewerId}" width="150" height="200" class="skin-thumb"></canvas>`;
-            setTimeout(() => {
-              try {
-                const canvasEl = document.getElementById(viewerId);
-                const viewer = new skinview3d.SkinViewer({ canvas: canvasEl, width: 150, height: 200, skin: r.skinData });
-                viewer.zoom = 0.9; viewer.autoRotate = true;
-                const control = skinview3d.createOrbitControls(viewer);
-                control.enableZoom = false; control.enableRotate = true;
-                // Обработка потери контекста на мобильных
-                if (canvasEl) canvasEl.addEventListener('webglcontextlost', () => {
-                  try { viewer.dispose(); } catch(e){}
-                  const img = document.createElement('img');
-                  img.src = r.skinData; img.className = 'skin-thumb'; img.style.width = '150px'; img.style.height = 'auto';
-                  canvasEl.replaceWith(img);
-                }, { once: true });
-                if (window.reviewViewers) window.reviewViewers.push(viewer);
-                if (isMobile) mobileViewerCount++;
-                window.mobileViewerCount = mobileViewerCount;
-              } catch (e) {
-                console.error('Ошибка при создании 3D предпросмотра:', e);
-              }
-            }, 300);
-          }
+          reviewHTML += `<br><img id="${viewerId}" alt="skin" class="skin-thumb" style="width:150px; height:auto; opacity:0.9;">`;
         }
 
         reviewDiv.innerHTML = reviewHTML;
@@ -747,6 +743,20 @@ document.addEventListener('DOMContentLoaded', () => {
             el.style.cursor = 'pointer';
             el.addEventListener('click', () => {
               if (window.openSkinModal) window.openSkinModal(r.skinData);
+            });
+            // Генерация статичного 3D‑кадра в очереди, чтобы не перегружать устройство
+            window.mobilePreviewQueue = (window.mobilePreviewQueue || Promise.resolve()).then(async () => {
+              try {
+                const off = document.createElement('canvas');
+                off.width = 150; off.height = 200;
+                const v = new skinview3d.SkinViewer({ canvas: off, width: 150, height: 200, skin: r.skinData });
+                v.zoom = 0.9; v.autoRotate = false;
+                await new Promise(res => setTimeout(res, 80));
+                el.src = off.toDataURL('image/png');
+                try { v.dispose(); } catch(e){}
+              } catch(e) {
+                el.src = r.skinData; // fallback
+              }
             });
           }
         }
