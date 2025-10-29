@@ -76,7 +76,8 @@
     .review-item { display:flex; gap:16px; align-items:flex-start; }
     .review-body { flex: 1 1 60%; }
     .review-preview { flex: 1 1 40%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
-    .review-preview .skin-thumb { display:block; width: 385px; height: 385px; object-fit: contain; margin: 0 auto; border:1px solid transparent; border-radius:12px; background:
+    /* Превью скина в правой колонке: не квадратное, адаптивное */
+    .review-preview .skin-thumb { display:block; width: 385px; height: auto; max-height: 560px; object-fit: contain; margin: 0 auto; border:1px solid transparent; border-radius:12px; background:
       linear-gradient(#1b1b23,#1b1b23) padding-box,
       var(--grad) border-box; }
     .review-hint { color:#888; font-size:0.8em; margin-top:6px; }
@@ -86,7 +87,8 @@
     }
     .criteria { background:#1e1e27; border-radius:8px; padding:8px 10px; margin:10px 0; font-size:0.9em; line-height:1.6; }
     .criteria small { display:block; color:#ccc; }
-    .review-item .skin-thumb { max-width:120px; margin-top:10px; border-radius:8px; border:1px solid #2f2f3b; cursor:pointer; display:block; }
+    /* Убираем прежние ограничения миниатюры, используем общий стиль выше */
+    .review-item .skin-thumb { margin-top:10px; border-radius:8px; border:1px solid #2f2f3b; cursor:pointer; display:block; }
     .review-item .skin-thumb:hover { border-color:#8a2be2; }
     .info-text { text-align:center; color:#888; font-size:0.85em; margin-top:8px; }
     .loading { text-align:center; color:#8a2be2; padding:20px; }
@@ -769,7 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (r.skinData) {
           const viewerId = `viewer_${doc.id}`;
           // добавим IMG и подсказку в колонку превью
-          reviewHTML = reviewHTML.replace('<div class="review-preview">\n            <!-- preview вставится ниже -->', `<div class=\"review-preview\">\n            <img id=\"${viewerId}\" alt=\"skin\" class=\"skin-thumb\" style=\"width:150px; height:auto; opacity:0.95;\">\n            <div class=\"review-hint\">Нажмите на скин для просмотра</div>`);
+          reviewHTML = reviewHTML.replace('<div class="review-preview">\n            <!-- preview вставится ниже -->', `<div class=\"review-preview\">\n            <img id=\"${viewerId}\" alt=\"skin\" class=\"skin-thumb\" style=\"opacity:0.95;\">\n            <div class=\"review-hint\">Нажмите на скин для просмотра</div>`);
         }
 
         reviewDiv.innerHTML = reviewHTML;
@@ -782,6 +784,8 @@ document.addEventListener('DOMContentLoaded', () => {
             el.addEventListener('click', () => {
               if (window.openSkinModal) window.openSkinModal(r.skinData);
             });
+            // Показываем исходный скин сразу, чтобы не оставался пустой квадрат
+            try { el.src = r.skinData; } catch(_) {}
             // Генерация статичного 3D‑кадра в очереди, чтобы не перегружать устройство
             window.mobilePreviewQueue = (window.mobilePreviewQueue || Promise.resolve()).then(async () => {
               try {
@@ -789,7 +793,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // динамический рендер под ширину правой колонки
                 const targetEl = document.getElementById(`viewer_${doc.id}`);
                 const targetWidth = Math.max(385, Math.min(560, (targetEl?.parentElement?.clientWidth || 400)));
-                const targetHeight = targetWidth; // квадрат для крупной рамки
+                // Делаем превью не квадратным (чуть выше ширины)
+                const targetHeight = Math.round(targetWidth * 1.35);
                 off.width = targetWidth; off.height = targetHeight;
                 const v = new skinview3d.SkinViewer({ canvas: off, width: targetWidth, height: targetHeight, skin: r.skinData });
                 v.zoom = 0.95; v.autoRotate = false;
@@ -806,7 +811,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.src = off.toDataURL('image/png');
                 try { v.dispose(); } catch(e){}
               } catch(e) {
-                el.src = r.skinData; // fallback
+                // Если рендер не удался, оставляем исходную картинку
+                try { el.src = r.skinData; } catch(_) {}
               }
             });
           }
