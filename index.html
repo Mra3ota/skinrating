@@ -81,6 +81,12 @@
     @media (max-width: 1099px) {
       #auth-section { position: static !important; width: auto !important; margin:10px 0 16px 0 !important; }
     }
+    /* Модальное окно для увеличенного SkinViewer */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index: 2000; }
+    .modal-content { background:#15151c; border:1px solid #2f2f3b; border-radius:12px; padding:14px; box-shadow: 0 0 30px rgba(0,0,0,0.5); max-width: 90vw; }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .modal-title { font-size:1.1em; font-weight:700; }
+    .modal-close { background:#8a2be2; border:none; color:#fff; border-radius:8px; padding:6px 10px; cursor:pointer; }
 #contest {
   margin: 20px auto 30px auto;
   padding: 15px 20px;
@@ -152,7 +158,6 @@
         <button id="auth-login" class="submit-button" style="margin-right:0;">Войти</button>
         <button id="auth-register" class="reset-button" style="margin-right:0;">Регистрация</button>
         <button id="auth-google" class="submit-button" style="background:#4285F4; margin-right:0;">Google</button>
-        <button id="auth-logout" class="reset-button" style="display:none; margin-right:0;">Выйти</button>
       </div>
       <div id="nick-row" style="display:none; margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
         <span id="nick-display" style="font-weight:700; color:#fff; background:#1e1e27; border:1px solid #8a2be2; border-radius:10px; padding:6px 10px;">—</span>
@@ -162,6 +167,9 @@
           <button id="nick-save" class="submit-button" style="margin-right:0; flex:1 1 0;">Сохранить</button>
           <button id="nick-cancel" class="reset-button" style="margin-right:0; flex:1 1 0;">Отмена</button>
         </div>
+      </div>
+      <div style="margin-top:8px;">
+        <button id="auth-logout" class="reset-button" style="display:none; margin-right:0;">Выйти</button>
       </div>
       <div id="auth-error" class="error" style="display:none; margin-top:8px;"></div>
     </section>
@@ -218,6 +226,16 @@
 </section>
     <div class="reviews" id="reviews">
       <div class="loading">Загрузка рецензий...</div>
+    </div>
+    <!-- Модальное окно увеличенного предпросмотра скина -->
+    <div id="skin-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="skin-modal-title">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-title" id="skin-modal-title">Предпросмотр скина</div>
+          <button id="skin-modal-close" class="modal-close">Закрыть</button>
+        </div>
+        <canvas id="skin-modal-canvas" width="320" height="420" class="skin-preview"></canvas>
+      </div>
     </div>
   </div>
 
@@ -655,27 +673,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Показываем base64 скин напрямую, если он есть
- if (r.skinData) {
-  const viewerId = `viewer_${doc.id}`;
-  reviewHTML += `<br><canvas id="${viewerId}" width="150" height="200" class="skin-thumb"></canvas>`;
-  setTimeout(() => {
-    try {
-      const viewer = new skinview3d.SkinViewer({
-        canvas: document.getElementById(viewerId),
-        width: 150,
-        height: 200,
-        skin: r.skinData
-      });
-      viewer.zoom = 0.9;
-      viewer.autoRotate = true;
-      const control = skinview3d.createOrbitControls(viewer);
-      control.enableZoom = false;
-      control.enableRotate = true;
-    } catch (e) {
-      console.error('Ошибка при создании 3D предпросмотра:', e);
-    }
-  }, 300);
-}
+        if (r.skinData) {
+          const viewerId = `viewer_${doc.id}`;
+          reviewHTML += `<br><canvas id="${viewerId}" width="150" height="200" class="skin-thumb" style="cursor:zoom-in"></canvas>`;
+          setTimeout(() => {
+            try {
+              const canvasEl = document.getElementById(viewerId);
+              const viewer = new skinview3d.SkinViewer({
+                canvas: canvasEl,
+                width: 150,
+                height: 200,
+                skin: r.skinData
+              });
+              viewer.zoom = 0.9;
+              viewer.autoRotate = true;
+              const control = skinview3d.createOrbitControls(viewer);
+              control.enableZoom = false;
+              control.enableRotate = true;
+              // Открыть модалку по клику на превью
+              if (canvasEl) {
+                canvasEl.addEventListener('click', () => openSkinModal(r.skinData));
+              }
+            } catch (e) {
+              console.error('Ошибка при создании 3D предпросмотра:', e);
+            }
+          }, 300);
+        }
 
         reviewDiv.innerHTML = reviewHTML;
         container.appendChild(reviewDiv);
@@ -784,6 +807,45 @@ if (!window.uploadedSkin) {
       submitBtn.textContent = 'Сохранить';
     }
   });
+
+  // --------- Модалка SkinViewer ---------
+  const skinModal = document.getElementById('skin-modal');
+  const skinModalClose = document.getElementById('skin-modal-close');
+  const skinModalCanvas = document.getElementById('skin-modal-canvas');
+  let modalViewer = null;
+
+  function openSkinModal(skinData) {
+    if (!skinModal || !skinModalCanvas) return;
+    skinModal.style.display = 'flex';
+    try {
+      if (modalViewer) { try { modalViewer.dispose(); } catch(e){} modalViewer = null; }
+      modalViewer = new skinview3d.SkinViewer({
+        canvas: skinModalCanvas,
+        width: skinModalCanvas.width,
+        height: skinModalCanvas.height,
+        skin: skinData
+      });
+      modalViewer.zoom = 0.8;
+      modalViewer.autoRotate = true;
+      const ctl = skinview3d.createOrbitControls(modalViewer);
+      ctl.enableZoom = true;
+      ctl.enableRotate = true;
+    } catch(e) {
+      console.error('Не удалось открыть предпросмотр:', e);
+    }
+  }
+
+  function closeSkinModal() {
+    if (!skinModal) return;
+    skinModal.style.display = 'none';
+    if (modalViewer) { try { modalViewer.dispose(); } catch(e){} modalViewer = null; }
+  }
+
+  if (skinModalClose) skinModalClose.addEventListener('click', closeSkinModal);
+  if (skinModal) skinModal.addEventListener('click', (e) => {
+    if (e.target === skinModal) closeSkinModal();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSkinModal(); });
 </script>
 
 </body>
