@@ -155,8 +155,13 @@
         <button id="auth-logout" class="reset-button" style="display:none; margin-right:0;">Выйти</button>
       </div>
       <div id="nick-row" style="display:none; margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-        <input id="nick-input" type="text" placeholder="Ваш ник" maxlength="40" style="flex:1; min-width:180px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
-        <button id="nick-save" class="submit-button" style="margin-right:0;">Сохранить ник</button>
+        <span id="nick-display" style="font-weight:700; color:#fff; background:#1e1e27; border:1px solid #8a2be2; border-radius:10px; padding:6px 10px;">—</span>
+        <button id="nick-edit" class="reset-button" style="margin-right:0;">Изменить</button>
+        <div id="nick-edit-box" style="display:none; width:100%; display:flex; gap:8px; align-items:center;">
+          <input id="nick-input" type="text" placeholder="Ваш ник" maxlength="40" style="flex:1; min-width:180px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
+          <button id="nick-save" class="submit-button" style="margin-right:0;">Сохранить</button>
+          <button id="nick-cancel" class="reset-button" style="margin-right:0;">Отмена</button>
+        </div>
       </div>
       <div id="auth-error" class="error" style="display:none; margin-top:8px;"></div>
     </section>
@@ -434,6 +439,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const nickRow = document.getElementById('nick-row');
   const nickInput = document.getElementById('nick-input');
   const nickSaveBtn = document.getElementById('nick-save');
+  const nickCancelBtn = document.getElementById('nick-cancel');
+  const nickEditBtn = document.getElementById('nick-edit');
+  const nickEditBox = document.getElementById('nick-edit-box');
+  const nickDisplay = document.getElementById('nick-display');
 
   async function loadNickname(uid) {
     try {
@@ -477,8 +486,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (user) {
         if (authStatus) authStatus.textContent = `Вход выполнен: ${user.email || 'пользователь'}`;
         if (authLogoutBtn) authLogoutBtn.style.display = 'inline-block';
-        if (authLoginBtn) authLoginBtn.style.display = 'inline-block';
-        if (authRegisterBtn) authRegisterBtn.style.display = 'inline-block';
+        if (authLoginBtn) authLoginBtn.style.display = 'none';
+        if (authRegisterBtn) authRegisterBtn.style.display = 'none';
         if (authGoogleBtn) authGoogleBtn.style.display = 'none';
         if (authEmail) authEmail.style.display = 'none';
         if (authPassword) authPassword.style.display = 'none';
@@ -489,6 +498,8 @@ document.addEventListener('DOMContentLoaded', () => {
           const fallback = user.email ? user.email.split('@')[0] : 'user';
           const name = existing || fallback;
           if (nickInput) nickInput.value = name;
+          if (nickDisplay) nickDisplay.textContent = name;
+          if (nickEditBox) nickEditBox.style.display = 'none';
           window.currentUserDisplayName = name;
         })();
       } else {
@@ -550,6 +561,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  if (nickEditBtn) nickEditBtn.addEventListener('click', () => {
+    if (!window.currentUserUid) return setAuthError('Войдите, чтобы изменить ник.');
+    if (nickEditBox) nickEditBox.style.display = 'flex';
+  });
+
+  if (nickCancelBtn) nickCancelBtn.addEventListener('click', () => {
+    if (nickEditBox) nickEditBox.style.display = 'none';
+    if (nickInput && nickDisplay) nickInput.value = nickDisplay.textContent || '';
+  });
+
   if (nickSaveBtn) nickSaveBtn.addEventListener('click', async () => {
     setAuthError('');
     try {
@@ -559,7 +580,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const saved = await saveNickname(uid, name);
       window.currentUserDisplayName = saved;
       if (authStatus) authStatus.textContent = `Вход выполнен: ${saved}`;
-      alert('Ник сохранён');
+      if (nickDisplay) nickDisplay.textContent = saved;
+      if (nickEditBox) nickEditBox.style.display = 'none';
     } catch (e) {
       setAuthError(e?.message || 'Не удалось сохранить ник');
     }
