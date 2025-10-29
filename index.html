@@ -132,6 +132,7 @@
         <input id="auth-password" type="password" placeholder="Пароль" style="flex:1; min-width:140px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
         <button id="auth-login" class="submit-button" style="margin-right:0;">Войти</button>
         <button id="auth-register" class="reset-button" style="margin-right:0;">Регистрация</button>
+        <button id="auth-google" class="submit-button" style="background:#4285F4; margin-right:0;">Google</button>
         <button id="auth-logout" class="reset-button" style="display:none; margin-right:0;">Выйти</button>
       </div>
       <div id="auth-error" class="error" style="display:none; margin-top:8px;"></div>
@@ -369,7 +370,9 @@ document.addEventListener('DOMContentLoaded', () => {
     onAuthStateChanged,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
-    signOut
+    signOut,
+    GoogleAuthProvider,
+    signInWithPopup
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
   const firebaseConfig = {
@@ -399,8 +402,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const authPassword = document.getElementById('auth-password');
   const authLoginBtn = document.getElementById('auth-login');
   const authRegisterBtn = document.getElementById('auth-register');
+  const authGoogleBtn = document.getElementById('auth-google');
   const authLogoutBtn = document.getElementById('auth-logout');
   const authControls = document.getElementById('auth-controls');
+  const googleProvider = auth ? new GoogleAuthProvider() : null;
 
   function setAuthError(message) {
     if (!authError) return;
@@ -422,6 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authLogoutBtn) authLogoutBtn.style.display = 'inline-block';
         if (authLoginBtn) authLoginBtn.style.display = 'inline-block';
         if (authRegisterBtn) authRegisterBtn.style.display = 'inline-block';
+        if (authGoogleBtn) authGoogleBtn.style.display = 'none';
         if (authEmail) authEmail.style.display = 'none';
         if (authPassword) authPassword.style.display = 'none';
       } else {
@@ -429,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authLogoutBtn) authLogoutBtn.style.display = 'none';
         if (authLoginBtn) authLoginBtn.style.display = 'inline-block';
         if (authRegisterBtn) authRegisterBtn.style.display = 'inline-block';
+        if (authGoogleBtn) authGoogleBtn.style.display = 'inline-block';
         if (authEmail) authEmail.style.display = 'inline-block';
         if (authPassword) authPassword.style.display = 'inline-block';
       }
@@ -468,6 +475,15 @@ document.addEventListener('DOMContentLoaded', () => {
       await signOut(auth);
     } catch (e) {
       setAuthError(e?.message || 'Ошибка выхода');
+    }
+  });
+
+  if (authGoogleBtn) authGoogleBtn.addEventListener('click', async () => {
+    setAuthError('');
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (e) {
+      setAuthError(e?.message || 'Ошибка входа через Google');
     }
   });
 
