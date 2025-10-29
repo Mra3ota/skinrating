@@ -135,6 +135,10 @@
         <button id="auth-google" class="submit-button" style="background:#4285F4; margin-right:0;">Google</button>
         <button id="auth-logout" class="reset-button" style="display:none; margin-right:0;">Выйти</button>
       </div>
+      <div id="nick-row" style="display:none; margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <input id="nick-input" type="text" placeholder="Ваш ник" maxlength="40" style="flex:1; min-width:180px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
+        <button id="nick-save" class="submit-button" style="margin-right:0;">Сохранить ник</button>
+      </div>
       <div id="auth-error" class="error" style="display:none; margin-top:8px;"></div>
     </section>
     <div class="upload-section">
@@ -360,11 +364,13 @@ document.addEventListener('DOMContentLoaded', () => {
     collection,
     addDoc,
     getDocs,
+    getDoc,
     query,
     orderBy,
     serverTimestamp,
     limit
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { doc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
   import {
     getAuth,
     onAuthStateChanged,
@@ -406,6 +412,33 @@ document.addEventListener('DOMContentLoaded', () => {
   const authLogoutBtn = document.getElementById('auth-logout');
   const authControls = document.getElementById('auth-controls');
   const googleProvider = auth ? new GoogleAuthProvider() : null;
+  const nickRow = document.getElementById('nick-row');
+  const nickInput = document.getElementById('nick-input');
+  const nickSaveBtn = document.getElementById('nick-save');
+
+  async function loadNickname(uid) {
+    try {
+      if (!uid) return null;
+      const userDocRef = doc(db, 'users', uid);
+      const snap = await getDoc(userDocRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        return data?.displayName || null;
+      }
+      return null;
+    } catch (e) {
+      console.warn('Не удалось получить ник:', e);
+      return null;
+    }
+  }
+
+  async function saveNickname(uid, name) {
+    if (!uid) throw new Error('Нет пользователя');
+    const safe = String(name || '').trim().slice(0, 40);
+    const userDocRef = doc(db, 'users', uid);
+    await setDoc(userDocRef, { displayName: safe, updatedAt: Date.now() }, { merge: true });
+    return safe;
+  }
 
   function setAuthError(message) {
     if (!authError) return;
@@ -430,6 +463,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authGoogleBtn) authGoogleBtn.style.display = 'none';
         if (authEmail) authEmail.style.display = 'none';
         if (authPassword) authPassword.style.display = 'none';
+        if (nickRow) nickRow.style.display = 'flex';
+        // загрузка ника
+        (async () => {
+          const existing = await loadNickname(user.uid);
+          const fallback = user.email ? user.email.split('@')[0] : 'user';
+          const name = existing || fallback;
+          if (nickInput) nickInput.value = name;
+          window.currentUserDisplayName = name;
+        })();
       } else {
         if (authStatus) authStatus.textContent = 'Вы не вошли. Войдите или зарегистрируйтесь, чтобы сохранять рецензии.';
         if (authLogoutBtn) authLogoutBtn.style.display = 'none';
@@ -438,6 +480,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authGoogleBtn) authGoogleBtn.style.display = 'inline-block';
         if (authEmail) authEmail.style.display = 'inline-block';
         if (authPassword) authPassword.style.display = 'inline-block';
+        if (nickRow) nickRow.style.display = 'none';
+        window.currentUserDisplayName = null;
       }
       if (window.updateSubmitState) try { window.updateSubmitState(); } catch(e) {}
       setAuthError('');
@@ -484,6 +528,21 @@ document.addEventListener('DOMContentLoaded', () => {
       await signInWithPopup(auth, googleProvider);
     } catch (e) {
       setAuthError(e?.message || 'Ошибка входа через Google');
+    }
+  });
+
+  if (nickSaveBtn) nickSaveBtn.addEventListener('click', async () => {
+    setAuthError('');
+    try {
+      const uid = window.currentUserUid;
+      if (!uid) return setAuthError('Войдите, чтобы сохранить ник.');
+      const name = nickInput?.value || '';
+      const saved = await saveNickname(uid, name);
+      window.currentUserDisplayName = saved;
+      if (authStatus) authStatus.textContent = `Вход выполнен: ${saved}`;
+      alert('Ник сохранён');
+    } catch (e) {
+      setAuthError(e?.message || 'Не удалось сохранить ник');
     }
   });
 
@@ -550,6 +609,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (createdStr) {
           reviewHTML += `<br><small>Дата: ${createdStr}</small>`;
+        }
+
+        if (r.authorName) {
+          reviewHTML += `<br><small>Автор: ${escapeHtml(r.authorName)}</small>`;
         }
 
         // Показываем base64 скин напрямую, если он есть
@@ -645,6 +708,7 @@ if (!window.uploadedSkin) {
         style: values.style,
         vibe: values.vibe,
         userId: window.currentUserUid,
+        authorName: window.currentUserDisplayName || null,
         createdAt: serverTimestamp()
       };
 
