@@ -22,7 +22,7 @@
       background: #15151c;
       border-radius: 16px;
       padding: 20px;
-      max-width: 900px;
+      max-width: 980px;
       width: 100%;
       box-shadow: 0 0 30px rgba(0,0,0,0.4);
     }
@@ -52,6 +52,10 @@
     .reset-button, .submit-button { background:#8a2be2; color:#fff; border:none; padding:10px 20px; border-radius:8px; font-size:1em; cursor:pointer; margin-right:8px; transition:all .15s; }
     .reset-button:hover, .submit-button:hover { background:#9b4dff; transform:translateY(-1px); }
     .reset-button:disabled, .submit-button:disabled { background:#555; cursor:not-allowed; }
+    .reset-button:focus-visible, .submit-button:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid #8a2be2;
+      outline-offset: 2px;
+    }
     .reviews { margin-top:30px; }
     .review-item { background:#1b1b23; border-radius:8px; padding:12px; margin-bottom:12px; border-left:3px solid #8a2be2; }
     .review-item h3 { margin-top:0; color:#8a2be2; }
@@ -81,12 +85,6 @@
     @media (max-width: 1099px) {
       #auth-section { position: static !important; width: auto !important; margin:10px 0 16px 0 !important; }
     }
-    /* Модальное окно для увеличенного SkinViewer */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index: 2000; }
-    .modal-content { background:#15151c; border:1px solid #2f2f3b; border-radius:12px; padding:14px; box-shadow: 0 0 30px rgba(0,0,0,0.5); max-width: 90vw; }
-    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-    .modal-title { font-size:1.1em; font-weight:700; }
-    .modal-close { background:#8a2be2; border:none; color:#fff; border-radius:8px; padding:6px 10px; cursor:pointer; }
 #contest {
   margin: 20px auto 30px auto;
   padding: 15px 20px;
@@ -139,6 +137,11 @@
 .disclaimer b {
   color: #ff4d4d;
 }
+/* Модалка с увеличенным предпросмотром скина */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display:none; align-items:center; justify-content:center; z-index: 2000; }
+.modal { background:#15151c; border:1px solid #2f2f3b; border-radius:12px; padding:14px; box-shadow:0 0 30px rgba(0,0,0,0.5); max-width: 90vw; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.modal-close { background:#8a2be2; border:none; color:#fff; padding:6px 12px; border-radius:8px; cursor:pointer; }
   </style>
 
 </head>
@@ -225,18 +228,18 @@
   </div>
 </section>
     <div class="reviews" id="reviews">
-      <div class="loading">Загрузка рецензий...</div>
+      <div class="loading" role="status" aria-live="polite">Загрузка рецензий...</div>
     </div>
-    <!-- Модальное окно увеличенного предпросмотра скина -->
-    <div id="skin-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="skin-modal-title">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div class="modal-title" id="skin-modal-title">Предпросмотр скина</div>
-          <button id="skin-modal-close" class="modal-close">Закрыть</button>
-        </div>
-        <canvas id="skin-modal-canvas" width="320" height="420" class="skin-preview"></canvas>
+  <!-- Модалка SkinViewer -->
+  <div id="skin-modal-overlay" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div style="font-weight:700;">Предпросмотр скина</div>
+        <button id="skin-modal-close" class="modal-close">Закрыть</button>
       </div>
+      <canvas id="skin-modal-canvas" width="320" height="420" class="skin-preview" style="max-width:320px; height:420px;"></canvas>
     </div>
+  </div>
   </div>
 
 <script>
@@ -292,20 +295,25 @@ document.addEventListener('DOMContentLoaded', () => {
     return total;
   }
 
-  // Инициализация слайдеров
+  // Дебаунс-хелпер
+  function debounce(fn, ms) {
+    let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  }
+
+  // Инициализация слайдеров с дебаунсом
   ranges.forEach(id => {
     const input = document.getElementById(id);
     const label = document.getElementById(`${id}-value`);
     if (input && label) {
-      input.addEventListener('input', () => {
+      input.addEventListener('input', debounce(() => {
         values[id] = parseInt(input.value, 10);
         label.textContent = input.value;
         calculateTotal();
-      });
+      }, 120));
     }
   });
 
-  // Загрузка файла
+  // Загрузка файла + проверка геометрии
   document.getElementById('skin-upload').addEventListener('change', async e => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -315,11 +323,22 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     
-    // Сохраняем data URL скина в window.uploadedSkin (base64)
-    
+    // Сохраняем data URL скина в window.uploadedSkin (base64) с проверкой размера
     const reader = new FileReader();
-    reader.onload = evt => {
-      uploadedSkin = evt.target.result;
+    reader.onload = async evt => {
+      const dataUrl = evt.target.result;
+      // проверка геометрии
+      try {
+        const img = new Image();
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataUrl; });
+        const valid = (img.width === 64 && img.height === 64) || (img.width === 64 && img.height === 32);
+        if (!valid) {
+          alert('Размеры изображения должны быть 64×64 или 64×32.');
+          return;
+        }
+      } catch(e) { alert('Не удалось прочитать изображение.'); return; }
+
+      uploadedSkin = dataUrl;
       window.uploadedSkin = uploadedSkin;
       
       try {
@@ -394,6 +413,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Устанавливаем корректное начальное состояние кнопки
   updateSubmitState();
+  // Делаем калькулятор доступным глобально для модуля
+  window.calculateTotalForSubmit = calculateTotal;
 });
 </script>
 
@@ -616,27 +637,37 @@ document.addEventListener('DOMContentLoaded', () => {
       .replace(/'/g, "&#039;");
   }
 
-  // Загрузка рецензий
-  async function loadReviews() {
+  // Загрузка рецензий (с пагинацией)
+  let reviewsLastDoc = null;
+  const REVIEWS_PAGE = 20;
+  async function loadReviews(reset = false) {
     const container = document.getElementById('reviews');
 
     try {
-      container.innerHTML = '<div class="loading">Загрузка рецензий...</div>';
+      if (reset) {
+        container.innerHTML = '<div class="loading" role="status" aria-live="polite">Загрузка рецензий...</div>';
+        reviewsLastDoc = null;
+      }
 
-      const q = query(
-        collection(db, "reviews"),
-        orderBy("createdAt", "desc"),
-        limit(50)
-      );
+      let qRef = query(collection(db, "reviews"), orderBy("createdAt", "desc"), limit(REVIEWS_PAGE));
+      if (reviewsLastDoc) {
+        qRef = query(collection(db, "reviews"), orderBy("createdAt", "desc"), startAfter(reviewsLastDoc), limit(REVIEWS_PAGE));
+      }
 
-      const snapshot = await getDocs(q);
+      const snapshot = await getDocs(qRef);
 
       if (snapshot.empty) {
         container.innerHTML = '<div class="info-text">Пока нет рецензий. Будьте первым!</div>';
         return;
       }
 
-      container.innerHTML = '';
+      if (!reviewsLastDoc) {
+        if (window.reviewViewers && Array.isArray(window.reviewViewers)) {
+          window.reviewViewers.forEach(v => { try { v.dispose(); } catch(e){} });
+        }
+        window.reviewViewers = [];
+        container.innerHTML = '';
+      }
 
       snapshot.forEach(doc => {
         const r = doc.data();
@@ -673,45 +704,90 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Показываем base64 скин напрямую, если он есть
-        if (r.skinData) {
-          const viewerId = `viewer_${doc.id}`;
-          reviewHTML += `<br><canvas id="${viewerId}" width="150" height="200" class="skin-thumb" style="cursor:zoom-in"></canvas>`;
-          setTimeout(() => {
-            try {
-              const canvasEl = document.getElementById(viewerId);
-              const viewer = new skinview3d.SkinViewer({
-                canvas: canvasEl,
-                width: 150,
-                height: 200,
-                skin: r.skinData
-              });
-              viewer.zoom = 0.9;
-              viewer.autoRotate = true;
-              const control = skinview3d.createOrbitControls(viewer);
-              control.enableZoom = false;
-              control.enableRotate = true;
-              // Открыть модалку по клику на превью
-              if (canvasEl) {
-                canvasEl.addEventListener('click', () => openSkinModal(r.skinData));
-              }
-            } catch (e) {
-              console.error('Ошибка при создании 3D предпросмотра:', e);
-            }
-          }, 300);
-        }
+ if (r.skinData) {
+  const viewerId = `viewer_${doc.id}`;
+  reviewHTML += `<br><canvas id="${viewerId}" width="150" height="200" class="skin-thumb"></canvas>`;
+  setTimeout(() => {
+    try {
+      const viewer = new skinview3d.SkinViewer({
+        canvas: document.getElementById(viewerId),
+        width: 150,
+        height: 200,
+        skin: r.skinData
+      });
+      viewer.zoom = 0.9;
+      viewer.autoRotate = true;
+      const control = skinview3d.createOrbitControls(viewer);
+      control.enableZoom = false;
+      control.enableRotate = true;
+      if (window.reviewViewers) window.reviewViewers.push(viewer);
+      const canvasEl = document.getElementById(viewerId);
+      if (canvasEl) {
+        canvasEl.style.cursor = 'pointer';
+        canvasEl.addEventListener('click', () => openSkinModal(r.skinData));
+      }
+    } catch (e) {
+      console.error('Ошибка при создании 3D предпросмотра:', e);
+    }
+  }, 300);
+}
 
         reviewDiv.innerHTML = reviewHTML;
         container.appendChild(reviewDiv);
+        reviewsLastDoc = doc;
       });
+
+      // Показать/создать кнопку "Загрузить ещё"
+      let moreBtn = document.getElementById('reviews-more');
+      if (!moreBtn) {
+        const wrap = document.createElement('div');
+        wrap.style.textAlign = 'center';
+        wrap.style.marginTop = '10px';
+        moreBtn = document.createElement('button');
+        moreBtn.id = 'reviews-more';
+        moreBtn.className = 'reset-button';
+        moreBtn.textContent = 'Загрузить ещё';
+        wrap.appendChild(moreBtn);
+        container.parentElement.appendChild(wrap);
+        moreBtn.addEventListener('click', () => loadReviews(false));
+      }
 
     } catch (err) {
       console.error('Ошибка при загрузке рецензий:', err);
-      container.innerHTML = `<div class="error">Ошибка загрузки. Попробуйте обновить страницу.</div>`;
+      container.innerHTML = `<div class=\"error\" role=\"alert\">Ошибка загрузки. Попробуйте обновить страницу.</div>`;
     }
   }
 
   // Загружаем рецензии при старте
-  loadReviews();
+  loadReviews(true);
+
+  // Модалка SkinViewer (увеличенный просмотр)
+  let modalViewer = null;
+  const modalOverlay = document.getElementById('skin-modal-overlay');
+  const modalClose = document.getElementById('skin-modal-close');
+  const modalCanvas = document.getElementById('skin-modal-canvas');
+
+  function openSkinModal(skinData) {
+    if (!modalOverlay || !modalCanvas) return;
+    try { if (modalViewer) { modalViewer.dispose(); modalViewer = null; } } catch(e){}
+    modalOverlay.style.display = 'flex';
+    try {
+      modalViewer = new skinview3d.SkinViewer({ canvas: modalCanvas, width: modalCanvas.width, height: modalCanvas.height, skin: skinData });
+      modalViewer.zoom = 0.9; modalViewer.autoRotate = true;
+      const control = skinview3d.createOrbitControls(modalViewer);
+      control.enableZoom = true; control.enableRotate = true;
+    } catch(e) { console.error('Не удалось открыть модальное превью', e); }
+  }
+
+  function closeSkinModal() {
+    if (!modalOverlay) return;
+    modalOverlay.style.display = 'none';
+    try { if (modalViewer) { modalViewer.dispose(); modalViewer = null; } } catch(e){}
+  }
+
+  window.openSkinModal = openSkinModal;
+  if (modalClose) modalClose.addEventListener('click', closeSkinModal);
+  if (modalOverlay) modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeSkinModal(); });
 
   // Отправка рецензии
   document.getElementById('submit').addEventListener('click', async () => {
@@ -755,10 +831,12 @@ if (!window.uploadedSkin) {
         1: 1, 2: 1.0675, 3: 1.1349, 4: 1.2024, 5: 1.2699,
         6: 1.3373, 7: 1.4048, 8: 1.4723, 9: 1.5397, 10: 1.6072
       };
-      const baseSum = Number(values.line) + Number(values.palette) + Number(values.shade) + Number(values.style);
-      const scaled = baseSum * 1.4;
-      const multiplier = vibeMultiplier[Number(values.vibe)] || 1;
-      const total = Math.round(scaled * multiplier);
+      const total = (window.calculateTotalForSubmit ? window.calculateTotalForSubmit() : (function(){
+        const baseSum = Number(values.line) + Number(values.palette) + Number(values.shade) + Number(values.style);
+        const scaled = baseSum * 1.4;
+        const multiplier = vibeMultiplier[Number(values.vibe)] || 1;
+        return Math.round(scaled * multiplier);
+      })());
 
       const reviewData = {
         title: title,
@@ -807,45 +885,6 @@ if (!window.uploadedSkin) {
       submitBtn.textContent = 'Сохранить';
     }
   });
-
-  // --------- Модалка SkinViewer ---------
-  const skinModal = document.getElementById('skin-modal');
-  const skinModalClose = document.getElementById('skin-modal-close');
-  const skinModalCanvas = document.getElementById('skin-modal-canvas');
-  let modalViewer = null;
-
-  function openSkinModal(skinData) {
-    if (!skinModal || !skinModalCanvas) return;
-    skinModal.style.display = 'flex';
-    try {
-      if (modalViewer) { try { modalViewer.dispose(); } catch(e){} modalViewer = null; }
-      modalViewer = new skinview3d.SkinViewer({
-        canvas: skinModalCanvas,
-        width: skinModalCanvas.width,
-        height: skinModalCanvas.height,
-        skin: skinData
-      });
-      modalViewer.zoom = 0.8;
-      modalViewer.autoRotate = true;
-      const ctl = skinview3d.createOrbitControls(modalViewer);
-      ctl.enableZoom = true;
-      ctl.enableRotate = true;
-    } catch(e) {
-      console.error('Не удалось открыть предпросмотр:', e);
-    }
-  }
-
-  function closeSkinModal() {
-    if (!skinModal) return;
-    skinModal.style.display = 'none';
-    if (modalViewer) { try { modalViewer.dispose(); } catch(e){} modalViewer = null; }
-  }
-
-  if (skinModalClose) skinModalClose.addEventListener('click', closeSkinModal);
-  if (skinModal) skinModal.addEventListener('click', (e) => {
-    if (e.target === skinModal) closeSkinModal();
-  });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSkinModal(); });
 </script>
 
 </body>
