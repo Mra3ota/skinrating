@@ -144,18 +144,6 @@
   </a>
   <h1>Оценка скина</h1>
 </header>
-    <!-- Публикация скина -->
-    <section id="publish" style="margin:10px 0 16px 0; background:#1e1e27; border:1px solid #2f2f3b; border-radius:10px; padding:10px 14px;">
-      <h2 style="margin:0 0 8px 0; font-size:1.2em;">Публикация скина</h2>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-        <input id="skin-title" type="text" placeholder="Название скина" maxlength="60" style="flex:1; min-width:180px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
-        <input id="skin-file" type="file" accept="image/png" style="color:#fff;" />
-        <button id="skin-publish" class="submit-button" disabled>Опубликовать</button>
-      </div>
-      <div class="info-text" id="skin-hint" style="text-align:left; margin-top:6px;">PNG 64×64 или 64×32. Превью появится ниже.</div>
-      <canvas id="skin-publish-preview" width="150" height="200" class="skin-thumb" style="margin-top:8px;"></canvas>
-      <div id="publish-error" class="error" style="display:none; margin-top:8px;"></div>
-    </section>
     <section class="auth" id="auth-section" style="margin:10px 0 16px 0; background:#1e1e27; border:1px solid #2f2f3b; border-radius:10px; padding:10px 14px; position:fixed; right:20px; top:20px; width:300px; z-index:1000;">
       <div id="auth-status" class="info-text" style="margin-bottom:8px;">Вы не вошли. Войдите или зарегистрируйтесь, чтобы сохранять рецензии.</div>
       <div id="auth-controls" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
@@ -231,14 +219,6 @@
     <div class="reviews" id="reviews">
       <div class="loading">Загрузка рецензий...</div>
     </div>
-    <!-- Лента скинов -->
-    <section id="feed" style="margin-top:22px;">
-      <h2 style="margin:0 0 8px 0; font-size:1.2em;">Лента скинов</h2>
-      <div id="feed-list"></div>
-      <div style="text-align:center; margin-top:10px;">
-        <button id="feed-more" class="reset-button" style="display:none;">Загрузить ещё</button>
-      </div>
-    </section>
   </div>
 
 <script>
@@ -412,10 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
     query,
     orderBy,
     serverTimestamp,
-    limit,
-    startAfter,
-    runTransaction,
-    updateDoc
+    limit
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
   import { doc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
   import {
@@ -609,227 +586,6 @@ document.addEventListener('DOMContentLoaded', () => {
       setAuthError(e?.message || 'Не удалось сохранить ник');
     }
   });
-
-  // ---------- ПУБЛИКАЦИЯ СКИНА (dataURL + превью) ----------
-  const publishBtn = document.getElementById('skin-publish');
-  const publishTitle = document.getElementById('skin-title');
-  const publishFile = document.getElementById('skin-file');
-  const publishPreview = document.getElementById('skin-publish-preview');
-  const publishError = document.getElementById('publish-error');
-
-  function setPublishError(msg) {
-    if (!publishError) return;
-    if (msg) {
-      publishError.textContent = msg;
-      publishError.style.display = 'block';
-    } else {
-      publishError.textContent = '';
-      publishError.style.display = 'none';
-    }
-  }
-
-  function enablePublishIfReady() {
-    const hasTitle = (publishTitle?.value || '').trim().length > 0;
-    const hasFile = !!publishFile?.files?.[0];
-    if (publishBtn) publishBtn.disabled = !(hasTitle && hasFile && !!window.currentUserUid);
-  }
-
-  if (publishTitle) publishTitle.addEventListener('input', enablePublishIfReady);
-  if (publishFile) publishFile.addEventListener('change', enablePublishIfReady);
-
-  async function readFileAsDataUrl(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  async function loadImage(dataUrl) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => resolve(img);
-      img.onerror = reject;
-      img.src = dataUrl;
-    });
-  }
-
-  function makeThumb(img, size = 128) {
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled = false; // пиксель-арт
-    const scale = Math.min(size / img.width, size / img.height);
-    const w = Math.round(img.width * scale);
-    const h = Math.round(img.height * scale);
-    const x = Math.floor((size - w) / 2);
-    const y = Math.floor((size - h) / 2);
-    ctx.clearRect(0,0,size,size);
-    ctx.drawImage(img, x, y, w, h);
-    return canvas.toDataURL('image/png');
-  }
-
-  if (publishFile) publishFile.addEventListener('change', async () => {
-    try {
-      setPublishError('');
-      const file = publishFile.files?.[0];
-      if (!file) return;
-      if (!file.type.includes('png')) return setPublishError('Только PNG.');
-      const dataUrl = await readFileAsDataUrl(file);
-      const img = await loadImage(dataUrl);
-      const valid = (img.width === 64 && img.height === 64) || (img.width === 64 && img.height === 32);
-      if (!valid) return setPublishError('Размеры должны быть 64×64 или 64×32.');
-      // предварительный предпросмотр на канвасе
-      try {
-        const pv = publishPreview;
-        if (pv) {
-          const v = new skinview3d.SkinViewer({ canvas: pv, width: pv.width, height: pv.height, skin: dataUrl });
-          v.zoom = 0.9; v.autoRotate = false;
-          setTimeout(() => { try { v.dispose(); } catch(e){} }, 500);
-        }
-      } catch(e){}
-    } catch (e) {
-      setPublishError('Не удалось прочитать файл.');
-    } finally {
-      enablePublishIfReady();
-    }
-  });
-
-  async function createSkinDocument({ title, skinData, thumbData }) {
-    const payload = {
-      title: String(title || '').trim().slice(0, 60),
-      skinData,
-      thumbData,
-      authorId: window.currentUserUid,
-      authorName: window.currentUserDisplayName || null,
-      createdAt: serverTimestamp(),
-      ratingSum: 0,
-      ratingCount: 0
-    };
-    return await addDoc(collection(db, 'skins'), payload);
-  }
-
-  if (publishBtn) publishBtn.addEventListener('click', async () => {
-    if (!window.currentUserUid) return setPublishError('Войдите, чтобы публиковать.');
-    const file = publishFile?.files?.[0];
-    const title = (publishTitle?.value || '').trim();
-    if (!file || !title) return;
-    publishBtn.disabled = true; publishBtn.textContent = 'Публикация...'; setPublishError('');
-    try {
-      const dataUrl = await readFileAsDataUrl(file);
-      const img = await loadImage(dataUrl);
-      const valid = (img.width === 64 && img.height === 64) || (img.width === 64 && img.height === 32);
-      if (!valid) throw new Error('Размеры должны быть 64×64 или 64×32.');
-      const thumb = makeThumb(img, 128);
-      // Простая проверка размеров
-      const base64Len = (dataUrl.split(',')[1] || '').length;
-      const sizeBytes = Math.ceil(base64Len * 3 / 4);
-      if (sizeBytes > 200000) throw new Error('Файл слишком большой (>200KB).');
-      await createSkinDocument({ title, skinData: dataUrl, thumbData: thumb });
-      alert('✅ Скин опубликован!');
-      publishTitle.value = '';
-      if (publishFile) publishFile.value = '';
-      enablePublishIfReady();
-      // перезагрузим ленту
-      if (typeof loadFeed === 'function') loadFeed(true);
-    } catch(e) {
-      setPublishError(e?.message || 'Не удалось опубликовать скин');
-    } finally {
-      publishBtn.disabled = false; publishBtn.textContent = 'Опубликовать';
-    }
-  });
-
-  // ---------- ЛЕНТА СКИНОВ И РЕЙТИНГ ----------
-  const feedList = document.getElementById('feed-list');
-  const feedMore = document.getElementById('feed-more');
-  let feedLastDoc = null;
-
-  function skinCardHtml(s, id) {
-    const avg = s.ratingCount ? (s.ratingSum / s.ratingCount).toFixed(1) : '—';
-    const count = s.ratingCount || 0;
-    const author = escapeHtml(s.authorName || 'Пользователь');
-    return `
-      <div class="review-item">
-        <div class="author-badge">${author}</div>
-        <h3>${escapeHtml(s.title || 'Без названия')}</h3>
-        ${s.thumbData ? `<img src="${s.thumbData}" alt="thumb" class="skin-thumb" style="max-width:150px;">` : ''}
-        <div class="criteria">
-          <small><b>Средняя:</b> ${avg} / 10</small>
-          <small><b>Оценок:</b> ${count}</small>
-        </div>
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-          <input type="range" min="1" max="10" value="7" id="rate_${id}" style="flex:1;">
-          <button class="submit-button" data-skin="${id}" data-ratebtn>Оценить</button>
-        </div>
-      </div>
-    `;
-  }
-
-  async function loadFeed(reset = false) {
-    if (!feedList) return;
-    if (reset) { feedList.innerHTML = ''; feedLastDoc = null; }
-    const base = collection(db, 'skins');
-    let q = query(base, orderBy('createdAt', 'desc'), limit(20));
-    if (feedLastDoc) q = query(base, orderBy('createdAt', 'desc'), startAfter(feedLastDoc), limit(20));
-    const snap = await getDocs(q);
-    if (snap.empty && !feedLastDoc && reset) {
-      feedList.innerHTML = '<div class="info-text">Пока нет скинов. Опубликуйте первый!</div>';
-      if (feedMore) feedMore.style.display = 'none';
-      return;
-    }
-    let last = null;
-    snap.forEach(docu => {
-      const s = docu.data();
-      const wrapper = document.createElement('div');
-      wrapper.innerHTML = skinCardHtml(s, docu.id);
-      feedList.appendChild(wrapper.firstElementChild);
-      last = docu;
-    });
-    if (last) feedLastDoc = last; 
-    if (feedMore) feedMore.style.display = snap.size === 20 ? 'inline-block' : 'none';
-    // навесить обработчики оценок
-    feedList.querySelectorAll('[data-ratebtn]').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        if (!window.currentUserUid) return alert('Войдите, чтобы оценивать.');
-        const skinId = btn.getAttribute('data-skin');
-        const range = document.getElementById(`rate_${skinId}`);
-        const value = parseInt(range?.value || '7', 10);
-        try {
-          await rateSkinTransaction(skinId, value);
-          await loadFeed(true);
-        } catch(err) {
-          alert('Не удалось поставить оценку: ' + (err?.message || err));
-        }
-      });
-    });
-  }
-
-  if (feedMore) feedMore.addEventListener('click', () => loadFeed(false));
-  window.loadFeed = loadFeed;
-  loadFeed(true);
-
-  async function rateSkinTransaction(skinId, value) {
-    const skinRef = doc(db, 'skins', skinId);
-    const ratingRef = doc(db, 'skins', skinId, 'ratings', window.currentUserUid);
-    await runTransaction(db, async (tx) => {
-      const skinSnap = await tx.get(skinRef);
-      if (!skinSnap.exists()) throw new Error('Скин не найден');
-      const ratingSnap = await tx.get(ratingRef);
-      let ratingSum = skinSnap.data().ratingSum || 0;
-      let ratingCount = skinSnap.data().ratingCount || 0;
-      if (ratingSnap.exists()) {
-        const old = ratingSnap.data().value || 0;
-        ratingSum += (value - old);
-      } else {
-        ratingSum += value;
-        ratingCount += 1;
-      }
-      tx.set(ratingRef, { value, updatedAt: Date.now() });
-      tx.update(skinRef, { ratingSum, ratingCount });
-    });
-  }
 
   // Утилита: экранирование HTML для вывода
   function escapeHtml(unsafe) {
