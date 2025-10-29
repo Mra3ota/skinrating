@@ -59,6 +59,15 @@
     .reviews { margin-top:30px; }
     .review-item { background:#1b1b23; border-radius:8px; padding:12px; margin-bottom:12px; border-left:3px solid #8a2be2; }
     .review-item h3 { margin-top:0; color:#8a2be2; }
+    .review-item { display:flex; gap:16px; align-items:flex-start; }
+    .review-body { flex: 1 1 auto; }
+    .review-preview { flex: 0 0 180px; text-align:center; }
+    .review-preview .skin-thumb { width:150px; height:auto; }
+    .review-hint { color:#888; font-size:0.8em; margin-top:6px; }
+    @media (max-width: 720px) {
+      .review-item { flex-direction:column; }
+      .review-preview { order: -1; }
+    }
     .criteria { background:#1e1e27; border-radius:8px; padding:8px 10px; margin:10px 0; font-size:0.9em; line-height:1.6; }
     .criteria small { display:block; color:#ccc; }
     .review-item .skin-thumb { max-width:120px; margin-top:10px; border-radius:8px; border:1px solid #2f2f3b; cursor:pointer; display:block; }
@@ -710,28 +719,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const authorDisplay = escapeHtml(r.authorName || 'Пользователь');
         let reviewHTML = `
-          <div class="author-badge">${authorDisplay}</div>
-          <h3>${escapeHtml(r.title || 'Без заголовка')}</h3>
-          <p>${escapeHtml(r.text || '')}</p>
-          <div class="criteria">
-            <small>Лайн / Образ: ${r.line ?? '-'}</small>
-            <small>Палитра: ${r.palette ?? '-'}</small>
-            <small>Реализация / Шейд: ${r.shade ?? '-'}</small>
-            <small>Айдентика / Стилистика: ${r.style ?? '-'}</small>
-            <small>Общее впечатление / Вайб: ${r.vibe ?? '-'}</small>
+          <div class="review-body">
+            <div class="author-badge">${authorDisplay}</div>
+            <h3>${escapeHtml(r.title || 'Без заголовка')}</h3>
+            <p>${escapeHtml(r.text || '')}</p>
+            <div class="criteria">
+              <small>Лайн / Образ: ${r.line ?? '-'}</small>
+              <small>Палитра: ${r.palette ?? '-'}</small>
+              <small>Реализация / Шейд: ${r.shade ?? '-'}</small>
+              <small>Айдентика / Стилистика: ${r.style ?? '-'}</small>
+              <small>Общее впечатление / Вайб: ${r.vibe ?? '-'}</small>
+            </div>
+            <small><b>Итоговая оценка:</b> ${r.total ?? '-'} / 90</small>
           </div>
-          <small><b>Итоговая оценка:</b> ${r.total ?? '-'} / 90</small>
+          <div class="review-preview">
+            <!-- preview вставится ниже -->
+          </div>
         `;
 
         if (createdStr) {
-          reviewHTML += `<br><small>Дата: ${createdStr}</small>`;
+          reviewHTML = reviewHTML.replace('</div>\n          <div class="review-preview">', `<br><small>Дата: ${createdStr}</small></div>\n          <div class=\"review-preview\">`);
         }
 
         // Всегда используем статичное 3D‑превью (снимок кадра SkinViewer),
         // а полноэкранное 3D показываем в модалке по клику
         if (r.skinData) {
           const viewerId = `viewer_${doc.id}`;
-          reviewHTML += `<br><img id="${viewerId}" alt="skin" class="skin-thumb" style="width:150px; height:auto; opacity:0.9;">`;
+          // добавим IMG и подсказку в колонку превью
+          reviewHTML = reviewHTML.replace('<div class="review-preview">\n            <!-- preview вставится ниже -->', `<div class=\"review-preview\">\n            <img id=\"${viewerId}\" alt=\"skin\" class=\"skin-thumb\" style=\"width:150px; height:auto; opacity:0.95;\">\n            <div class=\"review-hint\">Нажмите на скин для просмотра</div>`);
         }
 
         reviewDiv.innerHTML = reviewHTML;
@@ -751,7 +766,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 off.width = 150; off.height = 200;
                 const v = new skinview3d.SkinViewer({ canvas: off, width: 150, height: 200, skin: r.skinData });
                 v.zoom = 0.9; v.autoRotate = false;
-                await new Promise(res => setTimeout(res, 80));
+                // Задаём позу "шаг" и ждём кадр
+                try {
+                  const walk = new skinview3d.WalkingAnimation(v);
+                  walk.speed = 1.0; walk.paused = true; walk.progress = 0.35;
+                } catch(e) {}
+                await new Promise(res => setTimeout(res, 200));
                 el.src = off.toDataURL('image/png');
                 try { v.dispose(); } catch(e){}
               } catch(e) {
