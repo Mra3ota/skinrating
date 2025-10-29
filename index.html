@@ -62,6 +62,25 @@
     .info-text { text-align:center; color:#888; font-size:0.85em; margin-top:8px; }
     .loading { text-align:center; color:#8a2be2; padding:20px; }
     .error { color:#f88; padding:10px; border-radius:6px; background:#2a1a2a; text-align:center; }
+    /* Автор-бейдж над заголовком рецензии */
+    .author-badge {
+      display: inline-block;
+      background: #1e1e27;
+      color: #fff;
+      border: 1px solid #8a2be2;
+      border-radius: 12px;
+      padding: 6px 10px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      box-shadow: 0 0 10px rgba(138,43,226,0.15);
+    }
+    /* Фиксированная панель авторизации справа */
+    @media (min-width: 1100px) {
+      body.with-auth-sidebar { padding-right: 340px; }
+    }
+    @media (max-width: 1099px) {
+      #auth-section { position: static !important; width: auto !important; margin:10px 0 16px 0 !important; }
+    }
 #contest {
   margin: 20px auto 30px auto;
   padding: 15px 20px;
@@ -125,7 +144,7 @@
   </a>
   <h1>Оценка скина</h1>
 </header>
-    <section class="auth" id="auth-section" style="margin:10px 0 16px 0; background:#1e1e27; border:1px solid #2f2f3b; border-radius:10px; padding:10px 14px;">
+    <section class="auth" id="auth-section" style="margin:10px 0 16px 0; background:#1e1e27; border:1px solid #2f2f3b; border-radius:10px; padding:10px 14px; position:fixed; right:20px; top:20px; width:300px; z-index:1000;">
       <div id="auth-status" class="info-text" style="margin-bottom:8px;">Вы не вошли. Войдите или зарегистрируйтесь, чтобы сохранять рецензии.</div>
       <div id="auth-controls" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
         <input id="auth-email" type="email" placeholder="Email" style="flex:1; min-width:180px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
@@ -594,7 +613,9 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
+        const authorDisplay = escapeHtml(r.authorName || 'Пользователь');
         let reviewHTML = `
+          <div class="author-badge">${authorDisplay}</div>
           <h3>${escapeHtml(r.title || 'Без заголовка')}</h3>
           <p>${escapeHtml(r.text || '')}</p>
           <div class="criteria">
@@ -609,10 +630,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (createdStr) {
           reviewHTML += `<br><small>Дата: ${createdStr}</small>`;
-        }
-
-        if (r.authorName) {
-          reviewHTML += `<br><small>Автор: ${escapeHtml(r.authorName)}</small>`;
         }
 
         // Показываем base64 скин напрямую, если он есть
