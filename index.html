@@ -191,7 +191,6 @@
       <div id="auth-controls" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
         <input id="auth-email" type="email" placeholder="Email" style="flex:1; min-width:180px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
         <input id="auth-password" type="password" placeholder="Пароль" style="flex:1; min-width:140px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
-        <!-- Роль назначает только админ; селектор скрыт -->
         <button id="auth-login" class="submit-button" style="margin-right:0;">Войти</button>
         <button id="auth-register" class="reset-button" style="margin-right:0;">Регистрация</button>
         <button id="auth-google" class="submit-button" style="background:#4285F4; margin-right:0;">Google</button>
@@ -208,17 +207,6 @@
       <div style="margin-top:8px;">
         <button id="auth-logout" class="reset-button" style="display:none; margin-right:0;">Выйти</button>
       </div>
-      <!-- Мини‑панель админа для назначения ролей -->
-      <div id="admin-roles" style="display:none; margin-top:10px; padding-top:8px; border-top:1px dashed #2f2f3b;">
-        <div style="font-weight:700; margin-bottom:6px;">Админ: назначение ролей</div>
-        <input id="role-user-uid" type="text" placeholder="UID пользователя" style="width:100%; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px; margin-bottom:6px;" />
-        <select id="role-new-role" style="width:100%; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px; margin-bottom:6px;">
-          <option value="reviewer">Рецензент</option>
-          <option value="creator">Создатель</option>
-        </select>
-        <button id="role-apply" class="submit-button" style="margin-right:0; width:100%;">Назначить роль</button>
-        <div id="role-admin-error" class="error" style="display:none; margin-top:8px;"></div>
-      </div>
       <div id="auth-error" class="error" style="display:none; margin-top:8px;"></div>
     </section>
     <div class="upload-section" id="upload">
@@ -226,28 +214,6 @@
       <div class="info-text">Загрузите PNG файл скина (64x64 или 64x32)</div>
       <canvas id="skin-viewer" class="skin-preview"></canvas>
     </div>
-
-    <!-- Мини‑платформа скинов (бесплатная: base64 в Firestore, без Storage) -->
-    <section id="skin-platform" style="margin-top:18px;">
-      <h2 style="margin:6px 0 10px 0;">Платформа скинов</h2>
-      <div id="platform-msg" class="info-text">Войдите, чтобы загружать или оценивать.</div>
-      <div id="skin-upload-v2" style="display:none; background:#1e1e27; border:1px solid #2f2f3b; border-radius:10px; padding:10px 14px; margin-bottom:12px;">
-        <div style="font-weight:700; margin-bottom:6px;">Загрузка скина (для Создателей)</div>
-        <input id="skin-file-v2" type="file" accept="image/png" />
-        <input id="skin-name-v2" type="text" placeholder="Название" style="display:block; margin-top:8px; width:100%; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
-        <textarea id="skin-desc-v2" placeholder="Описание" style="display:block; margin-top:8px; width:100%; min-height:60px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;"></textarea>
-        <button id="skin-upload-btn-v2" class="submit-button" style="margin-top:8px;">Загрузить</button>
-        <div id="skin-upload-error" class="error" style="display:none; margin-top:8px;"></div>
-      </div>
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
-        <div style="font-weight:700;">Лента скинов</div>
-        <select id="feed-sort" style="background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:6px;">
-          <option value="new">Новые</option>
-          <option value="top">Лучшие</option>
-        </select>
-      </div>
-      <div id="skin-feed" class="reviews" style="margin-top:10px;"><div class="loading">Загрузка ленты...</div></div>
-    </section>
 
     <div class="criterion">
       <label for="line">Лайн / Образ <span id="line-value">5</span></label>
@@ -495,8 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
     addDoc,
     getDocs,
     getDoc,
-    updateDoc,
-    runTransaction,
     query,
     orderBy,
     serverTimestamp,
@@ -597,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e && e.code) setAuthError(`Firebase: ${e.code}`);
     });
 
-    onAuthStateChanged(auth, async (user) => {
+    onAuthStateChanged(auth, (user) => {
       window.currentUserUid = user ? user.uid : null;
       if (user) {
         if (authStatus) authStatus.textContent = `Вход выполнен: ${user.email || 'пользователь'}`;
@@ -608,7 +572,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authEmail) authEmail.style.display = 'none';
         if (authPassword) authPassword.style.display = 'none';
         if (nickRow) nickRow.style.display = 'flex';
-        // загрузка ника и роли
+        // загрузка ника
         (async () => {
           const existing = await loadNickname(user.uid);
           const fallback = user.email ? user.email.split('@')[0] : 'user';
@@ -618,30 +582,6 @@ document.addEventListener('DOMContentLoaded', () => {
           if (nickEditBox) nickEditBox.style.display = 'none';
           window.currentUserDisplayName = name;
         })();
-
-        // подгружаем профиль с ролью
-        try {
-          const userDocRef = doc(db, 'users', user.uid);
-          const snap = await getDoc(userDocRef);
-          const role = snap.exists() ? (snap.data()?.role || 'reviewer') : 'reviewer';
-          window.currentUserRole = role;
-        } catch(_) { window.currentUserRole = 'creator'; }
-
-        // показать загрузчик скинов, если создатель
-        const upBox = document.getElementById('skin-upload-v2');
-        if (upBox) upBox.style.display = (window.currentUserRole === 'creator') ? 'block' : 'none';
-        const platformMsg = document.getElementById('platform-msg');
-        if (platformMsg) platformMsg.textContent = (window.currentUserRole === 'creator') ? 'Вы можете загружать скины.' : 'Вы можете оценивать скины.';
-
-        // показать админ-панель только администратору
-        try {
-          const userDocRef = doc(db, 'users', user.uid);
-          const snap = await getDoc(userDocRef);
-          const isAdmin = snap.exists() && (snap.data()?.role === 'admin');
-          const adminBox = document.getElementById('admin-roles');
-          if (adminBox) adminBox.style.display = isAdmin ? 'block' : 'none';
-          window.currentUserIsAdmin = isAdmin;
-        } catch(_) {}
       } else {
         if (authStatus) authStatus.textContent = 'Вы не вошли. Войдите или зарегистрируйтесь, чтобы сохранять рецензии.';
         if (authLogoutBtn) authLogoutBtn.style.display = 'none';
@@ -652,11 +592,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authPassword) authPassword.style.display = 'inline-block';
         if (nickRow) nickRow.style.display = 'none';
         window.currentUserDisplayName = null;
-        window.currentUserRole = null;
-        const upBox = document.getElementById('skin-upload-v2');
-        if (upBox) upBox.style.display = 'none';
-        const adminBox = document.getElementById('admin-roles');
-        if (adminBox) adminBox.style.display = 'none';
       }
       if (window.updateSubmitState) try { window.updateSubmitState(); } catch(e) {}
       setAuthError('');
@@ -682,18 +617,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const email = authEmail?.value?.trim();
       const password = authPassword?.value || '';
       if (!email || !password) return setAuthError('Введите email и пароль.');
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      try {
-        // роль по умолчанию назначает система: только РЕЦЕНЗЕНТ
-        const role = 'reviewer';
-        await setDoc(doc(db, 'users', cred.user.uid), {
-          username: email.split('@')[0],
-          role,
-          avatarUrl: '',
-          avgCreatorRating: 0,
-          createdAt: Date.now()
-        }, { merge: true });
-      } catch(_) {}
+      await createUserWithEmailAndPassword(auth, email, password);
     } catch (e) {
       setAuthError(e?.message || 'Ошибка регистрации');
     }
@@ -1062,183 +986,6 @@ if (!window.uploadedSkin) {
       submitBtn.disabled = false;
       submitBtn.textContent = 'Сохранить';
     }
-  });
-
-  // ===== ПЛАТФОРМА СКИНОВ (без Storage: сохраняем base64 в Firestore) =====
-  const skinFile = document.getElementById('skin-file-v2');
-  const skinName = document.getElementById('skin-name-v2');
-  const skinDesc = document.getElementById('skin-desc-v2');
-  const skinBtn = document.getElementById('skin-upload-btn-v2');
-  const skinErr = document.getElementById('skin-upload-error');
-  const feedEl = document.getElementById('skin-feed');
-  const feedSort = document.getElementById('feed-sort');
-
-  function setSkinErr(msg) {
-    if (!skinErr) return;
-    if (msg) { skinErr.textContent = msg; skinErr.style.display = 'block'; } else { skinErr.textContent=''; skinErr.style.display='none'; }
-  }
-
-  async function uploadSkinBase64() {
-    try {
-      setSkinErr('');
-      if (!window.currentUserUid) return setSkinErr('Войдите, чтобы загружать.');
-      if (window.currentUserRole !== 'creator') return setSkinErr('Только создатели могут загружать.');
-      const file = skinFile?.files?.[0];
-      if (!file) return setSkinErr('Выберите PNG-файл.');
-      if (!file.type.includes('png')) return setSkinErr('Только PNG.');
-      const name = (skinName?.value || '').trim();
-      if (!name) return setSkinErr('Введите название.');
-      const desc = (skinDesc?.value || '').trim();
-      const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
-      const base64 = String(dataUrl);
-      if (base64.length > 1_200_000) return setSkinErr('Файл слишком большой (огр. ~900KB-1MB).');
-
-      const docRef = await addDoc(collection(db, 'skins'), {
-        authorId: window.currentUserUid,
-        name,
-        description: desc,
-        imageData: base64,
-        ratings: {},
-        averageRating: 0,
-        ratingCount: 0,
-        createdAt: serverTimestamp()
-      });
-      // очистка
-      if (skinFile) skinFile.value = '';
-      if (skinName) skinName.value = '';
-      if (skinDesc) skinDesc.value = '';
-      await loadSkinFeed();
-      alert('Скин загружен!');
-    } catch(e) {
-      setSkinErr(e?.message || 'Не удалось загрузить скин');
-    }
-  }
-
-  if (skinBtn) skinBtn.addEventListener('click', uploadSkinBase64);
-  if (feedSort) feedSort.addEventListener('change', () => loadSkinFeed());
-
-  async function loadSkinFeed() {
-    if (!feedEl) return;
-    feedEl.innerHTML = '<div class="loading">Загрузка ленты...</div>';
-    try {
-      const sort = (feedSort?.value || 'new');
-      const ref = sort === 'top'
-        ? query(collection(db, 'skins'), orderBy('averageRating', 'desc'), limit(30))
-        : query(collection(db, 'skins'), orderBy('createdAt', 'desc'), limit(30));
-      const snap = await getDocs(ref);
-      if (snap.empty) { feedEl.innerHTML = '<div class="info-text">Скинов пока нет.</div>'; return; }
-      feedEl.innerHTML = '';
-      snap.forEach(d => {
-        const s = d.data();
-        const card = document.createElement('div');
-        card.className = 'review-item';
-        const rightId = `skin_card_img_${d.id}`;
-        card.innerHTML = `
-          <div class="review-body">
-            <div class="author-badge">${escapeHtml(s.name || 'Без названия')}</div>
-            <p>${escapeHtml(s.description || '')}</p>
-            <div class="criteria">
-              <small><b>Автор:</b> ${escapeHtml(s.authorId || '-')}</small>
-              <small><b>Средняя:</b> ${Number(s.averageRating || 0)} / 90</small>
-            </div>
-          </div>
-          <div class="review-preview"></div>
-        `;
-        feedEl.appendChild(card);
-        const previewCol = card.querySelector('.review-preview');
-        const img = document.createElement('img');
-        img.id = rightId; img.className = 'skin-thumb'; img.loading = 'lazy'; img.decoding='async'; img.alt='skin'; img.style.opacity='0.95';
-        try { img.src = s.imageData; } catch(_) {}
-        img.addEventListener('click', () => { if (window.openSkinModal) window.openSkinModal(s.imageData); });
-        const hint = document.createElement('div'); hint.className='review-hint'; hint.textContent='Нажмите на скин для просмотра';
-        previewCol.appendChild(img); previewCol.appendChild(hint);
-
-        // отрисуем 3D‑снимок
-        window.mobilePreviewQueue = (window.mobilePreviewQueue || Promise.resolve()).then(async () => {
-          try {
-            const off = document.createElement('canvas');
-            const parentWidth = previewCol.clientWidth || 360;
-            const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
-            const targetWidth = Math.max(220, Math.min(isMobile ? 360 : 420, parentWidth));
-            const targetHeight = Math.round(targetWidth * 1.35);
-            off.width = targetWidth; off.height = targetHeight;
-            const v = new skinview3d.SkinViewer({ canvas: off, width: targetWidth, height: targetHeight, preserveDrawingBuffer: true });
-            try { v.renderer.setClearColor(0x15151c, 1); } catch(_) {}
-            try { await v.loadSkin(s.imageData); } catch(_) {}
-            v.zoom = 0.95; v.autoRotate = false;
-            try { const walk = new skinview3d.WalkingAnimation(v); walk.speed=1.0; walk.paused=true; walk.progress=0.30; v.playerObject.rotation.y=-0.4; v.camera.position.set(0,24,46); v.camera.lookAt(0,18,0); } catch(_) {}
-            await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
-            img.src = off.toDataURL('image/png');
-            try { v.dispose(); } catch(_) {}
-          } catch(_) { try { img.src = s.imageData; } catch(_){} }
-        });
-
-        // Рейтинг (для рецензентов)
-        const canRate = window.currentUserUid && window.currentUserRole === 'reviewer';
-        if (canRate) {
-          const rateWrap = document.createElement('div');
-          rateWrap.style.marginTop = '8px';
-          const input = document.createElement('input'); input.type='number'; input.min='0'; input.max='90'; input.value='45'; input.style.width='80px'; input.style.marginRight='8px';
-          const btn = document.createElement('button'); btn.className='submit-button'; btn.textContent='Оценить';
-          rateWrap.appendChild(input); rateWrap.appendChild(btn);
-          card.querySelector('.review-body').appendChild(rateWrap);
-          btn.addEventListener('click', async () => {
-            const val = Math.max(0, Math.min(90, parseInt(input.value,10)||0));
-            try {
-              await runTransaction(db, async (tx) => {
-                const ref = doc(db, 'skins', d.id);
-                const snap = await tx.get(ref);
-                if (!snap.exists()) throw new Error('Скин не найден');
-                const data = snap.data();
-                const ratings = data.ratings || {};
-                if (ratings[window.currentUserUid]) throw new Error('Вы уже оценили этот скин');
-                ratings[window.currentUserUid] = val;
-                const ratingCount = (data.ratingCount || 0) + 1;
-                const averageRating = Math.round(((data.averageRating || 0) * (ratingCount - 1) + val) / ratingCount);
-                tx.update(ref, { ratings, ratingCount, averageRating });
-              });
-              await loadSkinFeed();
-              alert('Оценка сохранена');
-            } catch(e) { alert(e?.message || 'Не удалось сохранить оценку'); }
-          });
-        }
-      });
-    } catch(e) {
-      feedEl.innerHTML = '<div class="error">Не удалось загрузить ленту.</div>';
-    }
-  }
-
-  // первая загрузка ленты
-  loadSkinFeed();
-
-  // ===== Админ: назначение ролей =====
-  const roleUidInput = document.getElementById('role-user-uid');
-  const roleNewSelect = document.getElementById('role-new-role');
-  const roleApplyBtn = document.getElementById('role-apply');
-  const roleAdminErr = document.getElementById('role-admin-error');
-
-  function setRoleAdminErr(msg) {
-    if (!roleAdminErr) return;
-    if (msg) { roleAdminErr.textContent = msg; roleAdminErr.style.display = 'block'; } else { roleAdminErr.textContent=''; roleAdminErr.style.display='none'; }
-  }
-
-  if (roleApplyBtn) roleApplyBtn.addEventListener('click', async () => {
-    try {
-      setRoleAdminErr('');
-      if (!window.currentUserIsAdmin) return setRoleAdminErr('Недостаточно прав.');
-      const uid = (roleUidInput?.value || '').trim();
-      const newRole = (roleNewSelect?.value === 'creator') ? 'creator' : 'reviewer';
-      if (!uid) return setRoleAdminErr('Введите UID пользователя.');
-      await setDoc(doc(db, 'users', uid), { role: newRole }, { merge: true });
-      setRoleAdminErr('Роль назначена.');
-      // обновим локально, если админ меняет сам себя
-      if (window.currentUserUid === uid) {
-        window.currentUserRole = newRole;
-        const upBox = document.getElementById('skin-upload-v2');
-        if (upBox) upBox.style.display = (newRole === 'creator') ? 'block' : 'none';
-      }
-      await loadSkinFeed();
-    } catch(e) { setRoleAdminErr(e?.message || 'Не удалось назначить роль'); }
   });
 </script>
 
