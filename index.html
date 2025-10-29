@@ -6,9 +6,23 @@
   <title>Оценка скина</title>
   <script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
   <style>
+    :root {
+      --bg: #0e0e12;
+      --surface: #11131a;
+      --surface-2: #15151c;
+      --text: #eaeaf2;
+      --text-2: #a9a9b8;
+      --text-3: #7b7b8f;
+      --line: #2a2d3a;
+      --accent: #8a2be2;
+      --accent-hover: #9b4dff;
+      --grad: linear-gradient(135deg, #6B5BFF 0%, #9049FF 35%, #C24BFF 68%, #FF49C6 100%);
+      --ring-shadow: 0 0 80px rgba(144,73,255,.25);
+      --radius: 16px;
+    }
     body {
-      background-color: #0e0e12;
-      color: #fff;
+      background-color: var(--bg);
+      color: var(--text);
       font-family: 'Inter', sans-serif;
       display: flex;
       justify-content: center;
@@ -19,8 +33,8 @@
       box-sizing: border-box;
     }
     .container {
-      background: #15151c;
-      border-radius: 16px;
+      background: var(--surface-2);
+      border-radius: var(--radius);
       padding: 20px;
       max-width: 980px;
       width: 100%;
@@ -49,15 +63,15 @@
     input[type=range]::-moz-range-thumb { width:20px; height:20px; background:#fff; border-radius:50%; cursor:pointer; border:2px solid #8a2be2; }
     .score-display { background:#1e1e27; border-radius:10px; padding:12px; text-align:center; font-size:1.1em; font-weight:bold; margin-top:20px;}
     textarea { width:100%; min-height:80px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:10px; resize:vertical; margin-bottom:12px; font-family:inherit; box-sizing:border-box; }
-    .reset-button, .submit-button { background:#8a2be2; color:#fff; border:none; padding:10px 20px; border-radius:8px; font-size:1em; cursor:pointer; margin-right:8px; transition:all .15s; }
-    .reset-button:hover, .submit-button:hover { background:#9b4dff; transform:translateY(-1px); }
+    .reset-button, .submit-button { background:var(--accent); color:#fff; border:none; padding:10px 20px; border-radius:8px; font-size:1em; cursor:pointer; margin-right:8px; transition:all .15s; }
+    .reset-button:hover, .submit-button:hover { background:var(--accent-hover); transform:translateY(-1px); }
     .reset-button:disabled, .submit-button:disabled { background:#555; cursor:not-allowed; }
     .reset-button:focus-visible, .submit-button:focus-visible, input:focus-visible, textarea:focus-visible {
       outline: 2px solid #8a2be2;
       outline-offset: 2px;
     }
     .reviews { margin-top:30px; }
-    .review-item { background:#1b1b23; border-radius:8px; padding:12px; margin-bottom:12px; border-left:3px solid #8a2be2; }
+    .review-item { background:#1b1b23; border-radius:8px; padding:12px; margin-bottom:12px; border-left:3px solid var(--accent); }
     .review-item h3 { margin-top:0; color:#8a2be2; }
     .review-item { display:flex; gap:16px; align-items:flex-start; }
     .review-body { flex: 1 1 auto; }
@@ -80,13 +94,27 @@
       display: inline-block;
       background: #1e1e27;
       color: #fff;
-      border: 1px solid #8a2be2;
+      border: 1px solid var(--accent);
       border-radius: 12px;
       padding: 6px 10px;
       font-weight: 700;
       margin-bottom: 8px;
       box-shadow: 0 0 10px rgba(138,43,226,0.15);
     }
+
+    /* Hero */
+    .hero { position: relative; padding: 24px 16px 28px; margin-bottom: 12px; background: var(--surface); border-radius: var(--radius); overflow:hidden; }
+    .hero-ring { position:absolute; inset:auto; left:50%; top:50%; width:420px; height:420px; transform:translate(-50%,-50%); border-radius:50%;
+      background: var(--grad); padding:2px; box-shadow: var(--ring-shadow); }
+    .hero-ring::before { content:""; display:block; width:100%; height:100%; border-radius:50%; background: radial-gradient(closest-side, #0e0e12 85%, transparent 86%); }
+    .hero-content { position:relative; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .hero-title { font-size:1.6em; margin:0; letter-spacing:.2px; }
+    .hero-cta { display:inline-block; padding:10px 18px; border-radius:10px; background: var(--grad); color:#fff; text-decoration:none; font-weight:600; box-shadow: var(--ring-shadow); }
+
+    /* Preview border gradient */
+    .review-preview .skin-thumb { border:1px solid transparent; border-radius:10px; background:
+      linear-gradient(#1b1b23,#1b1b23) padding-box,
+      var(--grad) border-box; }
     /* Фиксированная панель авторизации справа */
     @media (min-width: 1100px) {
       body.with-auth-sidebar { padding-right: 340px; }
@@ -162,6 +190,13 @@
   </a>
   <h1>Оценка скина</h1>
 </header>
+    <section class="hero">
+      <div class="hero-ring"></div>
+      <div class="hero-content">
+        <h2 class="hero-title">MMMSkin</h2>
+        <a href="#upload" class="hero-cta">Загрузить скин</a>
+      </div>
+    </section>
     <section class="auth" id="auth-section" style="margin:10px 0 16px 0; background:#1e1e27; border:1px solid #2f2f3b; border-radius:10px; padding:10px 14px; position:fixed; right:20px; top:20px; width:300px; z-index:1000;">
       <div id="auth-status" class="info-text" style="margin-bottom:8px;">Вы не вошли. Войдите или зарегистрируйтесь, чтобы сохранять рецензии.</div>
       <div id="auth-controls" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
@@ -185,7 +220,7 @@
       </div>
       <div id="auth-error" class="error" style="display:none; margin-top:8px;"></div>
     </section>
-    <div class="upload-section">
+    <div class="upload-section" id="upload">
       <input type="file" id="skin-upload" accept="image/png" />
       <div class="info-text">Загрузите PNG файл скина (64x64 или 64x32)</div>
       <canvas id="skin-viewer" class="skin-preview"></canvas>
@@ -687,6 +722,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (snapshot.empty) {
         container.innerHTML = '<div class="info-text">Пока нет рецензий. Будьте первым!</div>';
+        const maybeMore = document.getElementById('reviews-more');
+        if (maybeMore) maybeMore.style.display = 'none';
         return;
       }
 
@@ -770,8 +807,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                   const walk = new skinview3d.WalkingAnimation(v);
                   walk.speed = 1.0; walk.paused = true; walk.progress = 0.35;
-                } catch(e) {}
-                await new Promise(res => setTimeout(res, 200));
+                  // Повернём модель слегка вбок для ракурса, похожего на NameMC
+                  v.playerObject.rotation.y = -0.6;
+                  // Небольшое смещение камеры вверх и вперёд
+                  v.camera.position.set(24, 22, 38);
+                  v.camera.lookAt(0, 18, 0);
+                } catch(e) { try { v.playerObject.rotation.y = -0.6; } catch(_) {} }
+                await new Promise(res => setTimeout(res, 120));
                 el.src = off.toDataURL('image/png');
                 try { v.dispose(); } catch(e){}
               } catch(e) {
@@ -783,19 +825,25 @@ document.addEventListener('DOMContentLoaded', () => {
         reviewsLastDoc = doc;
       });
 
-      // Показать/создать кнопку "Загрузить ещё"
+      // Кнопка "Загрузить ещё" — показываем только если есть ещё страницы
       let moreBtn = document.getElementById('reviews-more');
-      if (!moreBtn) {
-        const wrap = document.createElement('div');
-        wrap.style.textAlign = 'center';
-        wrap.style.marginTop = '10px';
-        moreBtn = document.createElement('button');
-        moreBtn.id = 'reviews-more';
-        moreBtn.className = 'reset-button';
-        moreBtn.textContent = 'Загрузить ещё';
-        wrap.appendChild(moreBtn);
-        container.parentElement.appendChild(wrap);
-        moreBtn.addEventListener('click', () => loadReviews(false));
+      const shouldShowMore = snapshot.size >= REVIEWS_PAGE;
+      if (shouldShowMore) {
+        if (!moreBtn) {
+          const wrap = document.createElement('div');
+          wrap.style.textAlign = 'center';
+          wrap.style.marginTop = '10px';
+          moreBtn = document.createElement('button');
+          moreBtn.id = 'reviews-more';
+          moreBtn.className = 'reset-button';
+          moreBtn.textContent = 'Загрузить ещё';
+          wrap.appendChild(moreBtn);
+          container.parentElement.appendChild(wrap);
+          moreBtn.addEventListener('click', () => loadReviews(false));
+        }
+        moreBtn.style.display = 'inline-block';
+      } else if (moreBtn) {
+        moreBtn.style.display = 'none';
       }
 
     } catch (err) {
