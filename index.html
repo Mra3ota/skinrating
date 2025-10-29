@@ -669,6 +669,10 @@ document.addEventListener('DOMContentLoaded', () => {
         container.innerHTML = '';
       }
 
+      const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+      let mobileViewerCount = window.mobileViewerCount || 0;
+      const MAX_MOBILE_VIEWERS = 3; // ограничим число WebGL контекстов на телефонах
+
       snapshot.forEach(doc => {
         const r = doc.data();
         const reviewDiv = document.createElement('div');
@@ -703,37 +707,49 @@ document.addEventListener('DOMContentLoaded', () => {
           reviewHTML += `<br><small>Дата: ${createdStr}</small>`;
         }
 
-        // Показываем base64 скин напрямую, если он есть
- if (r.skinData) {
-  const viewerId = `viewer_${doc.id}`;
-  reviewHTML += `<br><canvas id="${viewerId}" width="150" height="200" class="skin-thumb"></canvas>`;
-  setTimeout(() => {
-    try {
-      const viewer = new skinview3d.SkinViewer({
-        canvas: document.getElementById(viewerId),
-        width: 150,
-        height: 200,
-        skin: r.skinData
-      });
-      viewer.zoom = 0.9;
-      viewer.autoRotate = true;
-      const control = skinview3d.createOrbitControls(viewer);
-      control.enableZoom = false;
-      control.enableRotate = true;
-      if (window.reviewViewers) window.reviewViewers.push(viewer);
-      const canvasEl = document.getElementById(viewerId);
-      if (canvasEl) {
-        canvasEl.style.cursor = 'pointer';
-        canvasEl.addEventListener('click', () => openSkinModal(r.skinData));
-      }
-    } catch (e) {
-      console.error('Ошибка при создании 3D предпросмотра:', e);
-    }
-  }, 300);
-}
+        // Показываем skin: на мобильных создаём не больше N 3D-просмотрщиков, остальным — статичное изображение
+        if (r.skinData) {
+          const viewerId = `viewer_${doc.id}`;
+          if (isMobile && mobileViewerCount >= MAX_MOBILE_VIEWERS) {
+            reviewHTML += `<br><img id="${viewerId}" src="${r.skinData}" alt="skin" class="skin-thumb" style="width:150px; height:auto;">`;
+          } else {
+            reviewHTML += `<br><canvas id="${viewerId}" width="150" height="200" class="skin-thumb"></canvas>`;
+            setTimeout(() => {
+              try {
+                const canvasEl = document.getElementById(viewerId);
+                const viewer = new skinview3d.SkinViewer({ canvas: canvasEl, width: 150, height: 200, skin: r.skinData });
+                viewer.zoom = 0.9; viewer.autoRotate = true;
+                const control = skinview3d.createOrbitControls(viewer);
+                control.enableZoom = false; control.enableRotate = true;
+                // Обработка потери контекста на мобильных
+                if (canvasEl) canvasEl.addEventListener('webglcontextlost', () => {
+                  try { viewer.dispose(); } catch(e){}
+                  const img = document.createElement('img');
+                  img.src = r.skinData; img.className = 'skin-thumb'; img.style.width = '150px'; img.style.height = 'auto';
+                  canvasEl.replaceWith(img);
+                }, { once: true });
+                if (window.reviewViewers) window.reviewViewers.push(viewer);
+                if (isMobile) mobileViewerCount++;
+                window.mobileViewerCount = mobileViewerCount;
+              } catch (e) {
+                console.error('Ошибка при создании 3D предпросмотра:', e);
+              }
+            }, 300);
+          }
+        }
 
         reviewDiv.innerHTML = reviewHTML;
         container.appendChild(reviewDiv);
+        // Привяжем клик по превью (canvas или img)
+        if (r.skinData) {
+          const el = document.getElementById(`viewer_${doc.id}`);
+          if (el) {
+            el.style.cursor = 'pointer';
+            el.addEventListener('click', () => {
+              if (window.openSkinModal) window.openSkinModal(r.skinData);
+            });
+          }
+        }
         reviewsLastDoc = doc;
       });
 
