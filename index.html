@@ -789,7 +789,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // динамический рендер под ширину правой колонки
                 const targetEl = document.getElementById(`viewer_${doc.id}`);
                 const targetWidth = Math.max(385, Math.min(560, (targetEl?.parentElement?.clientWidth || 400)));
-                const targetHeight = targetWidth; // квадратный кадр под увеличенную рамку
+                const targetHeight = targetWidth; // квадрат для крупной рамки
                 off.width = targetWidth; off.height = targetHeight;
                 const v = new skinview3d.SkinViewer({ canvas: off, width: targetWidth, height: targetHeight, skin: r.skinData });
                 v.zoom = 0.95; v.autoRotate = false;
