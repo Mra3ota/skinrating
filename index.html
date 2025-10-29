@@ -75,8 +75,10 @@
     .review-item h3 { margin-top:0; color:#8a2be2; }
     .review-item { display:flex; gap:16px; align-items:flex-start; }
     .review-body { flex: 1 1 60%; }
-    .review-preview { flex: 1 1 40%; text-align:center; }
-    .review-preview .skin-thumb { width:100%; height:auto; max-width:100%; }
+    .review-preview { flex: 1 1 40%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+    .review-preview .skin-thumb { display:block; width: 220px; height: 220px; object-fit: contain; margin: 0 auto; border:1px solid transparent; border-radius:12px; background:
+      linear-gradient(#1b1b23,#1b1b23) padding-box,
+      var(--grad) border-box; }
     .review-hint { color:#888; font-size:0.8em; margin-top:6px; }
     @media (max-width: 720px) {
       .review-item { flex-direction:column; }
