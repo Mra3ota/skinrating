@@ -1,9 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="icon" href="data:,">
 <title>Итоги конкурса — Results</title>
 <style>
   :root{
@@ -69,8 +69,7 @@
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
-
-const firebaseConfig = {
+    const firebaseConfig = {
       apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
       authDomain: "skinsrzt.firebaseapp.com",
       projectId: "skinsrzt",
@@ -112,7 +111,7 @@ const firebaseConfig = {
 
     onAuthStateChanged(auth, user => {
       currentUser = user;
-      signBtn.textContent = user ? 'Выйти (' + (user.emailuser.displayName'') + ')' : 'Войти';
+      signBtn.textContent = user ? 'Выйти (' + (user.email || user.displayName || '') + ')' : 'Войти';
       adminWrap.classList.toggle('hidden', !(user && user.email === ADMIN_EMAIL));
     });
 
@@ -181,8 +180,7 @@ const firebaseConfig = {
         return { ...e, judgeCount, judges: s, sum, avgRaw, avgCeil };
       });
 
-
-if (!arr.length) {
+      if (!arr.length) {
         listWrap.innerHTML = '';
         podiumWrap.style.display = 'none';
         emptyMsg.style.display = 'block';
@@ -192,7 +190,7 @@ if (!arr.length) {
       // сортировка по avgCeil, потом avgRaw
       arr.sort((a,b) => {
         if (b.avgCeil !== a.avgCeil) return b.avgCeil - a.avgCeil;
-        return (b.avgRaw  0) - (a.avgRaw  0);
+        return (b.avgRaw || 0) - (a.avgRaw || 0);
       });
 
       // топ-3
@@ -205,7 +203,7 @@ if (!arr.length) {
         const place = idx+1;
         const el = document.createElement('div');
         el.className = 'place';
-        el.innerHTML = 
+        el.innerHTML = `
           <div style="display:flex;gap:8px;align-items:center;">
             <div style="width:80px;height:80px;border-radius:8px;overflow:hidden;background:#000" id="pv_${it.id}"></div>
             <div>
@@ -214,11 +212,11 @@ if (!arr.length) {
               <div style="margin-top:6px;"><span class="pill">Avg: ${it.avgCeil} / 90</span></div>
             </div>
           </div>
-        ;
+        `;
         el.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         podiumWrap.appendChild(el);
         // init mini skinview
-        setTimeout(()=> initMiniViewer(pv_${it.id}, it.skinData), 60);
+        setTimeout(()=> initMiniViewer(`pv_${it.id}`, it.skinData), 60);
       });
 
       // общий список (включаем топ-3 также)
@@ -227,7 +225,7 @@ if (!arr.length) {
         const place = idx+1;
         const card = document.createElement('div');
         card.className = 'card';
-        card.innerHTML = 
+        card.innerHTML = `
           <div class="thumb" id="thumb_${it.id}"></div>
           <div class="meta">
             <h2>${escapeHtml(it.authorName || '—')}</h2>
@@ -237,10 +235,10 @@ if (!arr.length) {
               <span class="pill">Сумма: ${it.sum}</span>
             </div>
           </div>
-        ;
+        `;
         card.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         listWrap.appendChild(card);
-        setTimeout(()=> initMiniViewer(thumb_${it.id}, it.skinData), 60);
+        setTimeout(()=> initMiniViewer(`thumb_${it.id}`, it.skinData), 60);
       });
     }
 
@@ -262,7 +260,7 @@ if (!arr.length) {
         viewer.autoUpdate = true;
         viewer.rotation.y = Math.PI/6;
       } catch(e){
-        el.innerHTML = <img src="${skinDataUrl||''}" style="width:100%;height:100%;object-fit:cover" />;
+        el.innerHTML = `<img src="${skinDataUrl||''}" style="width:100%;height:100%;object-fit:cover" />`;
       }
     }
 
