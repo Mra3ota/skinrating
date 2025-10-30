@@ -227,42 +227,6 @@
   </a>
   <h1>Оценка скина</h1>
 </header>
-    <nav class="tab-navigation" id="main-tabs">
-      <button class="tab-btn active" data-tab="results">Итоги конкурса</button>
-      <button class="tab-btn" data-tab="upload" style="display:none;">Загрузка скинов</button>
-    </nav>
-
-    <div class="page-section active" id="results-section">
-      <div class="results-container">
-        <h2 style="text-align:center; font-size:2.2em; margin:20px 0;">🏆 Итоги конкурса</h2>
-        <div class="winners-section">
-          <div class="winners-title">Призовые места</div>
-          <div class="winners-grid" id="winners-container"></div>
-        </div>
-        <div class="others-section">
-          <h3 style="text-align:center; font-size:1.5em; margin:20px 0;">Остальные участники</h3>
-          <div id="others-container"></div>
-        </div>
-        <div class="loading" id="results-loading">Загрузка результатов...</div>
-      </div>
-    </div>
-
-    <div class="page-section" id="upload-skins-section">
-      <div class="upload-skin-form">
-        <h2 style="text-align:center;">Загрузка скинов для конкурса</h2>
-        <input type="text" id="skin-title-input" placeholder="Название скина" maxlength="100" />
-        <input type="file" id="skin-file-input" accept="image/png" />
-        <img id="skin-preview-img" class="skin-preview-upload" style="display:none;" />
-        <button class="submit-button" id="upload-skin-btn" disabled>Загрузить скин</button>
-        <div id="upload-error" class="error" style="display:none; margin-top:10px;"></div>
-        <div id="upload-success" class="info-text" style="display:none; margin-top:10px; color:#0f0;">Скин успешно загружен!</div>
-      </div>
-      <div style="max-width:800px; margin:20px auto;">
-        <h3 style="text-align:center;">Загруженные скины</h3>
-        <div id="uploaded-skins-list"></div>
-      </div>
-    </div>
-
     <section class="auth" id="auth-section" style="margin:10px 0 16px 0; background:#1e1e27; border:1px solid #2f2f3b; border-radius:10px; padding:10px 14px; position:fixed; right:20px; top:20px; width:300px; z-index:1000;">
       <div id="auth-status" class="info-text" style="margin-bottom:8px;">Вы не вошли. Войдите или зарегистрируйтесь, чтобы сохранять рецензии.</div>
       <div id="auth-controls" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
@@ -1296,34 +1260,135 @@ if (!window.uploadedSkin) {
   });
 </script>
 
-<!-- Навигация между вкладками (статичная верстка + простой переключатель) -->
+<!-- ==================== ВСТАВЛЕНО: Навигация между вкладками и секции ==================== -->
+<!-- НАВИГАЦИЯ МЕЖДУ ВКЛАДКАМИ -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  const tabNav = document.getElementById('main-tabs');
-  const tabBtns = tabNav ? tabNav.querySelectorAll('.tab-btn') : [];
-  const resultsSection = document.getElementById('results-section');
-  const uploadSkinsSection = document.getElementById('upload-skins-section');
+  const container = document.querySelector('.container');
+  const header = container.querySelector('header');
+  const tabNav = document.createElement('nav');
+  tabNav.className = 'tab-navigation';
+  tabNav.innerHTML = `
+    <button class="tab-btn active" data-tab="results">Итоги конкурса</button>
+    <button class="tab-btn" data-tab="upload" style="display:none;">Загрузка скинов</button>
+  `;
+  header.after(tabNav);
 
-  function activate(tab) {
+  const authSection = document.getElementById('auth-section');
+  const uploadSection = document.getElementById('upload');
+  const criteriaElements = document.querySelectorAll('.criterion');
+  const scoreDisplay = document.getElementById('total');
+  const titleInput = document.getElementById('title');
+  const textInput = document.getElementById('text');
+  const textWarning = document.getElementById('text-warning');
+  const disclaimer = document.querySelector('.disclaimer');
+  const resetBtn = document.getElementById('reset');
+  const submitBtn = document.getElementById('submit');
+  const contestSection = document.getElementById('contest');
+  const reviewsSection = document.getElementById('reviews');
+
+  const reviewPageSection = document.createElement('div');
+  reviewPageSection.className = 'page-section active';
+  reviewPageSection.id = 'review-section';
+
+  if (uploadSection) reviewPageSection.appendChild(uploadSection);
+  criteriaElements.forEach(el => reviewPageSection.appendChild(el));
+  if (scoreDisplay) reviewPageSection.appendChild(scoreDisplay);
+  if (titleInput) reviewPageSection.appendChild(titleInput);
+  if (textInput) reviewPageSection.appendChild(textInput);
+  if (textWarning) reviewPageSection.appendChild(textWarning);
+  if (disclaimer) reviewPageSection.appendChild(disclaimer);
+  if (resetBtn) reviewPageSection.appendChild(resetBtn);
+  if (submitBtn) reviewPageSection.appendChild(submitBtn);
+  if (contestSection) reviewPageSection.appendChild(contestSection);
+  if (reviewsSection) reviewPageSection.appendChild(reviewsSection);
+
+  tabNav.after(reviewPageSection);
+
+  const resultsSection = document.createElement('div');
+  resultsSection.className = 'page-section';
+  resultsSection.id = 'results-section';
+  resultsSection.innerHTML = `
+    <div class="results-container">
+      <h2 style="text-align:center; font-size:2.2em; margin:20px 0;">🏆 Итоги конкурса</h2>
+      <div class="winners-section">
+        <div class="winners-title">Призовые места</div>
+        <div class="winners-grid" id="winners-container"></div>
+      </div>
+      <div class="others-section">
+        <h3 style="text-align:center; font-size:1.5em; margin:20px 0;">Остальные участники</h3>
+        <div id="others-container"></div>
+      </div>
+      <div class="loading" id="results-loading">Загрузка результатов...</div>
+    </div>
+  `;
+  reviewPageSection.after(resultsSection);
+
+  const uploadSkinsSection = document.createElement('div');
+  uploadSkinsSection.className = 'page-section';
+  uploadSkinsSection.id = 'upload-skins-section';
+  uploadSkinsSection.innerHTML = `
+    <div class="upload-skin-form">
+      <h2 style="text-align:center;">Загрузка скинов для конкурса</h2>
+      <input type="text" id="skin-title-input" placeholder="Название скина" maxlength="100" />
+      <input type="file" id="skin-file-input" accept="image/png" />
+      <img id="skin-preview-img" class="skin-preview-upload" style="display:none;" />
+      <button class="submit-button" id="upload-skin-btn" disabled>Загрузить скин</button>
+      <div id="upload-error" class="error" style="display:none; margin-top:10px;"></div>
+      <div id="upload-success" class="info-text" style="display:none; margin-top:10px; color:#0f0;">Скин успешно загружен!</div>
+    </div>
+    <div style="max-width:800px; margin:20px auto;">
+      <h3 style="text-align:center;">Загруженные скины</h3>
+      <div id="uploaded-skins-list"></div>
+    </div>
+  `;
+  resultsSection.after(uploadSkinsSection);
+
+  const tabBtns = tabNav.querySelectorAll('.tab-btn');
+  const pageSections = document.querySelectorAll('.page-section');
+
+  function activateTab(tab) {
     tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-    if (resultsSection) resultsSection.classList.toggle('active', tab === 'results');
-    if (uploadSkinsSection) uploadSkinsSection.classList.toggle('active', tab === 'upload');
+    pageSections.forEach(section => { section.classList.remove('active'); });
+    if (tab === 'results') resultsSection.classList.add('active');
+    else if (tab === 'upload') uploadSkinsSection.classList.add('active');
+    else reviewPageSection.classList.add('active');
     try { history.replaceState(null, '', '#tab=' + tab); } catch(_) {}
   }
 
-  tabBtns.forEach(btn => btn.addEventListener('click', () => activate(btn.dataset.tab)));
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+  });
 
-  function readHash() {
+  function readTabFromHash() {
     const h = (location.hash || '').toLowerCase();
+    if (h.includes('results')) return 'results';
     if (h.includes('upload')) return 'upload';
-    return 'results';
+    return 'review';
   }
-  window.addEventListener('hashchange', () => activate(readHash()));
-  activate(readHash());
 
-  // Видимость вкладки загрузки — только для admin
+  window.addEventListener('hashchange', () => activateTab(readTabFromHash()));
+
+  // Навигация из самих секций
+  try {
+    const rc = resultsSection.querySelector('.results-container');
+    if (rc) rc.insertAdjacentHTML('afterbegin', '<div style="text-align:center; margin:10px 0;"><button class="reset-button" id="back-to-review-results">Назад к оценке</button></div>');
+    const backResults = document.getElementById('back-to-review-results');
+    if (backResults) backResults.addEventListener('click', () => activateTab('review'));
+  } catch(_) {}
+  try {
+    uploadSkinsSection.insertAdjacentHTML('afterbegin', '<div style="text-align:center; margin:10px 0;"><button class="reset-button" id="back-to-review-upload">Назад к оценке</button></div>');
+    const backUpload = document.getElementById('back-to-review-upload');
+    if (backUpload) backUpload.addEventListener('click', () => activateTab('review'));
+  } catch(_) {}
+
+  // Инициализация активной вкладки
+  activateTab(readTabFromHash());
+
   window.updateTabVisibility = function(role) {
     const uploadTab = document.querySelector('[data-tab="upload"]');
+    const reviewTab = document.querySelector('[data-tab="review"]');
+    if (reviewTab) reviewTab.style.display = 'inline-block';
     if (uploadTab) uploadTab.style.display = (role === 'admin') ? 'inline-block' : 'none';
   };
 });
