@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Итоги конкурса — MMM</title>
+  <style>
+    :root{
+      --bg:#0e0e12; --surface:#11131a; --accent:#8a2be2; --text:#eaeaf2; --muted:#9aa0b2;
+      --card:#14141a; --radius:14px;
+    }
+    body{ margin:0; font-family:Inter,Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:24px; box-sizing:border-box; }
+    .wrap{ max-width:1100px; margin:0 auto; }
+    header{ display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+    header h1{ font-size:1.4rem; margin:0; }
+    .top-actions{ margin-left:auto; }
+    .btn{ background:var(--accent); color:#fff; border:none; padding:8px 12px; border-radius:10px; cursor:pointer; text-decoration:none; font-weight:600; }
+    .grid{ display:grid; grid-template-columns: 1fr; gap:14px; }
+    /* выделенный блок для топ-3 */
+    .podium{ display:flex; gap:12px; margin-bottom:18px; }
+    .podium .place{ flex:1; background:linear-gradient(180deg, rgba(138,43,226,0.12), rgba(20,16,30,0.6)); border-radius:12px; padding:12px; border:1px solid rgba(138,43,226,0.12); }
+    .podium .place h3{ margin:0 0 8px 0; font-size:0.95rem; color:var(--accent); }
+    /* общий стиль карточки */
+    .card{ background:var(--card); border-radius:12px; padding:12px; display:flex; gap:12px; align-items:flex-start; border:1px solid rgba(255,255,255,0.03); }
+    .thumb{ width:180px; flex:0 0 180px; border-radius:10px; overflow:hidden; background:#0d0d0f; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.03); }
+    .thumb img{ max-width:100%; height:auto; display:block; }
+    .meta{ flex:1; }
+    .meta h2{ margin:0 0 6px 0; font-size:1.05rem; }
+    .meta .uploader{ color:var(--muted); font-size:0.9rem; margin-bottom:8px; }
+    .scores{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .score-pill{ background:#0f0f12; padding:6px 8px; border-radius:8px; font-weight:700; color:var(--text); border:1px solid rgba(255,255,255,0.02); }
+    .place-badge{ font-size:0.95rem; font-weight:800; color:#111; background:linear-gradient(90deg,#ffd86b,#ff6b6b); padding:6px 10px; border-radius:10px; display:inline-block; }
+    .judge-list{ margin-top:10px; border-top:1px dashed rgba(255,255,255,0.03); padding-top:10px; }
+    .judge-item{ padding:8px; border-radius:8px; background:rgba(255,255,255,0.01); margin-bottom:6px; display:flex; gap:10px; align-items:center; }
+    .judge-item b{ min-width:90px; display:inline-block; }
+    .empty{ color:var(--muted); text-align:center; padding:40px; background:var(--surface); border-radius:12px; }
+    .small{ font-size:0.9rem; color:var(--muted); }
+    /* responsive */
+    @media (max-width:900px){
+      .thumb{ width:140px; flex:0 0 140px; }
+      .podium{ flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Итоги конкурса</h1>
+      <div class="top-actions">
+        <a href="index.html" class="btn" style="background:#444;margin-right:8px;">Вернуться к оценке</a>
+        <a href="#" id="refreshBtn" class="btn">Обновить</a>
+      </div>
+    </header>
+
+    <section id="content">
+      <div id="podiumWrap" class="podium" aria-hidden="true"></div>
+      <div id="listWrap" class="grid"></div>
+      <div id="empty" class="empty" style="display:none;">Пока нет загруженных скинов для конкурса.</div>
+    </section>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
+      authDomain: "skinsrzt.firebaseapp.com",
+      projectId: "skinsrzt",
+      storageBucket: "skinsrzt.appspot.com",
+      messagingSenderId: "1084042281569",
+      appId: "1:1084042281569:web:25872944cf7dac7fd66020"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // HTML элементы
+    const podiumWrap = document.getElementById('podiumWrap');
+    const listWrap = document.getElementById('listWrap');
+    const empty = document.getElementById('empty');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    // Локальные кэши
+    let entries = {};     // { id: { ...doc } }
+    let scores = {};      // { id: [ scoreDoc, ... ] }  (ключ — skinId)
+    let scoresById = {};  // { scoreDocId: scoreData }  - не обязательно, но удобно
+
+    // Слушаем все записи участников
+    const entriesQ = query(collection(db, 'contest_entries'), orderBy('createdAt','desc'));
+    onSnapshot(entriesQ, snapshot => {
+      snapshot.docChanges().forEach(ch => {
+        const id = ch.doc.id;
+        const data = ch.doc.data();
+        if (ch.type === 'removed') {
+          delete entries[id];
+        } else {
+          entries[id] = { id, ...data };
+        }
+      });
+      rebuildView();
+    }, err => {
+      console.error('Ошибка listen entries:', err);
+    });
+
+    // Слушаем все оценки судей (в реальном времени)
+    const scoresQ = query(collection(db, 'contest_scores'), orderBy('createdAt','asc'));
+    onSnapshot(scoresQ, snapshot => {
+      // Пересобираем весь набор оценок при изменениях — для простоты и корректности
+      scores = {};
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const skinId = d.skinId;
+        if (!scores[skinId]) scores[skinId] = [];
+        scores[skinId].push({ id: doc.id, ...d });
+      });
+      rebuildView();
+    }, err => {
+      console.error('Ошибка listen scores:', err);
+    });
+
+    // Перестроение UI
+    function rebuildView(){
+      // Превращаем entries в массив с агрегацией
+      const arr = Object.values(entries).map(e => {
+        const s = scores[e.id] || [];
+        // для каждой оценки у нас уже есть поле total; если нет — вычисляем
+        const judgeCount = s.length;
+        const sumTotals = s.reduce((acc, v) => acc + (v.total || 0), 0);
+        const avgRaw = judgeCount ? (sumTotals / judgeCount) : 0;
+        const avgCeil = judgeCount ? Math.ceil(avgRaw) : 0; // округляем вверх
+        return {
+          ...e,
+          judgeCount,
+          judges: s,
+          avgRaw,
+          avgCeil
+        };
+      });
+
+      if (arr.length === 0) {
+        listWrap.innerHTML = '';
+        podiumWrap.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      } else {
+        empty.style.display = 'none';
+      }
+
+      // Сортируем по среднему округлённому вниз? требовалось — "от лучшего к худшему"
+      arr.sort((a,b) => {
+        // сначала по avgCeil, потом по avgRaw, потом по суммарной оценке (для более точного порядка)
+        if (b.avgCeil !== a.avgCeil) return b.avgCeil - a.avgCeil;
+        if ((b.avgRaw || 0) !== (a.avgRaw || 0)) return (b.avgRaw || 0) - (a.avgRaw || 0);
+        return 0;
+      });
+
+      // Топ-3 выводим в отдельном блоке
+      const top3 = arr.slice(0,3);
+      const others = arr.slice(3);
+
+      // Рисуем podium
+      podiumWrap.innerHTML = '';
+      podiumWrap.style.display = top3.length ? 'flex' : 'none';
+      top3.forEach((item, idx) => {
+        const place = idx + 1;
+        const el = document.createElement('div');
+        el.className = 'place';
+        el.innerHTML = `
+          <h3>${place} место — ${item.avgCeil} / 90</h3>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div style="width:72px;height:72px;border-radius:10px;overflow:hidden;background:#0b0b0d;border:1px solid rgba(255,255,255,0.03);">
+              <img src="${item.skinData || ''}" alt="skin" style="width:100%;height:auto;display:block" />
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:800">${escapeHtml(item.title || 'Без названия')}</div>
+              <div class="small">Автор: ${escapeHtml(item.uploaderName || '—')}</div>
+            </div>
+          </div>
+          <div style="margin-top:8px;"><span class="place-badge">ПРИЗОВОЕ</span></div>
+        `;
+        podiumWrap.appendChild(el);
+      });
+
+      // Рисуем список остальных (и топ-3 тоже выведем в общем списке — но с бейджем)
+      listWrap.innerHTML = '';
+      arr.forEach((item, index) => {
+        const place = index + 1;
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="thumb"><img src="${item.skinData || ''}" alt="skin"/></div>
+          <div class="meta">
+            <h2>${escapeHtml(item.title || 'Без названия')}</h2>
+            <div class="uploader">Автор: ${escapeHtml(item.uploaderName || '—')} • место: <span style="font-weight:800">${place}</span> • судей: ${item.judgeCount}</div>
+            <div class="scores">
+              <div class="score-pill">Средний: ${item.avgCeil} / 90</div>
+              <div class="score-pill">Сумма (по судям): ${item.judges.reduce((a,b)=>a+(b.total||0),0)}</div>
+            </div>
+
+            <div class="judge-list">
+              ${ item.judges.length ? item.judges.map(j => `
+                <div class="judge-item">
+                  <b>${escapeHtml(j.judgeName || 'Судья')}</b>
+                  <div class="small">итог: ${j.total || '-'} / 90</div>
+                  <div style="margin-left:auto; text-align:right;">
+                    <div class="small">L:${j.line ?? '-'} P:${j.palette ?? '-'} S:${j.shade ?? '-'} St:${j.style ?? '-'} V:${j.vibe ?? '-'}</div>
+                    <div class="small">${new Date((j.createdAt && j.createdAt.seconds) ? j.createdAt.seconds*1000 : Date.now()).toLocaleString('ru-RU')}</div>
+                  </div>
+                </div>
+              `).join('') : `<div class="small">Оценок ещё нет.</div>` }
+            </div>
+          </div>
+        `;
+        listWrap.appendChild(card);
+      });
+    }
+
+    // escape HTML
+    function escapeHtml(unsafe){
+      if (!unsafe && unsafe !== 0) return '';
+      return String(unsafe).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+    }
+
+    refreshBtn.addEventListener('click', () => {
+      // ручная перестройка
+      rebuildView();
+    });
+
+  </script>
+</body>
+</html>
