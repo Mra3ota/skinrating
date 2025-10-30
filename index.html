@@ -1370,17 +1370,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const tabBtns = tabNav.querySelectorAll('.tab-btn');
   const pageSections = document.querySelectorAll('.page-section');
+
+  function activateTab(tab) {
+    tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+    pageSections.forEach(section => { section.classList.remove('active'); });
+    if (tab === 'results') resultsSection.classList.add('active');
+    else if (tab === 'upload') uploadSkinsSection.classList.add('active');
+    else reviewPageSection.classList.add('active');
+    try { history.replaceState(null, '', '#tab=' + tab); } catch(_) {}
+  }
+
   tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const tab = btn.dataset.tab;
-      tabBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      pageSections.forEach(section => { section.classList.remove('active'); });
-      if (tab === 'review') reviewPageSection.classList.add('active');
-      else if (tab === 'results') resultsSection.classList.add('active');
-      else if (tab === 'upload') uploadSkinsSection.classList.add('active');
-    });
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
   });
+
+  function readTabFromHash() {
+    const h = (location.hash || '').toLowerCase();
+    if (h.includes('results')) return 'results';
+    if (h.includes('upload')) return 'upload';
+    return 'review';
+  }
+
+  window.addEventListener('hashchange', () => activateTab(readTabFromHash()));
+
+  // Навигация из самих секций
+  try {
+    const rc = resultsSection.querySelector('.results-container');
+    if (rc) rc.insertAdjacentHTML('afterbegin', '<div style="text-align:center; margin:10px 0;"><button class="reset-button" id="back-to-review-results">Назад к оценке</button></div>');
+    const backResults = document.getElementById('back-to-review-results');
+    if (backResults) backResults.addEventListener('click', () => activateTab('review'));
+  } catch(_) {}
+  try {
+    uploadSkinsSection.insertAdjacentHTML('afterbegin', '<div style="text-align:center; margin:10px 0;"><button class="reset-button" id="back-to-review-upload">Назад к оценке</button></div>');
+    const backUpload = document.getElementById('back-to-review-upload');
+    if (backUpload) backUpload.addEventListener('click', () => activateTab('review'));
+  } catch(_) {}
+
+  // Инициализация активной вкладки
+  activateTab(readTabFromHash());
 
   window.updateTabVisibility = function(role) {
     const uploadTab = document.querySelector('[data-tab="upload"]');
