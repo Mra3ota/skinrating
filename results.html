@@ -8,16 +8,37 @@
 <style>
   :root{
     --bg:#0e0e12; --card:#14141a; --accent:#8a2be2; --text:#eaeaf2; --muted:#9aa0b2;
+    --gold: #ffd700; --silver: #c0c0c0; --bronze: #cd7f32;
   }
   body{ margin:0; font-family:Inter,Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:22px; }
   .wrap{ max-width:1100px; margin:0 auto; }
   header{ display:flex; align-items:center; gap:12px; margin-bottom:18px; }
-  .btn{ background:var(--accent); color:#fff; padding:8px 12px; border-radius:8px; text-decoration:none; font-weight:700; cursor:pointer; border: none; }
-  .podium{ display:flex; gap:12px; margin-bottom:18px; }
-  .place{ flex:1; background:linear-gradient(180deg, rgba(138,43,226,0.08), rgba(20,16,30,0.5)); border-radius:10px; padding:10px; border:1px solid rgba(138,43,226,0.12); cursor:pointer; }
+  .btn{ background:var(--accent); color:#fff; padding:8px 12px; border-radius:8px; text-decoration:none; font-weight:700; cursor:pointer; border: none; transition: all 0.3s ease; }
+  .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(138,43,226,0.4); }
+  
+  .podium-title{ text-align:center; font-size:1.5rem; font-weight:800; margin-bottom:16px; background: linear-gradient(90deg, var(--gold), var(--silver), var(--bronze)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  
+  .podium{ display:flex; gap:12px; margin-bottom:24px; }
+  .place{ flex:1; background:linear-gradient(180deg, rgba(138,43,226,0.08), rgba(20,16,30,0.5)); border-radius:10px; padding:14px; border:2px solid rgba(138,43,226,0.12); cursor:pointer; position:relative; overflow:hidden; transition: all 0.3s ease; }
+  .place:hover{ transform: translateY(-4px); box-shadow: 0 8px 24px rgba(138,43,226,0.3); }
+  .place::before{ content:''; position:absolute; top:0; left:0; right:0; height:4px; }
+  .place-1{ border-color: var(--gold); }
+  .place-1::before{ background: linear-gradient(90deg, var(--gold), #ffed4e); }
+  .place-2{ border-color: var(--silver); }
+  .place-2::before{ background: linear-gradient(90deg, var(--silver), #e8e8e8); }
+  .place-3{ border-color: var(--bronze); }
+  .place-3::before{ background: linear-gradient(90deg, var(--bronze), #e89b5f); }
+  
+  .medal{ font-size:2.5rem; position:absolute; top:8px; right:8px; opacity:0.9; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+  
   .grid{ display:grid; grid-template-columns:1fr; gap:12px; }
-  .card{ display:flex; gap:12px; align-items:flex-start; padding:10px; background:var(--card); border-radius:10px; border:1px solid rgba(255,255,255,0.03); cursor:pointer; }
-  .thumb{ width:180px; height:180px; border-radius:10px; overflow:hidden; background:#0b0b0d; display:flex; align-items:center; justify-content:center; }
+  .card{ display:flex; gap:12px; align-items:flex-start; padding:10px; background:var(--card); border-radius:10px; border:1px solid rgba(255,255,255,0.03); cursor:pointer; transition: all 0.3s ease; position:relative; }
+  .card:hover{ transform: translateX(4px); border-color: rgba(138,43,226,0.3); box-shadow: -4px 0 12px rgba(138,43,226,0.2); }
+  
+  .thumb{ width:180px; height:180px; border-radius:10px; overflow:hidden; background:#0b0b0d; display:flex; align-items:center; justify-content:center; position:relative; }
+  .thumb img{ width:100%; height:100%; object-fit:cover; transition: transform 0.3s ease; }
+  .card:hover .thumb img{ transform: scale(1.05); }
+  
   .meta{ flex:1; }
   .meta h2{ margin:0 0 6px 0; font-size:1rem; }
   .small{ color:var(--muted); font-size:0.9rem; }
@@ -25,25 +46,31 @@
   .admin-form{ margin:12px 0; padding:12px; background:rgba(255,255,255,0.02); border-radius:8px; }
   .hidden{ display:none; }
   input, button, textarea, select { font-family:inherit; }
-  .file-label{ display:inline-block; padding:8px 10px; background:#111217; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.03); margin-right:8px; }
+  .file-label{ display:inline-block; padding:8px 10px; background:#111217; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.03); margin-right:8px; transition: all 0.2s ease; }
+  .file-label:hover{ background:#1a1a22; border-color: rgba(138,43,226,0.3); }
   .admin-small{ color:var(--muted); font-size:0.85rem; margin-top:6px; }
+  
+  .loading-spinner{ width:40px; height:40px; border:3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius:50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+  
   @media (max-width:900px){
     .thumb{ width:140px; height:140px; }
     .podium{ flex-direction:column; }
+    .medal{ font-size:2rem; }
   }
 </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Итоги конкурса</h1>
+      <h1>🏆 Итоги конкурса</h1>
       <div style="margin-left:auto; display:flex; gap:8px; align-items:center;">
         <a href="index.html" class="btn" style="background:#444">Вернуться</a>
         <button id="signBtn" class="btn">Войти</button>
       </div>
     </header>
 
-    <!-- admin form: видна только администратору (email = nmprokhorov@gmail.com) -->
+    <!-- admin form -->
     <div id="adminWrap" class="admin-form hidden">
       <strong>Добавить скин в конкурс (админ)</strong>
       <div style="margin-top:8px;">
@@ -55,7 +82,11 @@
       <div class="admin-small">Файл сохраняется как dataURL в документе <code>contest_entries</code>.</div>
     </div>
 
-    <div id="podiumWrap" class="podium" style="display:none;"></div>
+    <div id="podiumSection" style="display:none;">
+      <div class="podium-title">🎉 Призёры конкурса 🎉</div>
+      <div id="podiumWrap" class="podium"></div>
+    </div>
+    
     <div id="listWrap" class="grid"></div>
     <div id="emptyMsg" class="small" style="text-align:center;margin-top:18px;display:none;">Пока нет конкурсных скинов.</div>
   </div>
@@ -82,7 +113,6 @@
     const db = getFirestore(app);
     const auth = getAuth(app);
 
-    // элементы
     const adminWrap = document.getElementById('adminWrap');
     const authorInput = document.getElementById('authorInput');
     const fileInput = document.getElementById('fileInput');
@@ -90,14 +120,15 @@
     const adminMsg = document.getElementById('adminMsg');
     const listWrap = document.getElementById('listWrap');
     const podiumWrap = document.getElementById('podiumWrap');
+    const podiumSection = document.getElementById('podiumSection');
     const emptyMsg = document.getElementById('emptyMsg');
     const signBtn = document.getElementById('signBtn');
 
     const ADMIN_EMAIL = "nmprokhorov@gmail.com";
+    const MEDALS = ['🥇', '🥈', '🥉'];
 
     let currentUser = null;
 
-    // auth controls
     const provider = new GoogleAuthProvider();
     signBtn.addEventListener('click', async () => {
       if (!currentUser) {
@@ -115,7 +146,6 @@
       adminWrap.classList.toggle('hidden', !(user && user.email === ADMIN_EMAIL));
     });
 
-    // add entry (admin)
     addBtn.addEventListener('click', async () => {
       adminMsg.textContent = '';
       if (!currentUser || currentUser.email !== ADMIN_EMAIL) { adminMsg.textContent = 'Требуется вход админа'; return; }
@@ -144,9 +174,8 @@
       reader.readAsDataURL(f);
     });
 
-    // слушаем contest_entries и contest_scores, пересчитываем рейтинги
-    let entries = {}; // id -> { ... }
-    let scores = {};  // skinId -> [scoreDocs]
+    let entries = {};
+    let scores = {};
 
     const entriesQ = query(collection(db, 'contest_entries'), orderBy('createdAt','desc'));
     onSnapshot(entriesQ, snap => {
@@ -182,51 +211,52 @@
 
       if (!arr.length) {
         listWrap.innerHTML = '';
-        podiumWrap.style.display = 'none';
+        podiumSection.style.display = 'none';
         emptyMsg.style.display = 'block';
         return;
       }
       emptyMsg.style.display = 'none';
-      // сортировка по avgCeil, потом avgRaw
+      
       arr.sort((a,b) => {
         if (b.avgCeil !== a.avgCeil) return b.avgCeil - a.avgCeil;
         return (b.avgRaw || 0) - (a.avgRaw || 0);
       });
 
-      // топ-3
       const top3 = arr.slice(0,3);
 
-      // показать podium
       podiumWrap.innerHTML = '';
-      podiumWrap.style.display = top3.length ? 'flex' : 'none';
+      podiumSection.style.display = top3.length ? 'block' : 'none';
       top3.forEach((it, idx) => {
         const place = idx+1;
         const el = document.createElement('div');
-        el.className = 'place';
+        el.className = `place place-${place}`;
         el.innerHTML = `
+          <div class="medal">${MEDALS[idx]}</div>
           <div style="display:flex;gap:8px;align-items:center;">
-            <div style="width:80px;height:80px;border-radius:8px;overflow:hidden;background:#000" id="pv_${it.id}"></div>
+            <div style="width:80px;height:80px;border-radius:8px;overflow:hidden;background:#000;position:relative;" id="pv_${it.id}">
+              <div class="loading-spinner" style="margin:auto;"></div>
+            </div>
             <div>
-              <div style="font-weight:800">${escapeHtml(it.authorName || '—')}</div>
-              <div class="small">Место: ${place}</div>
-              <div style="margin-top:6px;"><span class="pill">Avg: ${it.avgCeil} / 90</span></div>
+              <div style="font-weight:800;font-size:1.1rem;">${escapeHtml(it.authorName || '—')}</div>
+              <div class="small" style="font-size:0.95rem;margin-top:4px;">Место: <strong>${place}</strong></div>
+              <div style="margin-top:6px;"><span class="pill" style="background:rgba(138,43,226,0.2);">Avg: ${it.avgCeil} / 90</span></div>
             </div>
           </div>
         `;
         el.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         podiumWrap.appendChild(el);
-        // init mini skinview
-        setTimeout(()=> initMiniViewer(`pv_${it.id}`, it.skinData), 60);
+        setTimeout(()=> init3DPreview(`pv_${it.id}`, it.skinData), 100);
       });
 
-      // общий список (включаем топ-3 также)
       listWrap.innerHTML = '';
       arr.forEach((it, idx) => {
         const place = idx+1;
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-          <div class="thumb" id="thumb_${it.id}"></div>
+          <div class="thumb" id="thumb_${it.id}">
+            <div class="loading-spinner"></div>
+          </div>
           <div class="meta">
             <h2>${escapeHtml(it.authorName || '—')}</h2>
             <div class="small">Место: <strong>${place}</strong> • Судей: ${it.judgeCount}</div>
@@ -238,30 +268,82 @@
         `;
         card.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         listWrap.appendChild(card);
-        setTimeout(()=> initMiniViewer(`thumb_${it.id}`, it.skinData), 60);
+        setTimeout(()=> init3DPreview(`thumb_${it.id}`, it.skinData), 100);
       });
     }
 
-    function initMiniViewer(containerId, skinDataUrl){
-      const el = document.getElementById(containerId);
-      if (!el) return;
-      el.innerHTML = ''; // clear
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = el.clientWidth || 160;
-        canvas.height = el.clientHeight || 160;
-        el.appendChild(canvas);
-        const viewer = new skinview3d.SkinViewer({
-          canvas: canvas,
-          width: canvas.width,
-          height: canvas.height,
-          skin: skinDataUrl || ''
-        });
-        viewer.autoUpdate = true;
-        viewer.rotation.y = Math.PI/6;
-      } catch(e){
-        el.innerHTML = `<img src="${skinDataUrl||''}" style="width:100%;height:100%;object-fit:cover" />`;
-      }
+    // 3D превью как в вашем коде
+    window.previewQueue = (window.previewQueue || Promise.resolve());
+    
+    async function init3DPreview(containerId, skinDataUrl){
+      const container = document.getElementById(containerId);
+      if (!container || !skinDataUrl) return;
+      
+      window.previewQueue = window.previewQueue.then(async () => {
+        try {
+          const img = document.createElement('img');
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          img.style.opacity = '0.95';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          
+          // Временная заглушка
+          img.src = skinDataUrl;
+          container.innerHTML = '';
+          container.appendChild(img);
+          
+          // Генерация 3D кадра
+          const off = document.createElement('canvas');
+          const parentWidth = container.clientWidth || 180;
+          const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+          const targetWidth = Math.max(180, Math.min(isMobile ? 360 : 420, parentWidth));
+          const targetHeight = Math.round(targetWidth * 1.35);
+          off.width = targetWidth;
+          off.height = targetHeight;
+          
+          const viewer = new skinview3d.SkinViewer({
+            canvas: off,
+            width: targetWidth,
+            height: targetHeight,
+            preserveDrawingBuffer: true
+          });
+          
+          try { viewer.renderer.setClearColor(0x15151c, 1); } catch(_) {}
+          
+          await viewer.loadSkin(skinDataUrl);
+          viewer.zoom = 0.95;
+          viewer.autoRotate = false;
+          
+          try {
+            const walk = new skinview3d.WalkingAnimation(viewer);
+            walk.speed = 1.0;
+            walk.paused = true;
+            walk.progress = 0.30;
+            viewer.playerObject.rotation.y = -0.4;
+            viewer.camera.position.set(0, 24, 46);
+            viewer.camera.lookAt(0, 18, 0);
+          } catch(e) {
+            try { viewer.playerObject.rotation.y = -0.4; } catch(_) {}
+          }
+          
+          await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+          
+          img.src = off.toDataURL('image/png');
+          
+          try { viewer.dispose(); } catch(e) {}
+        } catch(e) {
+          console.error('3D preview error:', e);
+          const img = document.createElement('img');
+          img.src = skinDataUrl;
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          container.innerHTML = '';
+          container.appendChild(img);
+        }
+      });
     }
 
     function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
