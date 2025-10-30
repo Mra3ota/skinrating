@@ -18,18 +18,23 @@
   
   .podium-title{ text-align:center; font-size:1.5rem; font-weight:800; margin-bottom:16px; background: linear-gradient(90deg, var(--gold), var(--silver), var(--bronze)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
   
-  .podium{ display:flex; gap:12px; margin-bottom:24px; }
-  .place{ flex:1; background:linear-gradient(180deg, rgba(138,43,226,0.08), rgba(20,16,30,0.5)); border-radius:10px; padding:14px; border:2px solid rgba(138,43,226,0.12); cursor:pointer; position:relative; overflow:hidden; transition: all 0.3s ease; }
-  .place:hover{ transform: translateY(-4px); box-shadow: 0 8px 24px rgba(138,43,226,0.3); }
+  .podium{ display:flex; align-items:flex-end; justify-content:center; gap:12px; margin-bottom:24px; padding:20px 0; }
+  .place{ background:linear-gradient(180deg, rgba(138,43,226,0.08), rgba(20,16,30,0.5)); border-radius:10px; padding:14px; border:2px solid rgba(138,43,226,0.12); cursor:pointer; position:relative; overflow:hidden; transition: all 0.3s ease; }
+  .place:hover{ transform: translateY(-8px); box-shadow: 0 12px 32px rgba(138,43,226,0.4); }
   .place::before{ content:''; position:absolute; top:0; left:0; right:0; height:4px; }
-  .place-1{ border-color: var(--gold); }
+  
+  .place-1{ width:280px; height:320px; border-color: var(--gold); order:2; }
   .place-1::before{ background: linear-gradient(90deg, var(--gold), #ffed4e); }
-  .place-2{ border-color: var(--silver); }
+  
+  .place-2{ width:260px; height:260px; border-color: var(--silver); order:1; }
   .place-2::before{ background: linear-gradient(90deg, var(--silver), #e8e8e8); }
-  .place-3{ border-color: var(--bronze); }
+  
+  .place-3{ width:260px; height:220px; border-color: var(--bronze); order:3; }
   .place-3::before{ background: linear-gradient(90deg, var(--bronze), #e89b5f); }
   
-  .medal{ font-size:2.5rem; position:absolute; top:8px; right:8px; opacity:0.9; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+  .medal{ font-size:3rem; position:absolute; top:12px; right:12px; opacity:0.9; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+  
+  .podium-content{ display:flex; flex-direction:column; align-items:center; justify-content:space-between; height:100%; }
   
   .grid{ display:grid; grid-template-columns:1fr; gap:12px; }
   .card{ display:flex; gap:12px; align-items:flex-start; padding:10px; background:var(--card); border-radius:10px; border:1px solid rgba(255,255,255,0.03); cursor:pointer; transition: all 0.3s ease; position:relative; }
@@ -232,14 +237,16 @@
         el.className = `place place-${place}`;
         el.innerHTML = `
           <div class="medal">${MEDALS[idx]}</div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <div style="width:80px;height:80px;border-radius:8px;overflow:hidden;background:#000;position:relative;" id="pv_${it.id}">
-              <div class="loading-spinner" style="margin:auto;"></div>
+          <div class="podium-content">
+            <div style="text-align:center;">
+              <div style="width:120px;height:120px;margin:0 auto 12px;border-radius:12px;overflow:hidden;background:#000;position:relative;" id="pv_${it.id}">
+                <div class="loading-spinner" style="margin:auto;"></div>
+              </div>
+              <div style="font-weight:800;font-size:1.2rem;margin-bottom:4px;">${escapeHtml(it.authorName || '—')}</div>
+              <div class="small" style="font-size:1rem;font-weight:700;color:var(--gold);">${place} место</div>
             </div>
-            <div>
-              <div style="font-weight:800;font-size:1.1rem;">${escapeHtml(it.authorName || '—')}</div>
-              <div class="small" style="font-size:0.95rem;margin-top:4px;">Место: <strong>${place}</strong></div>
-              <div style="margin-top:6px;"><span class="pill" style="background:rgba(138,43,226,0.2);">Avg: ${it.avgCeil} / 90</span></div>
+            <div style="text-align:center;width:100%;">
+              <span class="pill" style="background:rgba(138,43,226,0.3);font-size:1.1rem;padding:8px 16px;">⭐ ${it.avgCeil} / 90</span>
             </div>
           </div>
         `;
