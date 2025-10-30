@@ -6,61 +6,92 @@
 <link rel="icon" href="data:,">
 <title>Скин — Просмотр и оценка</title>
 <style>
-  :root{ --bg:#0e0e12; --card:#14141a; --accent:#8a2be2; --text:#eaeaf2; --muted:#9aa0b2; }
+  :root{ --bg:#0e0e12; --card:#14141a; --accent:#8a2be2; --text:#eaeaf2; --muted:#9aa0b2; --gold:#ffd700; --silver:#c0c0c0; --bronze:#cd7f32; }
+  * { box-sizing: border-box; }
   body{ margin:0; font-family:Inter,Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:20px; }
-  .wrap{ max-width:1100px; margin:0 auto; display:grid; grid-template-columns: 440px 1fr; gap:16px; align-items:start; }
-  .viewer{ background:#0b0b0d; border-radius:12px; padding:10px; border:1px solid rgba(255,255,255,0.03); }
-  .info{ background:var(--card); border-radius:12px; padding:12px; border:1px solid rgba(255,255,255,0.03); }
-  h1{ margin:0 0 8px 0; font-size:1.1rem; }
-  .small{ color:var(--muted); font-size:0.95rem; }
-  .list{ margin-top:12px; display:flex; flex-direction:column; gap:8px; }
-  .judge{ padding:8px; background:rgba(255,255,255,0.02); border-radius:8px; display:flex; gap:8px; align-items:center; }
-  .judge b{ min-width:120px; display:inline-block; }
-  .btn{ background:var(--accent); color:#fff; padding:8px 10px; border-radius:8px; cursor:pointer; border:none; font-weight:700; }
+  .wrap{ max-width:1200px; margin:0 auto; display:grid; grid-template-columns: 480px 1fr; gap:20px; align-items:start; }
+  .viewer{ background:#0b0b0d; border-radius:16px; padding:12px; border:1px solid rgba(255,255,255,0.05); position:relative; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .info{ background:var(--card); border-radius:16px; padding:16px; border:1px solid rgba(255,255,255,0.05); }
+  h1{ margin:0 0 10px 0; font-size:1.3rem; font-weight:800; letter-spacing:-0.3px; }
+  .small{ color:var(--muted); font-size:0.95rem; line-height:1.6; }
+  .list{ margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+  .judge{ padding:12px; background:rgba(255,255,255,0.02); border-radius:10px; display:flex; gap:12px; align-items:flex-start; transition: all 0.3s ease; border-left: 3px solid transparent; }
+  .judge:hover{ background:rgba(255,255,255,0.05); border-left-color: var(--accent); transform: translateX(4px); box-shadow: 0 2px 8px rgba(138,43,226,0.15); }
+  .judge b{ min-width:130px; display:inline-block; font-size:1rem; }
+  .btn{ background:var(--accent); color:#fff; padding:10px 14px; border-radius:8px; cursor:pointer; border:none; font-weight:700; transition: all 0.3s ease; font-size:0.95rem; }
+  .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(138,43,226,0.5); }
   input[type="range"] {
     width: 100%;
     -webkit-appearance: none;
     background: linear-gradient(90deg,#007bff,#8a2be2);
-    height: 6px;
-    border-radius: 6px;
+    height: 7px;
+    border-radius: 7px;
     outline: none;
+    transition: all 0.2s ease;
   }
+  input[type="range"]:hover { height: 9px; }
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     background: #fff;
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid #8a2be2;
+    border: 3px solid #8a2be2;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
   }
-  .criterion { margin-bottom:12px; }
-  .criterion label { display:flex; justify-content:space-between; font-weight:600; margin-bottom:6px; }
-  .score-display { background:#1e1e27; border-radius:10px; padding:12px; text-align:center; font-size:1.1em; font-weight:bold; margin-top:12px; }
-  textarea{ width:100%; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:#0e0e12; color:var(--text); }
+  input[type="range"]::-webkit-slider-thumb:hover {
+    width: 26px;
+    height: 26px;
+    box-shadow: 0 0 16px rgba(138,43,226,0.8);
+  }
+  .criterion { margin-bottom:14px; }
+  .criterion label { display:flex; justify-content:space-between; font-weight:600; margin-bottom:8px; font-size:0.95rem; }
+  .score-display { background:linear-gradient(135deg, #1e1e27, #252530); border-radius:12px; padding:16px; text-align:center; font-size:1.3em; font-weight:800; margin-top:14px; border: 2px solid rgba(138,43,226,0.3); box-shadow: 0 4px 12px rgba(138,43,226,0.2); }
+  textarea{ width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:#0a0a0f; color:var(--text); transition: all 0.3s ease; font-size:0.95rem; resize: vertical; }
+  textarea:focus{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(138,43,226,0.1); }
   .hidden{ display:none; }
-  @media (max-width:980px){ .wrap{ grid-template-columns: 1fr; } }
+  
+  .place-badge{ display:inline-block; padding:6px 14px; border-radius:10px; font-weight:800; font-size:0.95rem; margin-left:10px; border: 2px solid; }
+  .place-1{ background: linear-gradient(135deg, var(--gold), #ffed4e); color:#000; border-color: var(--gold); }
+  .place-2{ background: linear-gradient(135deg, var(--silver), #e8e8e8); color:#000; border-color: var(--silver); }
+  .place-3{ background: linear-gradient(135deg, var(--bronze), #e89b5f); color:#000; border-color: var(--bronze); }
+  
+  .medal-big{ font-size:4rem; position:absolute; top:12px; right:12px; opacity:0.25; pointer-events:none; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.6)); z-index:1; }
+  
+  .judge-scores{ display:grid; grid-template-columns: repeat(5, 1fr); gap:6px; margin-top:6px; font-size:0.85rem; }
+  .judge-scores span{ background:rgba(138,43,226,0.15); padding:4px 6px; border-radius:6px; text-align:center; }
+  
+  @media (max-width:1024px){ 
+    .wrap{ grid-template-columns: 1fr; } 
+    .medal-big{ font-size:3rem; } 
+  }
 </style>
 </head>
 <body>
   <div class="wrap">
     <div>
-      <div class="viewer" id="viewerWrap" style="height:520px;"></div>
-      <div style="margin-top:10px; display:flex; gap:8px;">
-        <button id="backBtn" class="btn" style="background:#444">Вернуться</button>
+      <div class="viewer" id="viewerWrap" style="height:560px;">
+        <div id="medalBig" class="medal-big"></div>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button id="backBtn" class="btn" style="background:#333">← Вернуться</button>
         <button id="signBtn" class="btn" style="margin-left:auto">Войти</button>
       </div>
     </div>
 
     <div>
       <div class="info">
-        <h1 id="authorTitle">Автор: —</h1>
-        <div class="small" id="placeLine">Место: — • Средний: — / 90</div>
-        <div id="judgeControls" style="margin-top:12px;"></div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <h1 id="authorTitle">Автор: —</h1>
+          <span id="placeBadge" class="place-badge hidden"></span>
+        </div>
+        <div class="small" id="placeLine" style="margin-bottom:12px;">Место: — • Средний балл: — / 90</div>
+        <div id="judgeControls"></div>
 
-        <!-- Блок оценки (скрыт по умолчанию, только для судей) -->
-        <div id="evalWrap" class="hidden" style="margin-top:12px; border-top:1px dashed rgba(255,255,255,0.03); padding-top:12px;">
-          <h3>Оценить скин</h3>
+        <div id="evalWrap" class="hidden" style="margin-top:16px; border-top:2px dashed rgba(255,255,255,0.05); padding-top:16px;">
+          <h3 style="margin:0 0 14px 0; font-size:1.15rem;">✨ Оценить скин</h3>
 
           <div class="criterion">
             <label for="line">Лайн / Образ <span id="line-value">5</span></label>
@@ -87,29 +118,27 @@
             <input type="range" id="vibe" min="1" max="10" value="5">
           </div>
 
-          <textarea id="reviewText" rows="3" placeholder="Рецензия (текст)"></textarea>
+          <textarea id="reviewText" rows="4" placeholder="Напишите развёрнутую рецензию..."></textarea>
 
-          <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+          <div style="display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;">
             <button id="submitEval" class="btn">Отправить оценку</button>
             <div id="evalMsg" class="small"></div>
           </div>
 
-          <div class="score-display" id="totalDisplay">Итог: 0 / 90</div>
+          <div class="score-display" id="totalDisplay">Итоговый балл: 0 / 90</div>
         </div>
       </div>
 
-      <div class="info" style="margin-top:12px;">
-        <strong>Оценки судей</strong>
-        <div id="scoresList" class="list" style="margin-top:8px;">
+      <div class="info" style="margin-top:16px;">
+        <strong style="font-size:1.1rem;">📝 Оценки судей</strong>
+        <div id="scoresList" class="list" style="margin-top:10px;">
           <div class="small">Загрузка оценок...</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SkinView3D -->
   <script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
-  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import {
@@ -135,10 +164,13 @@
     const skinId = urlParams.get('id');
     if (!skinId) { alert('id скина не указан'); throw new Error('no id'); }
 
-    // элементы
+    const MEDALS = ['🥇', '🥈', '🥉'];
+
     const viewerWrap = document.getElementById('viewerWrap');
+    const medalBig = document.getElementById('medalBig');
     const authorTitle = document.getElementById('authorTitle');
     const placeLine = document.getElementById('placeLine');
+    const placeBadge = document.getElementById('placeBadge');
     const scoresList = document.getElementById('scoresList');
     const judgeControls = document.getElementById('judgeControls');
     const evalWrap = document.getElementById('evalWrap');
@@ -156,7 +188,6 @@
 
     backBtn.addEventListener('click', ()=> location.href = 'results.html');
 
-    // auth
     const provider = new GoogleAuthProvider();
     let currentUser = null;
     signBtn.addEventListener('click', async ()=>{
@@ -173,7 +204,6 @@
       checkJudgeAndShow();
     });
 
-    // загрузка данных скина
     let skinDoc = null;
     async function loadSkin(){
       const docRef = doc(db, 'contest_entries', skinId);
@@ -181,18 +211,14 @@
       if (!snap.exists()) { alert('Скин не найден'); return; }
       skinDoc = { id: snap.id, ...snap.data() };
       authorTitle.textContent = 'Автор: ' + (skinDoc.authorName || '—');
-      // инициализация viewer
       initViewer(skinDoc.skinData);
-      // слушаем оценки
       listenScores();
-      // посчитаем место
       computePlaceAndUpdate();
     }
 
-    // SkinView3D full viewer
     let viewerInstance = null;
     function initViewer(skinDataUrl){
-      viewerWrap.innerHTML = '';
+      viewerWrap.innerHTML = '<div id="medalBig" class="medal-big"></div>';
       const canvas = document.createElement('canvas');
       canvas.style.width = '100%';
       canvas.style.height = '100%';
@@ -204,13 +230,13 @@
           height: canvas.clientHeight,
           skin: skinDataUrl || ''
         });
-        viewerInstance.autoUpdate = true;
+        viewerInstance.autoRotate = true;
+        viewerInstance.autoRotateSpeed = 0.5;
       } catch(e) {
-        viewerWrap.innerHTML = `<img src="${skinDataUrl||''}" style="width:100%;height:100%;object-fit:contain" />`;
+        viewerWrap.innerHTML = `<div id="medalBig" class="medal-big"></div><img src="${skinDataUrl||''}" style="width:100%;height:100%;object-fit:contain" />`;
       }
     }
 
-    // слушаем contest_scores для этого скина
     let scoreDocs = [];
     function listenScores(){
       const q = query(collection(db, 'contest_scores'), where('skinId','==', skinId));
@@ -224,7 +250,7 @@
 
     function renderScores(){
       if (!scoreDocs.length) {
-        scoresList.innerHTML = '<div class="small">Оценок ещё нет.</div>';
+        scoresList.innerHTML = '<div class="small" style="text-align:center;padding:20px;opacity:0.6;">Оценок ещё нет.</div>';
       } else {
         scoresList.innerHTML = '';
         scoreDocs.sort((a,b)=> (b.total||0)-(a.total||0));
@@ -234,12 +260,18 @@
           div.innerHTML = `
             <div style="flex:1;">
               <b>${escapeHtml(s.judgeName||'Судья')}</b>
-              <div class="small">Итог: ${s.total || '-'} / 90</div>
-              <div class="small">Баллы: L:${s.line||'-'} P:${s.palette||'-'} S:${s.shade||'-'} St:${s.style||'-'} V:${s.vibe||'-'}</div>
+              <div class="small" style="margin-top:6px;">Итоговый балл: <strong style="color:var(--accent);font-size:1.05rem;">${s.total || '-'} / 90</strong></div>
+              <div class="judge-scores">
+                <span>L: ${s.line||'-'}</span>
+                <span>P: ${s.palette||'-'}</span>
+                <span>S: ${s.shade||'-'}</span>
+                <span>St: ${s.style||'-'}</span>
+                <span>V: ${s.vibe||'-'}</span>
+              </div>
+              ${s.reviewText ? `<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.02);border-radius:8px;border-left:3px solid var(--accent);font-style:italic;font-size:0.9rem;line-height:1.5;">"${escapeHtml(s.reviewText)}"</div>` : ''}
             </div>
-            <div style="max-width:40%;text-align:right;">
-              <div class="small" style="color:var(--muted)">${new Date((s.createdAt && s.createdAt.seconds)? s.createdAt.seconds*1000 : Date.now()).toLocaleString('ru-RU')}</div>
-              <div style="margin-top:6px;">${escapeHtml(s.reviewText||'')}</div>
+            <div style="text-align:right;">
+              <div class="small" style="color:var(--muted);font-size:0.8rem;">${new Date((s.createdAt && s.createdAt.seconds)? s.createdAt.seconds*1000 : Date.now()).toLocaleString('ru-RU')}</div>
             </div>
           `;
           scoresList.appendChild(div);
@@ -247,7 +279,6 @@
       }
     }
 
-    // вычисляем средний и место
     async function computePlaceAndUpdate(){
       const entriesSnap = await getDocs(collection(db, 'contest_entries'));
       const all = [];
@@ -267,35 +298,44 @@
       const idx = all.findIndex(x=>x.id === skinId);
       const place = idx >= 0 ? idx+1 : '-';
       const cur = all.find(x=>x.id===skinId) || { avgCeil:0, avgRaw:0, sum:0 };
-      placeLine.textContent = `Место: ${place} • Средний: ${cur.avgCeil} / 90 • Судей: ${scoreDocs.length}`;
+      placeLine.textContent = `📍 Место: ${place} • ⭐ Средний балл: ${cur.avgCeil} / 90 • 👥 Оценок: ${scoreDocs.length}`;
+      
+      // Показываем медаль и бейдж для топ-3
+      if (place >= 1 && place <= 3) {
+        medalBig.textContent = MEDALS[place-1];
+        placeBadge.textContent = `${place} место`;
+        placeBadge.className = `place-badge place-${place}`;
+        placeBadge.classList.remove('hidden');
+      } else {
+        medalBig.textContent = '';
+        placeBadge.classList.add('hidden');
+      }
     }
 
-    // проверяем, является ли текущий пользователь судьёй
     async function checkJudgeAndShow(){
       judgeControls.innerHTML = '';
       evalWrap.classList.add('hidden');
       if (!currentUser) {
-        judgeControls.innerHTML = '<div class="small">Войдите, чтобы узнать, доступны ли функции судьи.</div>';
+        judgeControls.innerHTML = '<div class="small" style="padding:10px;background:rgba(255,255,255,0.02);border-radius:8px;text-align:center;">Войдите, чтобы узнать, доступны ли функции судьи.</div>';
         return;
       }
       try {
         const judgeDoc = await getDoc(doc(db, 'judges', currentUser.uid));
         if (judgeDoc.exists()) {
-          judgeControls.innerHTML = `<div class="small">Вы — судья (${escapeHtml(currentUser.displayName||'')}).</div><button id="toggleEval" class="btn" style="margin-top:8px;">Оценить</button>`;
+          judgeControls.innerHTML = `<div style="padding:10px;background:rgba(138,43,226,0.1);border-radius:8px;border:1px solid rgba(138,43,226,0.3);"><div class="small">✅ Вы — судья (${escapeHtml(currentUser.displayName||'')})</div><button id="toggleEval" class="btn" style="margin-top:10px;width:100%;">📝 Оценить скин</button></div>`;
           document.getElementById('toggleEval').addEventListener('click', ()=>{
             evalWrap.classList.toggle('hidden');
           });
           await prefillJudgeEvaluation();
         } else {
-          judgeControls.innerHTML = '<div class="small">Вы не судья — только судьи могут оценивать.</div>';
+          judgeControls.innerHTML = '<div class="small" style="padding:10px;background:rgba(255,255,255,0.02);border-radius:8px;text-align:center;">❌ Вы не судья — только судьи могут оценивать.</div>';
         }
       } catch(e){
         console.error(e);
-        judgeControls.innerHTML = '<div class="small">Ошибка проверки прав.</div>';
+        judgeControls.innerHTML = '<div class="small" style="padding:10px;background:rgba(255,0,0,0.1);border-radius:8px;text-align:center;">⚠️ Ошибка проверки прав.</div>';
       }
     }
 
-    // prefill
     async function prefillJudgeEvaluation(){
       if (!currentUser) return;
       const q = query(collection(db, 'contest_scores'), where('skinId','==', skinId), where('judgeId','==', currentUser.uid));
@@ -312,7 +352,6 @@
         calculateAndShowTotal();
         evalWrap.classList.remove('hidden');
       } else {
-        // defaults
         lineIn.value = 5; paletteIn.value = 5; shadeIn.value = 5; styleIn.value = 5; vibeIn.value = 5;
         reviewText.value = '';
         updateSliderLabels();
@@ -320,7 +359,6 @@
       }
     }
 
-    // расчёт по формуле из твоего примера
     const vibeMultiplier = {
       1: 1, 2: 1.0675, 3: 1.1349, 4: 1.2024, 5: 1.2699,
       6: 1.3373, 7: 1.4048, 8: 1.4723, 9: 1.5397, 10: 1.6072
@@ -336,13 +374,12 @@
       const scaled = baseSum * 1.4;
       const multiplier = vibeMultiplier[vibe] || 1;
       const total = Math.round(scaled * multiplier);
-      // cap to 90 safety (shouldn't exceed, but just in case)
       return Math.min(total, 90);
     }
 
     function calculateAndShowTotal(){
       const total = calculateTotalFromSliders();
-      totalDisplay.textContent = `Итог: ${total} / 90`;
+      totalDisplay.textContent = `Итоговый балл: ${total} / 90`;
       return total;
     }
 
@@ -354,10 +391,8 @@
       document.getElementById('vibe-value').textContent = vibeIn.value;
     }
 
-    // debounce helper
     function debounce(fn, ms=80){ let t; return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), ms); }; }
 
-    // wire sliders
     [lineIn, paletteIn, shadeIn, styleIn, vibeIn].forEach(inp => {
       inp.addEventListener('input', debounce(() => {
         updateSliderLabels();
@@ -365,11 +400,10 @@
       }, 60));
     });
 
-    // отправка оценки
     submitEval.addEventListener('click', async ()=>{
-      if (!currentUser) { evalMsg.textContent = 'Требуется вход.'; return; }
+      if (!currentUser) { evalMsg.textContent = '⚠️ Требуется вход.'; return; }
       const judgeDoc = await getDoc(doc(db, 'judges', currentUser.uid));
-      if (!judgeDoc.exists()) { evalMsg.textContent = 'У вас нет прав судьи.'; return; }
+      if (!judgeDoc.exists()) { evalMsg.textContent = '⚠️ У вас нет прав судьи.'; return; }
 
       const line = Number(lineIn.value)||0;
       const palette = Number(paletteIn.value)||0;
@@ -377,11 +411,11 @@
       const style = Number(styleIn.value)||0;
       const vibe = Number(vibeIn.value)||0;
       for (const v of [line,palette,shade,style,vibe]) {
-        if (v < 1 || v > 10) { evalMsg.textContent = 'Значения должны быть от 1 до 10.'; return; }
+        if (v < 1 || v > 10) { evalMsg.textContent = '⚠️ Значения должны быть от 1 до 10.'; return; }
       }
       const total = calculateTotalFromSliders();
       const review = (reviewText.value || '').trim();
-      evalMsg.textContent = 'Отправка...';
+      evalMsg.textContent = '⏳ Отправка...';
 
       try {
         const q = query(collection(db, 'contest_scores'), where('skinId','==', skinId), where('judgeId','==', currentUser.uid));
@@ -400,21 +434,20 @@
             createdAt: serverTimestamp()
           });
         }
-        evalMsg.textContent = 'Оценка сохранена';
-        setTimeout(()=> evalMsg.textContent = '', 2000);
+        evalMsg.textContent = '✅ Оценка сохранена';
+        evalMsg.style.color = '#4ade80';
+        setTimeout(()=> { evalMsg.textContent = ''; evalMsg.style.color = ''; }, 3000);
       } catch(e){
         console.error(e);
-        evalMsg.textContent = 'Ошибка: ' + (e.message || e);
+        evalMsg.textContent = '❌ Ошибка: ' + (e.message || e);
+        evalMsg.style.color = '#f87171';
       }
     });
 
-    // утилиты
     function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
-    // старт
     await loadSkin();
     checkJudgeAndShow();
-    // show initial slider labels & total
     updateSliderLabels();
     calculateAndShowTotal();
   </script>
