@@ -177,6 +177,47 @@
 .modal-close { background:#8a2be2; border:none; color:#fff; padding:6px 12px; border-radius:8px; cursor:pointer; }
   </style>
 
+  <!-- ==================== ВСТАВЛЕНО: Стили для вкладок, итогов конкурса и загрузки скинов ==================== -->
+  <style>
+    .tab-navigation { display:flex; gap:10px; justify-content:center; margin:20px 0; flex-wrap:wrap; }
+    .tab-btn { background: var(--surface-2); color: var(--text); border: 2px solid var(--line); padding: 10px 20px; border-radius: 8px; font-size: 1em; cursor: pointer; transition: all 0.2s; font-weight: 600; }
+    .tab-btn:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+    .results-container { max-width: 1200px; margin: 0 auto; }
+    .winners-section { margin-bottom: 40px; }
+    .winners-title { text-align: center; font-size: 2em; margin-bottom: 20px; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .winners-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; margin-bottom: 40px; }
+    .skin-card { background: var(--surface-2); border-radius: var(--radius); padding: 20px; border: 2px solid var(--line); transition: all 0.3s; position: relative; }
+    .skin-card:hover { border-color: var(--accent); box-shadow: var(--ring-shadow); transform: translateY(-4px); }
+    .skin-card.winner { border: 2px solid transparent; background: linear-gradient(var(--surface-2), var(--surface-2)) padding-box, var(--grad) border-box; }
+    .place-badge { position: absolute; top: 10px; right: 10px; background: var(--accent); color: #fff; padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.9em; }
+    .winner .place-badge { background: var(--grad); font-size: 1.1em; padding: 8px 16px; }
+    .skin-thumbnail { width: 100%; max-width: 200px; height: auto; margin: 10px auto; display: block; border-radius: 8px; border: 1px solid var(--line); image-rendering: pixelated; cursor: pointer; }
+    .skin-thumbnail:hover { border-color: var(--accent); }
+    .skin-title { text-align: center; font-size: 1.4em; font-weight: 700; margin: 10px 0; color: var(--text); }
+    .average-score { text-align: center; font-size: 1.8em; font-weight: 700; margin: 15px 0; background: var(--grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .judges-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 20px 0; }
+    .judge-card { background: var(--surface); padding: 10px; border-radius: 8px; border: 1px solid var(--line); text-align: center; }
+    .judge-name { font-weight: 700; color: var(--accent); margin-bottom: 5px; font-size: 0.9em; }
+    .judge-score { font-size: 1.4em; font-weight: 700; color: var(--text); }
+    .judge-pending { color: var(--text-3); font-style: italic; }
+    .reviews-details { margin-top: 20px; }
+    .reviews-details summary { cursor: pointer; font-weight: 600; padding: 10px; background: var(--surface); border-radius: 8px; list-style: none; user-select: none; }
+    .reviews-details summary:hover { background: var(--line); }
+    .reviews-details summary::before { content: '▶ '; display: inline-block; transition: transform 0.2s; }
+    .reviews-details[open] summary::before { transform: rotate(90deg); }
+    .review-full { background: var(--surface); padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 3px solid var(--accent); }
+    .review-full h4 { margin: 0 0 10px 0; color: var(--accent); }
+    .review-criteria { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin: 10px 0; font-size: 0.85em; }
+    .review-criteria span { background: var(--surface-2); padding: 4px 8px; border-radius: 4px; }
+    .upload-skin-form { max-width: 600px; margin: 20px auto; background: var(--surface-2); padding: 20px; border-radius: var(--radius); }
+    .upload-skin-form input[type="text"], .upload-skin-form input[type="file"] { width: 100%; margin: 10px 0; padding: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; color: var(--text); box-sizing: border-box; }
+    .skin-preview-upload { width: 100%; max-width: 200px; margin: 15px auto; display: block; border-radius: 8px; border: 2px solid var(--line); image-rendering: pixelated; }
+    @media (max-width: 640px) { .winners-grid { grid-template-columns: 1fr; } .judges-grid { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+
 </head>
 <body>
   <div class="container">
@@ -191,6 +232,7 @@
       <div id="auth-controls" style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
         <input id="auth-email" type="email" placeholder="Email" style="flex:1; min-width:180px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
         <input id="auth-password" type="password" placeholder="Пароль" style="flex:1; min-width:140px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
+        <!-- Роль назначает только админ; селектор скрыт -->
         <button id="auth-login" class="submit-button" style="margin-right:0;">Войти</button>
         <button id="auth-register" class="reset-button" style="margin-right:0;">Регистрация</button>
         <button id="auth-google" class="submit-button" style="background:#4285F4; margin-right:0;">Google</button>
@@ -207,6 +249,17 @@
       <div style="margin-top:8px;">
         <button id="auth-logout" class="reset-button" style="display:none; margin-right:0;">Выйти</button>
       </div>
+      <!-- Мини‑панель админа для назначения ролей -->
+      <div id="admin-roles" style="display:none; margin-top:10px; padding-top:8px; border-top:1px dashed #2f2f3b;">
+        <div style="font-weight:700; margin-bottom:6px;">Админ: назначение ролей</div>
+        <input id="role-user-uid" type="text" placeholder="UID пользователя" style="width:100%; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px; margin-bottom:6px;" />
+        <select id="role-new-role" style="width:100%; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px; margin-bottom:6px;">
+          <option value="reviewer">Рецензент</option>
+          <option value="creator">Создатель</option>
+        </select>
+        <button id="role-apply" class="submit-button" style="margin-right:0; width:100%;">Назначить роль</button>
+        <div id="role-admin-error" class="error" style="display:none; margin-top:8px;"></div>
+      </div>
       <div id="auth-error" class="error" style="display:none; margin-top:8px;"></div>
     </section>
     <div class="upload-section" id="upload">
@@ -214,6 +267,28 @@
       <div class="info-text">Загрузите PNG файл скина (64x64 или 64x32)</div>
       <canvas id="skin-viewer" class="skin-preview"></canvas>
     </div>
+
+    <!-- Мини‑платформа скинов (бесплатная: base64 в Firestore, без Storage) -->
+    <section id="skin-platform" style="margin-top:18px;">
+      <h2 style="margin:6px 0 10px 0;">Платформа скинов</h2>
+      <div id="platform-msg" class="info-text">Войдите, чтобы загружать или оценивать.</div>
+      <div id="skin-upload-v2" style="display:none; background:#1e1e27; border:1px solid #2f2f3b; border-radius:10px; padding:10px 14px; margin-bottom:12px;">
+        <div style="font-weight:700; margin-bottom:6px;">Загрузка скина (для Создателей)</div>
+        <input id="skin-file-v2" type="file" accept="image/png" />
+        <input id="skin-name-v2" type="text" placeholder="Название" style="display:block; margin-top:8px; width:100%; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;" />
+        <textarea id="skin-desc-v2" placeholder="Описание" style="display:block; margin-top:8px; width:100%; min-height:60px; background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:8px;"></textarea>
+        <button id="skin-upload-btn-v2" class="submit-button" style="margin-top:8px;">Загрузить</button>
+        <div id="skin-upload-error" class="error" style="display:none; margin-top:8px;"></div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+        <div style="font-weight:700;">Лента скинов</div>
+        <select id="feed-sort" style="background:#1b1b23; color:#fff; border:1px solid #2f2f3b; border-radius:8px; padding:6px;">
+          <option value="new">Новые</option>
+          <option value="top">Лучшие</option>
+        </select>
+      </div>
+      <div id="skin-feed" class="reviews" style="margin-top:10px;"><div class="loading">Загрузка ленты...</div></div>
+    </section>
 
     <div class="criterion">
       <label for="line">Лайн / Образ <span id="line-value">5</span></label>
@@ -461,6 +536,8 @@ document.addEventListener('DOMContentLoaded', () => {
     addDoc,
     getDocs,
     getDoc,
+    updateDoc,
+    runTransaction,
     query,
     orderBy,
     serverTimestamp,
@@ -561,7 +638,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e && e.code) setAuthError(`Firebase: ${e.code}`);
     });
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       window.currentUserUid = user ? user.uid : null;
       if (user) {
         if (authStatus) authStatus.textContent = `Вход выполнен: ${user.email || 'пользователь'}`;
@@ -572,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authEmail) authEmail.style.display = 'none';
         if (authPassword) authPassword.style.display = 'none';
         if (nickRow) nickRow.style.display = 'flex';
-        // загрузка ника
+        // загрузка ника и роли
         (async () => {
           const existing = await loadNickname(user.uid);
           const fallback = user.email ? user.email.split('@')[0] : 'user';
@@ -582,6 +659,30 @@ document.addEventListener('DOMContentLoaded', () => {
           if (nickEditBox) nickEditBox.style.display = 'none';
           window.currentUserDisplayName = name;
         })();
+
+        // подгружаем профиль с ролью
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const snap = await getDoc(userDocRef);
+          const role = snap.exists() ? (snap.data()?.role || 'reviewer') : 'reviewer';
+          window.currentUserRole = role;
+        } catch(_) { window.currentUserRole = 'creator'; }
+
+        // показать загрузчик скинов, если создатель
+        const upBox = document.getElementById('skin-upload-v2');
+        if (upBox) upBox.style.display = (window.currentUserRole === 'creator') ? 'block' : 'none';
+        const platformMsg = document.getElementById('platform-msg');
+        if (platformMsg) platformMsg.textContent = (window.currentUserRole === 'creator') ? 'Вы можете загружать скины.' : 'Вы можете оценивать скины.';
+
+        // показать админ-панель только администратору
+        try {
+          const userDocRef = doc(db, 'users', user.uid);
+          const snap = await getDoc(userDocRef);
+          const isAdmin = snap.exists() && (snap.data()?.role === 'admin');
+          const adminBox = document.getElementById('admin-roles');
+          if (adminBox) adminBox.style.display = isAdmin ? 'block' : 'none';
+          window.currentUserIsAdmin = isAdmin;
+        } catch(_) {}
       } else {
         if (authStatus) authStatus.textContent = 'Вы не вошли. Войдите или зарегистрируйтесь, чтобы сохранять рецензии.';
         if (authLogoutBtn) authLogoutBtn.style.display = 'none';
@@ -592,6 +693,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (authPassword) authPassword.style.display = 'inline-block';
         if (nickRow) nickRow.style.display = 'none';
         window.currentUserDisplayName = null;
+        window.currentUserRole = null;
+        const upBox = document.getElementById('skin-upload-v2');
+        if (upBox) upBox.style.display = 'none';
+        const adminBox = document.getElementById('admin-roles');
+        if (adminBox) adminBox.style.display = 'none';
       }
       if (window.updateSubmitState) try { window.updateSubmitState(); } catch(e) {}
       setAuthError('');
@@ -617,7 +723,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const email = authEmail?.value?.trim();
       const password = authPassword?.value || '';
       if (!email || !password) return setAuthError('Введите email и пароль.');
-      await createUserWithEmailAndPassword(auth, email, password);
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      try {
+        // роль по умолчанию назначает система: только РЕЦЕНЗЕНТ
+        const role = 'reviewer';
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          username: email.split('@')[0],
+          role,
+          avatarUrl: '',
+          avgCreatorRating: 0,
+          createdAt: Date.now()
+        }, { merge: true });
+      } catch(_) {}
     } catch (e) {
       setAuthError(e?.message || 'Ошибка регистрации');
     }
@@ -987,7 +1104,699 @@ if (!window.uploadedSkin) {
       submitBtn.textContent = 'Сохранить';
     }
   });
+
+  // ===== ПЛАТФОРМА СКИНОВ (без Storage: сохраняем base64 в Firestore) =====
+  const skinFile = document.getElementById('skin-file-v2');
+  const skinName = document.getElementById('skin-name-v2');
+  const skinDesc = document.getElementById('skin-desc-v2');
+  const skinBtn = document.getElementById('skin-upload-btn-v2');
+  const skinErr = document.getElementById('skin-upload-error');
+  const feedEl = document.getElementById('skin-feed');
+  const feedSort = document.getElementById('feed-sort');
+
+  function setSkinErr(msg) {
+    if (!skinErr) return;
+    if (msg) { skinErr.textContent = msg; skinErr.style.display = 'block'; } else { skinErr.textContent=''; skinErr.style.display='none'; }
+  }
+
+  async function uploadSkinBase64() {
+    try {
+      setSkinErr('');
+      if (!window.currentUserUid) return setSkinErr('Войдите, чтобы загружать.');
+      if (window.currentUserRole !== 'creator') return setSkinErr('Только создатели могут загружать.');
+      const file = skinFile?.files?.[0];
+      if (!file) return setSkinErr('Выберите PNG-файл.');
+      if (!file.type.includes('png')) return setSkinErr('Только PNG.');
+      const name = (skinName?.value || '').trim();
+      if (!name) return setSkinErr('Введите название.');
+      const desc = (skinDesc?.value || '').trim();
+      const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+      const base64 = String(dataUrl);
+      if (base64.length > 1_200_000) return setSkinErr('Файл слишком большой (огр. ~900KB-1MB).');
+
+      const docRef = await addDoc(collection(db, 'skins'), {
+        authorId: window.currentUserUid,
+        name,
+        description: desc,
+        imageData: base64,
+        ratings: {},
+        averageRating: 0,
+        ratingCount: 0,
+        createdAt: serverTimestamp()
+      });
+      // очистка
+      if (skinFile) skinFile.value = '';
+      if (skinName) skinName.value = '';
+      if (skinDesc) skinDesc.value = '';
+      await loadSkinFeed();
+      alert('Скин загружен!');
+    } catch(e) {
+      setSkinErr(e?.message || 'Не удалось загрузить скин');
+    }
+  }
+
+  if (skinBtn) skinBtn.addEventListener('click', uploadSkinBase64);
+  if (feedSort) feedSort.addEventListener('change', () => loadSkinFeed());
+
+  async function loadSkinFeed() {
+    if (!feedEl) return;
+    feedEl.innerHTML = '<div class="loading">Загрузка ленты...</div>';
+    try {
+      const sort = (feedSort?.value || 'new');
+      const ref = sort === 'top'
+        ? query(collection(db, 'skins'), orderBy('averageRating', 'desc'), limit(30))
+        : query(collection(db, 'skins'), orderBy('createdAt', 'desc'), limit(30));
+      const snap = await getDocs(ref);
+      if (snap.empty) { feedEl.innerHTML = '<div class="info-text">Скинов пока нет.</div>'; return; }
+      feedEl.innerHTML = '';
+      snap.forEach(d => {
+        const s = d.data();
+        const card = document.createElement('div');
+        card.className = 'review-item';
+        const rightId = `skin_card_img_${d.id}`;
+        card.innerHTML = `
+          <div class="review-body">
+            <div class="author-badge">${escapeHtml(s.name || 'Без названия')}</div>
+            <p>${escapeHtml(s.description || '')}</p>
+            <div class="criteria">
+              <small><b>Автор:</b> ${escapeHtml(s.authorId || '-')}</small>
+              <small><b>Средняя:</b> ${Number(s.averageRating || 0)} / 90</small>
+            </div>
+          </div>
+          <div class="review-preview"></div>
+        `;
+        feedEl.appendChild(card);
+        const previewCol = card.querySelector('.review-preview');
+        const img = document.createElement('img');
+        img.id = rightId; img.className = 'skin-thumb'; img.loading = 'lazy'; img.decoding='async'; img.alt='skin'; img.style.opacity='0.95';
+        try { img.src = s.imageData; } catch(_) {}
+        img.addEventListener('click', () => { if (window.openSkinModal) window.openSkinModal(s.imageData); });
+        const hint = document.createElement('div'); hint.className='review-hint'; hint.textContent='Нажмите на скин для просмотра';
+        previewCol.appendChild(img); previewCol.appendChild(hint);
+
+        // отрисуем 3D‑снимок
+        window.mobilePreviewQueue = (window.mobilePreviewQueue || Promise.resolve()).then(async () => {
+          try {
+            const off = document.createElement('canvas');
+            const parentWidth = previewCol.clientWidth || 360;
+            const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+            const targetWidth = Math.max(220, Math.min(isMobile ? 360 : 420, parentWidth));
+            const targetHeight = Math.round(targetWidth * 1.35);
+            off.width = targetWidth; off.height = targetHeight;
+            const v = new skinview3d.SkinViewer({ canvas: off, width: targetWidth, height: targetHeight, preserveDrawingBuffer: true });
+            try { v.renderer.setClearColor(0x15151c, 1); } catch(_) {}
+            try { await v.loadSkin(s.imageData); } catch(_) {}
+            v.zoom = 0.95; v.autoRotate = false;
+            try { const walk = new skinview3d.WalkingAnimation(v); walk.speed=1.0; walk.paused=true; walk.progress=0.30; v.playerObject.rotation.y=-0.4; v.camera.position.set(0,24,46); v.camera.lookAt(0,18,0); } catch(_) {}
+            await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+            img.src = off.toDataURL('image/png');
+            try { v.dispose(); } catch(_) {}
+          } catch(_) { try { img.src = s.imageData; } catch(_){} }
+        });
+
+        // Рейтинг (для рецензентов)
+        const canRate = window.currentUserUid && window.currentUserRole === 'reviewer';
+        if (canRate) {
+          const rateWrap = document.createElement('div');
+          rateWrap.style.marginTop = '8px';
+          const input = document.createElement('input'); input.type='number'; input.min='0'; input.max='90'; input.value='45'; input.style.width='80px'; input.style.marginRight='8px';
+          const btn = document.createElement('button'); btn.className='submit-button'; btn.textContent='Оценить';
+          rateWrap.appendChild(input); rateWrap.appendChild(btn);
+          card.querySelector('.review-body').appendChild(rateWrap);
+          btn.addEventListener('click', async () => {
+            const val = Math.max(0, Math.min(90, parseInt(input.value,10)||0));
+            try {
+              await runTransaction(db, async (tx) => {
+                const ref = doc(db, 'skins', d.id);
+                const snap = await tx.get(ref);
+                if (!snap.exists()) throw new Error('Скин не найден');
+                const data = snap.data();
+                const ratings = data.ratings || {};
+                if (ratings[window.currentUserUid]) throw new Error('Вы уже оценили этот скин');
+                ratings[window.currentUserUid] = val;
+                const ratingCount = (data.ratingCount || 0) + 1;
+                const averageRating = Math.round(((data.averageRating || 0) * (ratingCount - 1) + val) / ratingCount);
+                tx.update(ref, { ratings, ratingCount, averageRating });
+              });
+              await loadSkinFeed();
+              alert('Оценка сохранена');
+            } catch(e) { alert(e?.message || 'Не удалось сохранить оценку'); }
+          });
+        }
+      });
+    } catch(e) {
+      feedEl.innerHTML = '<div class="error">Не удалось загрузить ленту.</div>';
+    }
+  }
+
+  // первая загрузка ленты
+  loadSkinFeed();
+
+  // ===== Админ: назначение ролей =====
+  const roleUidInput = document.getElementById('role-user-uid');
+  const roleNewSelect = document.getElementById('role-new-role');
+  const roleApplyBtn = document.getElementById('role-apply');
+  const roleAdminErr = document.getElementById('role-admin-error');
+
+  function setRoleAdminErr(msg) {
+    if (!roleAdminErr) return;
+    if (msg) { roleAdminErr.textContent = msg; roleAdminErr.style.display = 'block'; } else { roleAdminErr.textContent=''; roleAdminErr.style.display='none'; }
+  }
+
+  if (roleApplyBtn) roleApplyBtn.addEventListener('click', async () => {
+    try {
+      setRoleAdminErr('');
+      if (!window.currentUserIsAdmin) return setRoleAdminErr('Недостаточно прав.');
+      const uid = (roleUidInput?.value || '').trim();
+      const newRole = (roleNewSelect?.value === 'creator') ? 'creator' : 'reviewer';
+      if (!uid) return setRoleAdminErr('Введите UID пользователя.');
+      await setDoc(doc(db, 'users', uid), { role: newRole }, { merge: true });
+      setRoleAdminErr('Роль назначена.');
+      // обновим локально, если админ меняет сам себя
+      if (window.currentUserUid === uid) {
+        window.currentUserRole = newRole;
+        const upBox = document.getElementById('skin-upload-v2');
+        if (upBox) upBox.style.display = (newRole === 'creator') ? 'block' : 'none';
+      }
+      await loadSkinFeed();
+    } catch(e) { setRoleAdminErr(e?.message || 'Не удалось назначить роль'); }
+  });
+</script>
+
+<!-- ==================== ВСТАВЛЕНО: Навигация между вкладками и секции ==================== -->
+<!-- НАВИГАЦИЯ МЕЖДУ ВКЛАДКАМИ -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.querySelector('.container');
+  const header = container.querySelector('header');
+  const tabNav = document.createElement('nav');
+  tabNav.className = 'tab-navigation';
+  tabNav.innerHTML = `
+    <button class="tab-btn active" data-tab="review">Оценка</button>
+    <button class="tab-btn" data-tab="results">Итоги конкурса</button>
+    <button class="tab-btn" data-tab="upload" style="display:none;">Загрузка скинов</button>
+  `;
+  header.after(tabNav);
+
+  const authSection = document.getElementById('auth-section');
+  const uploadSection = document.getElementById('upload');
+  const criteriaElements = document.querySelectorAll('.criterion');
+  const scoreDisplay = document.getElementById('total');
+  const titleInput = document.getElementById('title');
+  const textInput = document.getElementById('text');
+  const textWarning = document.getElementById('text-warning');
+  const disclaimer = document.querySelector('.disclaimer');
+  const resetBtn = document.getElementById('reset');
+  const submitBtn = document.getElementById('submit');
+  const contestSection = document.getElementById('contest');
+  const reviewsSection = document.getElementById('reviews');
+
+  const reviewPageSection = document.createElement('div');
+  reviewPageSection.className = 'page-section active';
+  reviewPageSection.id = 'review-section';
+
+  if (uploadSection) reviewPageSection.appendChild(uploadSection);
+  criteriaElements.forEach(el => reviewPageSection.appendChild(el));
+  if (scoreDisplay) reviewPageSection.appendChild(scoreDisplay);
+  if (titleInput) reviewPageSection.appendChild(titleInput);
+  if (textInput) reviewPageSection.appendChild(textInput);
+  if (textWarning) reviewPageSection.appendChild(textWarning);
+  if (disclaimer) reviewPageSection.appendChild(disclaimer);
+  if (resetBtn) reviewPageSection.appendChild(resetBtn);
+  if (submitBtn) reviewPageSection.appendChild(submitBtn);
+  if (contestSection) reviewPageSection.appendChild(contestSection);
+  if (reviewsSection) reviewPageSection.appendChild(reviewsSection);
+
+  tabNav.after(reviewPageSection);
+
+  const resultsSection = document.createElement('div');
+  resultsSection.className = 'page-section';
+  resultsSection.id = 'results-section';
+  resultsSection.innerHTML = `
+    <div class="results-container">
+      <h2 style="text-align:center; font-size:2.2em; margin:20px 0;">🏆 Итоги конкурса</h2>
+      <div class="winners-section">
+        <div class="winners-title">Призовые места</div>
+        <div class="winners-grid" id="winners-container"></div>
+      </div>
+      <div class="others-section">
+        <h3 style="text-align:center; font-size:1.5em; margin:20px 0;">Остальные участники</h3>
+        <div id="others-container"></div>
+      </div>
+      <div class="loading" id="results-loading">Загрузка результатов...</div>
+    </div>
+  `;
+  reviewPageSection.after(resultsSection);
+
+  const uploadSkinsSection = document.createElement('div');
+  uploadSkinsSection.className = 'page-section';
+  uploadSkinsSection.id = 'upload-skins-section';
+  uploadSkinsSection.innerHTML = `
+    <div class="upload-skin-form">
+      <h2 style="text-align:center;">Загрузка скинов для конкурса</h2>
+      <input type="text" id="skin-title-input" placeholder="Название скина" maxlength="100" />
+      <input type="file" id="skin-file-input" accept="image/png" />
+      <img id="skin-preview-img" class="skin-preview-upload" style="display:none;" />
+      <button class="submit-button" id="upload-skin-btn" disabled>Загрузить скин</button>
+      <div id="upload-error" class="error" style="display:none; margin-top:10px;"></div>
+      <div id="upload-success" class="info-text" style="display:none; margin-top:10px; color:#0f0;">Скин успешно загружен!</div>
+    </div>
+    <div style="max-width:800px; margin:20px auto;">
+      <h3 style="text-align:center;">Загруженные скины</h3>
+      <div id="uploaded-skins-list"></div>
+    </div>
+  `;
+  resultsSection.after(uploadSkinsSection);
+
+  const tabBtns = tabNav.querySelectorAll('.tab-btn');
+  const pageSections = document.querySelectorAll('.page-section');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      pageSections.forEach(section => { section.classList.remove('active'); });
+      if (tab === 'review') reviewPageSection.classList.add('active');
+      else if (tab === 'results') resultsSection.classList.add('active');
+      else if (tab === 'upload') uploadSkinsSection.classList.add('active');
+    });
+  });
+
+  window.updateTabVisibility = function(role) {
+    const uploadTab = document.querySelector('[data-tab="upload"]');
+    const reviewTab = document.querySelector('[data-tab="review"]');
+    if (reviewTab) reviewTab.style.display = 'inline-block';
+    if (uploadTab) uploadTab.style.display = (role === 'admin') ? 'inline-block' : 'none';
+  };
+});
+</script>
+
+<!-- ОСНОВНОЙ КОД ДЛЯ ИТОГОВ КОНКУРСА И ЗАГРУЗКИ СКИНОВ -->
+<script type="module">
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+const db = getFirestore();
+const auth = getAuth();
+
+let currentUserRole = null;
+async function loadUserRole(uid) {
+  if (!uid) return null;
+  try {
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    if (userDoc.exists()) return userDoc.data().role || 'user';
+    return 'user';
+  } catch (_) { return 'user'; }
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) { currentUserRole = await loadUserRole(user.uid); if (window.updateTabVisibility) window.updateTabVisibility(currentUserRole); }
+  else { currentUserRole = null; if (window.updateTabVisibility) window.updateTabVisibility(null); }
+});
+
+let skinsData = [];
+let reviewsData = [];
+onSnapshot(query(collection(db, 'skins'), orderBy('createdAt', 'desc')), (snapshot) => {
+  skinsData = []; snapshot.forEach(d => skinsData.push({ id: d.id, ...d.data() }));
+  renderResults(); renderUploadedSkins();
+});
+onSnapshot(collection(db, 'reviews'), (snapshot) => {
+  reviewsData = []; snapshot.forEach(d => reviewsData.push({ id: d.id, ...d.data() }));
+  renderResults();
+});
+
+function escapeHtml(unsafe) { if (!unsafe && unsafe !== 0) return ''; return String(unsafe).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+function renderResults() {
+  const winnersContainer = document.getElementById('winners-container');
+  const othersContainer = document.getElementById('others-container');
+  const loadingEl = document.getElementById('results-loading');
+  if (!winnersContainer || !othersContainer) return;
+  if (skinsData.length === 0) { if (loadingEl) loadingEl.textContent = 'Пока нет скинов в конкурсе.'; winnersContainer.innerHTML=''; othersContainer.innerHTML=''; return; }
+  if (loadingEl) loadingEl.style.display = 'none';
+  const skinsWithScores = skinsData.map(skin => {
+    const skinReviews = reviewsData.filter(r => r.skinId === skin.id);
+    const judgeScores = {};
+    skinReviews.forEach(review => { if (!judgeScores[review.userId]) judgeScores[review.userId] = { authorName: review.authorName || 'Судья', total: review.total || 0, reviews: [] }; judgeScores[review.userId].reviews.push(review); });
+    const totals = Object.values(judgeScores).map(j => j.total);
+    const avgScore = totals.length ? Math.ceil(totals.reduce((a,b)=>a+b,0)/totals.length) : 0;
+    return { ...skin, judgeScores, avgScore, allReviews: skinReviews };
+  });
+  skinsWithScores.sort((a,b)=>b.avgScore-a.avgScore);
+  const winners = skinsWithScores.slice(0,3);
+  const others = skinsWithScores.slice(3);
+  winnersContainer.innerHTML = winners.map((s,i)=>renderSkinCard(s,i+1,true)).join('');
+  othersContainer.innerHTML = others.map((s,i)=>renderSkinCard(s,i+4,false)).join('');
+}
+
+function renderSkinCard(skin, place, isWinner) {
+  const judgesList = Object.entries(skin.judgeScores).map(([_, data]) => `
+    <div class="judge-card">
+      <div class="judge-name">${escapeHtml(data.authorName)}</div>
+      <div class="judge-score">${data.total} / 90</div>
+    </div>
+  `).join('');
+  const judgesCount = Object.keys(skin.judgeScores).length;
+  const pendingJudges = Math.max(0, 4 - judgesCount);
+  const pendingCards = Array(pendingJudges).fill('').map(() => `
+    <div class="judge-card">
+      <div class="judge-name">Судья</div>
+      <div class="judge-pending">Ожидается</div>
+    </div>
+  `).join('');
+  const reviewsList = (skin.allReviews||[]).map(review => `
+    <div class="review-full">
+      <h4>${escapeHtml(review.authorName || 'Судья')}</h4>
+      <p>${escapeHtml(review.text || 'Без комментария')}</p>
+      <div class="review-criteria">
+        <span>Лайн: ${review.line || '-'}</span>
+        <span>Палитра: ${review.palette || '-'}</span>
+        <span>Шейд: ${review.shade || '-'}</span>
+        <span>Стилистика: ${review.style || '-'}</span>
+        <span>Вайб: ${review.vibe || '-'}</span>
+      </div>
+      <strong>Итого: ${review.total || '-'} / 90</strong>
+    </div>
+  `).join('');
+  return `
+    <div class="skin-card ${isWinner ? 'winner' : ''}">
+      <div class="place-badge">${place === 1 ? '🥇' : place === 2 ? '🥈' : place === 3 ? '🥉' : '#' + place}</div>
+      <img src="${skin.imageData || ''}" alt="${escapeHtml(skin.title || 'Скин')}" class="skin-thumbnail" onclick="if(window.openSkinModal) window.openSkinModal('${(skin.imageData || '').replace(/'/g, "\\'")}');" />
+      <div class="skin-title">${escapeHtml(skin.title || 'Без названия')}</div>
+      <div class="average-score">${skin.avgScore} / 90</div>
+      <div class="judges-grid">${judgesList}${pendingCards}</div>
+      <details class="reviews-details"><summary>Показать все рецензии (${(skin.allReviews||[]).length})</summary><div style="margin-top:10px;">${reviewsList || '<p style="color:#888;">Пока нет рецензий</p>'}</div></details>
+    </div>`;
+}
+
+const skinTitleInput = document.getElementById('skin-title-input');
+const skinFileInput = document.getElementById('skin-file-input');
+const skinPreviewImg = document.getElementById('skin-preview-img');
+const uploadSkinBtn = document.getElementById('upload-skin-btn');
+const uploadError = document.getElementById('upload-error');
+const uploadSuccess = document.getElementById('upload-success');
+let uploadedSkinData = null;
+
+if (skinFileInput) {
+  skinFileInput.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    if (!file.type.includes('png')) { if (uploadError){ uploadError.textContent='Только PNG файлы допустимы.'; uploadError.style.display='block'; } return; }
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const dataUrl = evt.target.result;
+      try {
+        const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataUrl; });
+        const valid = (img.width === 64 && img.height === 64) || (img.width === 64 && img.height === 32);
+        if (!valid) { if (uploadError){ uploadError.textContent='Размеры изображения должны быть 64×64 или 64×32.'; uploadError.style.display='block'; } return; }
+      } catch(_) { if (uploadError){ uploadError.textContent='Не удалось прочитать изображение.'; uploadError.style.display='block'; } return; }
+      uploadedSkinData = dataUrl; if (skinPreviewImg){ skinPreviewImg.src = dataUrl; skinPreviewImg.style.display = 'block'; }
+      if (uploadError) uploadError.style.display = 'none'; updateUploadBtnState();
+    }; reader.readAsDataURL(file);
+  });
+}
+if (skinTitleInput) skinTitleInput.addEventListener('input', updateUploadBtnState);
+function updateUploadBtnState(){ if(!uploadSkinBtn) return; const hasTitle = skinTitleInput && skinTitleInput.value.trim().length > 0; const hasSkin = !!uploadedSkinData; uploadSkinBtn.disabled = !(hasTitle && hasSkin && currentUserRole === 'admin'); }
+if (uploadSkinBtn) uploadSkinBtn.addEventListener('click', async ()=>{
+  const title = skinTitleInput?.value?.trim(); if(!title||!uploadedSkinData){ alert('Введите название и загрузите скин.'); return; }
+  if (currentUserRole !== 'admin'){ alert('У вас нет прав для загрузки скинов.'); return; }
+  uploadSkinBtn.disabled = true; uploadSkinBtn.textContent = 'Загрузка...'; if(uploadError) uploadError.style.display = 'none'; if(uploadSuccess) uploadSuccess.style.display = 'none';
+  try {
+    await addDoc(collection(db,'skins'),{ title, imageData: uploadedSkinData, createdAt: serverTimestamp() });
+    if(uploadSuccess){ uploadSuccess.textContent = `✅ Скин "${title}" успешно загружен!`; uploadSuccess.style.display = 'block'; }
+    if (skinTitleInput) skinTitleInput.value = ''; if (skinFileInput) skinFileInput.value = ''; if (skinPreviewImg) skinPreviewImg.style.display = 'none'; uploadedSkinData = null;
+    setTimeout(()=>{ if(uploadSuccess) uploadSuccess.style.display = 'none'; },3000);
+  } catch(err){ console.error('Ошибка загрузки скина:', err); if(uploadError){ uploadError.textContent = 'Ошибка: ' + (err.message||err); uploadError.style.display = 'block'; } }
+  finally { uploadSkinBtn.disabled = false; uploadSkinBtn.textContent = 'Загрузить скин'; updateUploadBtnState(); }
+});
+
+function renderUploadedSkins(){ const container = document.getElementById('uploaded-skins-list'); if(!container) return; if(skinsData.length === 0){ container.innerHTML = '<p style="text-align:center; color:#888;">Пока нет загруженных скинов.</p>'; return; } container.innerHTML = skinsData.map(skin=>`
+  <div style="background:var(--surface-2); padding:15px; margin:10px 0; border-radius:8px; display:flex; align-items:center; gap:15px;">
+    <img src="${skin.imageData}" style="width:64px; height:64px; image-rendering:pixelated; border:1px solid var(--line); border-radius:4px;" />
+    <div>
+      <strong>${escapeHtml(skin.title || 'Без названия')}</strong>
+      <div style="font-size:0.85em; color:#888;">ID: ${skin.id}</div>
+    </div>
+  </div>
+`).join(''); }
 </script>
 
 </body>
 </html>
+
+<!-- ==================== ВСТАВЛЕНО: Навигация между вкладками и секции ==================== -->
+<!-- НАВИГАЦИЯ МЕЖДУ ВКЛАДКАМИ -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.querySelector('.container');
+  const header = container.querySelector('header');
+  const tabNav = document.createElement('nav');
+  tabNav.className = 'tab-navigation';
+  tabNav.innerHTML = `
+    <button class="tab-btn active" data-tab="review">Оценка</button>
+    <button class="tab-btn" data-tab="results">Итоги конкурса</button>
+    <button class="tab-btn" data-tab="upload" style="display:none;">Загрузка скинов</button>
+  `;
+  header.after(tabNav);
+
+  const authSection = document.getElementById('auth-section');
+  const uploadSection = document.getElementById('upload');
+  const criteriaElements = document.querySelectorAll('.criterion');
+  const scoreDisplay = document.getElementById('total');
+  const titleInput = document.getElementById('title');
+  const textInput = document.getElementById('text');
+  const textWarning = document.getElementById('text-warning');
+  const disclaimer = document.querySelector('.disclaimer');
+  const resetBtn = document.getElementById('reset');
+  const submitBtn = document.getElementById('submit');
+  const contestSection = document.getElementById('contest');
+  const reviewsSection = document.getElementById('reviews');
+
+  const reviewPageSection = document.createElement('div');
+  reviewPageSection.className = 'page-section active';
+  reviewPageSection.id = 'review-section';
+
+  if (uploadSection) reviewPageSection.appendChild(uploadSection);
+  criteriaElements.forEach(el => reviewPageSection.appendChild(el));
+  if (scoreDisplay) reviewPageSection.appendChild(scoreDisplay);
+  if (titleInput) reviewPageSection.appendChild(titleInput);
+  if (textInput) reviewPageSection.appendChild(textInput);
+  if (textWarning) reviewPageSection.appendChild(textWarning);
+  if (disclaimer) reviewPageSection.appendChild(disclaimer);
+  if (resetBtn) reviewPageSection.appendChild(resetBtn);
+  if (submitBtn) reviewPageSection.appendChild(submitBtn);
+  if (contestSection) reviewPageSection.appendChild(contestSection);
+  if (reviewsSection) reviewPageSection.appendChild(reviewsSection);
+
+  tabNav.after(reviewPageSection);
+
+  const resultsSection = document.createElement('div');
+  resultsSection.className = 'page-section';
+  resultsSection.id = 'results-section';
+  resultsSection.innerHTML = `
+    <div class="results-container">
+      <h2 style="text-align:center; font-size:2.2em; margin:20px 0;">🏆 Итоги конкурса</h2>
+      <div class="winners-section">
+        <div class="winners-title">Призовые места</div>
+        <div class="winners-grid" id="winners-container"></div>
+      </div>
+      <div class="others-section">
+        <h3 style="text-align:center; font-size:1.5em; margin:20px 0;">Остальные участники</h3>
+        <div id="others-container"></div>
+      </div>
+      <div class="loading" id="results-loading">Загрузка результатов...</div>
+    </div>
+  `;
+  reviewPageSection.after(resultsSection);
+
+  const uploadSkinsSection = document.createElement('div');
+  uploadSkinsSection.className = 'page-section';
+  uploadSkinsSection.id = 'upload-skins-section';
+  uploadSkinsSection.innerHTML = `
+    <div class="upload-skin-form">
+      <h2 style="text-align:center;">Загрузка скинов для конкурса</h2>
+      <input type="text" id="skin-title-input" placeholder="Название скина" maxlength="100" />
+      <input type="file" id="skin-file-input" accept="image/png" />
+      <img id="skin-preview-img" class="skin-preview-upload" style="display:none;" />
+      <button class="submit-button" id="upload-skin-btn" disabled>Загрузить скин</button>
+      <div id="upload-error" class="error" style="display:none; margin-top:10px;"></div>
+      <div id="upload-success" class="info-text" style="display:none; margin-top:10px; color:#0f0;">Скин успешно загружен!</div>
+    </div>
+    <div style="max-width:800px; margin:20px auto;">
+      <h3 style="text-align:center;">Загруженные скины</h3>
+      <div id="uploaded-skins-list"></div>
+    </div>
+  `;
+  resultsSection.after(uploadSkinsSection);
+
+  const tabBtns = tabNav.querySelectorAll('.tab-btn');
+  const pageSections = document.querySelectorAll('.page-section');
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      tabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      pageSections.forEach(section => { section.classList.remove('active'); });
+      if (tab === 'review') reviewPageSection.classList.add('active');
+      else if (tab === 'results') resultsSection.classList.add('active');
+      else if (tab === 'upload') uploadSkinsSection.classList.add('active');
+    });
+  });
+
+  window.updateTabVisibility = function(role) {
+    const uploadTab = document.querySelector('[data-tab="upload"]');
+    const reviewTab = document.querySelector('[data-tab="review"]');
+    if (role === 'admin') { if (uploadTab) uploadTab.style.display = 'inline-block'; if (reviewTab) reviewTab.style.display = 'inline-block'; }
+    else if (role === 'judge') { if (uploadTab) uploadTab.style.display = 'none'; if (reviewTab) reviewTab.style.display = 'inline-block'; }
+    else { if (uploadTab) uploadTab.style.display = 'none'; if (reviewTab) reviewTab.style.display = 'none'; }
+  };
+});
+</script>
+
+<!-- ОСНОВНОЙ КОД ДЛЯ ИТОГОВ КОНКУРСА И ЗАГРУЗКИ СКИНОВ -->
+<script type="module">
+import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+const db = getFirestore();
+const auth = getAuth();
+
+let currentUserRole = null;
+async function loadUserRole(uid) {
+  if (!uid) return null;
+  try {
+    const userDoc = await getDoc(doc(db, 'users', uid));
+    if (userDoc.exists()) return userDoc.data().role || 'user';
+    return 'user';
+  } catch (_) { return 'user'; }
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) { currentUserRole = await loadUserRole(user.uid); if (window.updateTabVisibility) window.updateTabVisibility(currentUserRole); }
+  else { currentUserRole = null; if (window.updateTabVisibility) window.updateTabVisibility(null); }
+});
+
+let skinsData = [];
+let reviewsData = [];
+onSnapshot(query(collection(db, 'skins'), orderBy('createdAt', 'desc')), (snapshot) => {
+  skinsData = []; snapshot.forEach(d => skinsData.push({ id: d.id, ...d.data() }));
+  renderResults(); renderUploadedSkins();
+});
+onSnapshot(collection(db, 'reviews'), (snapshot) => {
+  reviewsData = []; snapshot.forEach(d => reviewsData.push({ id: d.id, ...d.data() }));
+  renderResults();
+});
+
+function escapeHtml(unsafe) { if (!unsafe && unsafe !== 0) return ''; return String(unsafe).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
+
+function renderResults() {
+  const winnersContainer = document.getElementById('winners-container');
+  const othersContainer = document.getElementById('others-container');
+  const loadingEl = document.getElementById('results-loading');
+  if (!winnersContainer || !othersContainer) return;
+  if (skinsData.length === 0) { if (loadingEl) loadingEl.textContent = 'Пока нет скинов в конкурсе.'; winnersContainer.innerHTML=''; othersContainer.innerHTML=''; return; }
+  if (loadingEl) loadingEl.style.display = 'none';
+  const skinsWithScores = skinsData.map(skin => {
+    const skinReviews = reviewsData.filter(r => r.skinId === skin.id);
+    const judgeScores = {};
+    skinReviews.forEach(review => { if (!judgeScores[review.userId]) judgeScores[review.userId] = { authorName: review.authorName || 'Судья', total: review.total || 0, reviews: [] }; judgeScores[review.userId].reviews.push(review); });
+    const totals = Object.values(judgeScores).map(j => j.total);
+    const avgScore = totals.length ? Math.ceil(totals.reduce((a,b)=>a+b,0)/totals.length) : 0;
+    return { ...skin, judgeScores, avgScore, allReviews: skinReviews };
+  });
+  skinsWithScores.sort((a,b)=>b.avgScore-a.avgScore);
+  const winners = skinsWithScores.slice(0,3);
+  const others = skinsWithScores.slice(3);
+  winnersContainer.innerHTML = winners.map((s,i)=>renderSkinCard(s,i+1,true)).join('');
+  othersContainer.innerHTML = others.map((s,i)=>renderSkinCard(s,i+4,false)).join('');
+}
+
+function renderSkinCard(skin, place, isWinner) {
+  const judgesList = Object.entries(skin.judgeScores).map(([_, data]) => `
+    <div class="judge-card">
+      <div class="judge-name">${escapeHtml(data.authorName)}</div>
+      <div class="judge-score">${data.total} / 90</div>
+    </div>
+  `).join('');
+  const judgesCount = Object.keys(skin.judgeScores).length;
+  const pendingJudges = Math.max(0, 4 - judgesCount);
+  const pendingCards = Array(pendingJudges).fill('').map(() => `
+    <div class="judge-card">
+      <div class="judge-name">Судья</div>
+      <div class="judge-pending">Ожидается</div>
+    </div>
+  `).join('');
+  const reviewsList = (skin.allReviews||[]).map(review => `
+    <div class="review-full">
+      <h4>${escapeHtml(review.authorName || 'Судья')}</h4>
+      <p>${escapeHtml(review.text || 'Без комментария')}</p>
+      <div class="review-criteria">
+        <span>Лайн: ${review.line || '-'}</span>
+        <span>Палитра: ${review.palette || '-'}</span>
+        <span>Шейд: ${review.shade || '-'}</span>
+        <span>Стилистика: ${review.style || '-'}</span>
+        <span>Вайб: ${review.vibe || '-'}</span>
+      </div>
+      <strong>Итого: ${review.total || '-'} / 90</strong>
+    </div>
+  `).join('');
+  return `
+    <div class="skin-card ${isWinner ? 'winner' : ''}">
+      <div class="place-badge">${place === 1 ? '🥇' : place === 2 ? '🥈' : place === 3 ? '🥉' : '#' + place}</div>
+      <img src="${skin.imageData || ''}" alt="${escapeHtml(skin.title || 'Скин')}" class="skin-thumbnail" onclick="if(window.openSkinModal) window.openSkinModal('${(skin.imageData || '').replace(/'/g, "\\'")}');" />
+      <div class="skin-title">${escapeHtml(skin.title || 'Без названия')}</div>
+      <div class="average-score">${skin.avgScore} / 90</div>
+      <div class="judges-grid">${judgesList}${pendingCards}</div>
+      <details class="reviews-details"><summary>Показать все рецензии (${(skin.allReviews||[]).length})</summary><div style="margin-top:10px;">${reviewsList || '<p style="color:#888;">Пока нет рецензий</p>'}</div></details>
+    </div>`;
+}
+
+const skinTitleInput = document.getElementById('skin-title-input');
+const skinFileInput = document.getElementById('skin-file-input');
+const skinPreviewImg = document.getElementById('skin-preview-img');
+const uploadSkinBtn = document.getElementById('upload-skin-btn');
+const uploadError = document.getElementById('upload-error');
+const uploadSuccess = document.getElementById('upload-success');
+let uploadedSkinData = null;
+
+if (skinFileInput) {
+  skinFileInput.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    if (!file.type.includes('png')) { if (uploadError){ uploadError.textContent='Только PNG файлы допустимы.'; uploadError.style.display='block'; } return; }
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      const dataUrl = evt.target.result;
+      try {
+        const img = new Image(); await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = dataUrl; });
+        const valid = (img.width === 64 && img.height === 64) || (img.width === 64 && img.height === 32);
+        if (!valid) { if (uploadError){ uploadError.textContent='Размеры изображения должны быть 64×64 или 64×32.'; uploadError.style.display='block'; } return; }
+      } catch(_) { if (uploadError){ uploadError.textContent='Не удалось прочитать изображение.'; uploadError.style.display='block'; } return; }
+      uploadedSkinData = dataUrl; if (skinPreviewImg){ skinPreviewImg.src=dataUrl; skinPreviewImg.style.display='block'; }
+      if (uploadError) uploadError.style.display='none'; updateUploadBtnState();
+    }; reader.readAsDataURL(file);
+  });
+}
+if (skinTitleInput) skinTitleInput.addEventListener('input', updateUploadBtnState);
+function updateUploadBtnState(){ if(!uploadSkinBtn) return; const hasTitle=skinTitleInput&&skinTitleInput.value.trim().length>0; const hasSkin=!!uploadedSkinData; uploadSkinBtn.disabled = !(hasTitle && hasSkin && currentUserRole === 'admin'); }
+if (uploadSkinBtn) uploadSkinBtn.addEventListener('click', async ()=>{
+  const title = skinTitleInput?.value?.trim(); if(!title||!uploadedSkinData){ alert('Введите название и загрузите скин.'); return; }
+  if (currentUserRole !== 'admin'){ alert('У вас нет прав для загрузки скинов.'); return; }
+  uploadSkinBtn.disabled=true; uploadSkinBtn.textContent='Загрузка...'; if(uploadError) uploadError.style.display='none'; if(uploadSuccess) uploadSuccess.style.display='none';
+  try {
+    await addDoc(collection(db,'skins'),{ title, imageData: uploadedSkinData, createdAt: serverTimestamp() });
+    if(uploadSuccess){ uploadSuccess.textContent = `✅ Скин "${title}" успешно загружен!`; uploadSuccess.style.display='block'; }
+    if (skinTitleInput) skinTitleInput.value=''; if (skinFileInput) skinFileInput.value=''; if (skinPreviewImg) skinPreviewImg.style.display='none'; uploadedSkinData=null;
+    setTimeout(()=>{ if(uploadSuccess) uploadSuccess.style.display='none'; },3000);
+  } catch(err){ console.error('Ошибка загрузки скина:', err); if(uploadError){ uploadError.textContent='Ошибка: ' + (err.message||err); uploadError.style.display='block'; } }
+  finally { uploadSkinBtn.disabled=false; uploadSkinBtn.textContent='Загрузить скин'; updateUploadBtnState(); }
+});
+
+function renderUploadedSkins(){ const container=document.getElementById('uploaded-skins-list'); if(!container) return; if(skinsData.length===0){ container.innerHTML='<p style="text-align:center; color:#888;">Пока нет загруженных скинов.</p>'; return; } container.innerHTML = skinsData.map(skin=>`
+  <div style="background:var(--surface-2); padding:15px; margin:10px 0; border-radius:8px; display:flex; align-items:center; gap:15px;">
+    <img src="${skin.imageData}" style="width:64px; height:64px; image-rendering:pixelated; border:1px solid var(--line); border-radius:4px;" />
+    <div>
+      <strong>${escapeHtml(skin.title || 'Без названия')}</strong>
+      <div style="font-size:0.85em; color:#888;">ID: ${skin.id}</div>
+    </div>
+  </div>
+`).join(''); }
+</script>
