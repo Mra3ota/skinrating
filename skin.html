@@ -240,6 +240,7 @@
     // слушаем contest_scores для этого скина
     let scoreDocs = [];
     let judgesCache = {}; // Кеш для имен судей
+    let usersCache = {}; // Кеш для ников из users
     
     function listenScores(){
       const q = query(collection(db, 'contest_scores'), where('skinId','==', skinId));
@@ -247,16 +248,31 @@
         scoreDocs = [];
         snap.forEach(d => scoreDocs.push({ id: d.id, ...d.data() }));
         
-        // Загружаем имена судей из коллекции judges
+        // Загружаем имена судей из коллекции judges И ники из users
         for (const score of scoreDocs) {
-          if (score.judgeId && !judgesCache[score.judgeId]) {
-            try {
-              const judgeDoc = await getDoc(doc(db, 'judges', score.judgeId));
-              if (judgeDoc.exists()) {
-                judgesCache[score.judgeId] = judgeDoc.data().name || 'Судья';
+          if (score.judgeId) {
+            // Загружаем из judges
+            if (!judgesCache[score.judgeId]) {
+              try {
+                const judgeDoc = await getDoc(doc(db, 'judges', score.judgeId));
+                if (judgeDoc.exists()) {
+                  judgesCache[score.judgeId] = judgeDoc.data().name || null;
+                }
+              } catch(e) {
+                console.log('Не удалось загрузить имя судьи из judges:', e);
               }
-            } catch(e) {
-              console.log('Не удалось загрузить имя судьи:', e);
+            }
+            
+            // Загружаем ник из users
+            if (!usersCache[score.judgeId]) {
+              try {
+                const userDoc = await getDoc(doc(db, 'users', score.judgeId));
+                if (userDoc.exists()) {
+                  usersCache[score.judgeId] = userDoc.data().displayName || null;
+                }
+              } catch(e) {
+                console.log('Не удалось загрузить ник из users:', e);
+              }
             }
           }
         }
@@ -273,11 +289,18 @@
         scoresList.innerHTML = '';
         scoreDocs.sort((a,b)=> (b.total||0)-(a.total||0));
         scoreDocs.forEach(s => {
+          // Приоритет: ник из users > имя из judges > judgeName > 'Судья'
+          const userNick = usersCache[s.judgeId];
+          const judgeName = judgesCache[s.judgeId];
+          const fallbackName = s.judgeName || 'Судья';
+          
+          const displayName = userNick || judgeName || fallbackName;
+          
           const div = document.createElement('div');
           div.className = 'judge';
           div.innerHTML = `
             <div style="flex:1;">
-              <b>${escapeHtml(s.judgeName||'Судья')}</b>
+              <b>${escapeHtml(displayName)}</b>
               <div class="small" style="margin-top:6px;">Итоговый балл: <strong style="color:var(--accent);font-size:1.05rem;">${s.total || '-'} / 90</strong></div>
               <div class="judge-scores">
                 <span>L: ${s.line||'-'}</span>
@@ -340,7 +363,18 @@
       try {
         const judgeDoc = await getDoc(doc(db, 'judges', currentUser.uid));
         if (judgeDoc.exists()) {
-          judgeControls.innerHTML = `<div style="padding:10px;background:rgba(138,43,226,0.1);border-radius:8px;border:1px solid rgba(138,43,226,0.3);"><div class="small">✅ Вы — судья (${escapeHtml(currentUser.displayName||'')})</div><button id="toggleEval" class="btn" style="margin-top:10px;width:100%;">📝 Оценить скин</button></div>`;
+          // Загружаем ник из users
+          let displayName = judgeDoc.data().name || currentUser.displayName || '';
+          try {
+            const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+            if (userDoc.exists() && userDoc.data().displayName) {
+              displayName = userDoc.data().displayName;
+            }
+          } catch(e) {
+            console.log('Не удалось загрузить ник из users:', e);
+          }
+          
+          judgeControls.innerHTML = `<div style="padding:10px;background:rgba(138,43,226,0.1);border-radius:8px;border:1px solid rgba(138,43,226,0.3);"><div class="small">✅ Вы — судья (${escapeHtml(displayName)})</div><button id="toggleEval" class="btn" style="margin-top:10px;width:100%;">📝 Оценить скин</button></div>`;
           document.getElementById('toggleEval').addEventListener('click', ()=>{
             evalWrap.classList.toggle('hidden');
           });
@@ -438,16 +472,36 @@
       try {
         const q = query(collection(db, 'contest_scores'), where('skinId','==', skinId), where('judgeId','==', currentUser.uid));
         const snaps = await getDocs(q);
+        
+        // Получаем имя судьи: приоритет - ник из users > имя из judges > displayName > email
+        let judgeName = currentUser.displayName || currentUser.email || 'Судья';
+        
+        try {
+          const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+          if (userDoc.exists() && userDoc.data().displayName) {
+            judgeName = userDoc.data().displayName;
+          } else {
+            const judgeDoc = await getDoc(doc(db, 'judges', currentUser.uid));
+            if (judgeDoc.exists() && judgeDoc.data().name) {
+              judgeName = judgeDoc.data().name;
+            }
+          }
+        } catch(e) {
+          console.log('Не удалось загрузить имя судьи:', e);
+        }
+        
         if (!snaps.empty) {
           const docRef = snaps.docs[0].ref;
           await updateDoc(docRef, {
-            line, palette, shade, style, vibe, total, reviewText: review, createdAt: serverTimestamp()
+            line, palette, shade, style, vibe, total, reviewText: review, 
+            judgeName: judgeName,
+            createdAt: serverTimestamp()
           });
         } else {
           await addDoc(collection(db, 'contest_scores'), {
             skinId,
             judgeId: currentUser.uid,
-            judgeName: currentUser.displayName || currentUser.email || 'Судья',
+            judgeName: judgeName,
             line, palette, shade, style, vibe, total, reviewText: review,
             createdAt: serverTimestamp()
           });
