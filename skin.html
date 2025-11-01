@@ -237,12 +237,30 @@
       }
     }
 
+    // слушаем contest_scores для этого скина
     let scoreDocs = [];
+    let judgesCache = {}; // Кеш для имен судей
+    
     function listenScores(){
       const q = query(collection(db, 'contest_scores'), where('skinId','==', skinId));
-      onSnapshot(q, snap => {
+      onSnapshot(q, async snap => {
         scoreDocs = [];
         snap.forEach(d => scoreDocs.push({ id: d.id, ...d.data() }));
+        
+        // Загружаем имена судей из коллекции judges
+        for (const score of scoreDocs) {
+          if (score.judgeId && !judgesCache[score.judgeId]) {
+            try {
+              const judgeDoc = await getDoc(doc(db, 'judges', score.judgeId));
+              if (judgeDoc.exists()) {
+                judgesCache[score.judgeId] = judgeDoc.data().name || 'Судья';
+              }
+            } catch(e) {
+              console.log('Не удалось загрузить имя судьи:', e);
+            }
+          }
+        }
+        
         renderScores();
         computePlaceAndUpdate();
       });
