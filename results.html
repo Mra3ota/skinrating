@@ -24,20 +24,19 @@
   .place:hover{ transform: translateY(-12px) scale(1.02); box-shadow: 0 16px 40px rgba(138,43,226,0.4); border-color: rgba(138,43,226,0.4); }
   .place::before{ content:''; position:absolute; top:0; left:0; right:0; height:5px; }
   
-  .place-1{ width:300px; height:380px; border-color: var(--gold); order:2; }
+  .place-1{ width:300px; height:400px; border-color: var(--gold); order:2; }
   .place-1::before{ background: linear-gradient(90deg, var(--gold), #ffed4e); box-shadow: 0 0 20px rgba(255,215,0,0.5); }
   
-  .place-2{ width:280px; height:320px; border-color: var(--silver); order:1; }
+  .place-2{ width:280px; height:340px; border-color: var(--silver); order:1; }
   .place-2::before{ background: linear-gradient(90deg, var(--silver), #e8e8e8); box-shadow: 0 0 20px rgba(192,192,192,0.5); }
   
-  .place-3{ width:280px; height:280px; border-color: var(--bronze); order:3; }
+  .place-3{ width:280px; height:300px; border-color: var(--bronze); order:3; }
   .place-3::before{ background: linear-gradient(90deg, var(--bronze), #e89b5f); box-shadow: 0 0 20px rgba(205,127,50,0.5); }
   
-  .medal{ font-size:3.5rem; margin-bottom:16px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); animation: float 3s ease-in-out infinite; position:relative; z-index:10; }
-  @keyframes float{ 0%, 100%{ transform: translateY(0); } 50%{ transform: translateY(-8px); } }
+  .medal{ font-size:4rem; margin-bottom:12px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); position:relative; z-index:10; display:block; }
   
-  .place-content{ display:flex; flex-direction:column; align-items:center; text-align:center; width:100%; }
-  .place-preview{ width:140px; height:180px; margin:0 auto 16px; border-radius:12px; overflow:hidden; background:#0a0a0f; position:relative; box-shadow: 0 8px 24px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.05); }
+  .place-content{ display:flex; flex-direction:column; align-items:center; text-align:center; width:100%; height:100%; justify-content:space-between; padding-top:8px; }
+  .place-preview{ width:140px; height:180px; margin:0 auto 12px; border-radius:12px; overflow:hidden; background:#0a0a0f; position:relative; box-shadow: 0 8px 24px rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.05); flex-shrink:0; }
   .place-preview img{ width:100%; height:100%; object-fit:contain; transition: transform 0.4s ease; }
   .place:hover .place-preview img{ transform: scale(1.1) rotate(2deg); }
   
@@ -53,14 +52,26 @@
   .card{ display:flex; gap:14px; align-items:center; padding:14px; background:var(--card); border-radius:12px; border:1px solid rgba(255,255,255,0.05); cursor:pointer; transition: all 0.3s ease; position:relative; }
   .card:hover{ transform: translateX(6px); border-color: rgba(138,43,226,0.4); box-shadow: -6px 0 16px rgba(138,43,226,0.25); background: rgba(20,20,26,0.9); }
   
-  .thumb{ width:140px; height:140px; min-width:140px; border-radius:10px; overflow:hidden; background:#0a0a0f; display:flex; align-items:center; justify-content:center; position:relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.03); }
-  .thumb img{ width:100%; height:100%; object-fit:cover; transition: transform 0.3s ease; }
+  .thumb{ width:140px; height:180px; min-width:140px; border-radius:10px; overflow:hidden; background:#0a0a0f; display:flex; align-items:center; justify-content:center; position:relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.03); }
+  .thumb img{ width:100%; height:100%; object-fit:contain; transition: transform 0.3s ease; }
   .card:hover .thumb img{ transform: scale(1.08); }
   
   .meta{ flex:1; min-width:0; }
   .meta h2{ margin:0 0 8px 0; font-size:1.15rem; font-weight:700; letter-spacing:-0.2px; }
   .small{ color:var(--muted); font-size:0.9rem; line-height:1.5; }
   .score-badge{ background:rgba(138,43,226,0.2); padding:8px 14px; border-radius:8px; display:inline-block; font-weight:700; font-size:1rem; border: 1px solid rgba(138,43,226,0.3); margin-top:10px; }
+  
+  .info-btn{ background:rgba(138,43,226,0.15); color:var(--text); padding:8px 14px; border-radius:8px; border:1px solid rgba(138,43,226,0.3); cursor:pointer; font-weight:600; transition: all 0.3s ease; font-size:0.9rem; }
+  .info-btn:hover{ background:rgba(138,43,226,0.25); border-color:rgba(138,43,226,0.5); }
+  
+  .modal{ display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
+  .modal.active{ display:flex; }
+  .modal-content{ background:var(--card); border-radius:16px; padding:24px; max-width:700px; width:100%; max-height:80vh; overflow-y:auto; border:1px solid rgba(138,43,226,0.3); box-shadow:0 8px 32px rgba(0,0,0,0.5); }
+  .modal-content h2{ margin:0 0 16px 0; font-size:1.5rem; color:var(--accent); }
+  .modal-content h3{ margin:16px 0 8px 0; font-size:1.1rem; color:var(--text); }
+  .modal-content p{ line-height:1.7; color:var(--muted); margin:0 0 12px 0; }
+  .close-modal{ position:absolute; top:12px; right:12px; width:32px; height:32px; background:rgba(255,255,255,0.1); border:none; border-radius:8px; cursor:pointer; font-size:1.5rem; color:var(--text); transition:all 0.2s ease; }
+  .close-modal:hover{ background:rgba(255,255,255,0.2); transform:scale(1.1); }
   
   .admin-form{ margin:16px 0; padding:16px; background:rgba(255,255,255,0.02); border-radius:12px; border: 1px solid rgba(255,255,255,0.05); }
   .hidden{ display:none; }
@@ -75,12 +86,13 @@
   @keyframes spin{ to{ transform: rotate(360deg); } }
   
   @media (max-width:900px){
-    .thumb{ width:100px; height:100px; min-width:100px; }
+    .thumb{ width:100px; height:130px; min-width:100px; }
     .podium{ flex-direction:column; align-items:center; gap:16px; }
     .place-1, .place-2, .place-3{ width:100% !important; max-width:360px; height:auto !important; min-height:280px; order:initial !important; }
     .medal{ font-size:2.5rem; }
     .place-author{ font-size:1.1rem; }
     .podium-title{ font-size:1.4rem; }
+    .place-preview{ height:150px; }
   }
 </style>
 </head>
@@ -88,7 +100,8 @@
   <div class="wrap">
     <header>
       <h1 style="font-size:1.8rem; font-weight:800; margin:0;">🏆 Итоги конкурса</h1>
-      <div style="margin-left:auto; display:flex; gap:10px; align-items:center;">
+      <div style="margin-left:auto; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <button id="infoBtn" class="info-btn">ℹ️ Система оценивания</button>
         <a href="index.html" class="btn" style="background:#333">Вернуться</a>
         <button id="signBtn" class="btn">Войти</button>
       </div>
@@ -113,6 +126,32 @@
     
     <div id="listWrap" class="grid"></div>
     <div id="emptyMsg" class="small" style="text-align:center;margin-top:32px;display:none;font-size:1.05rem;">Пока нет конкурсных скинов.</div>
+  </div>
+
+  <!-- Модальное окно с информацией -->
+  <div id="infoModal" class="modal">
+    <div class="modal-content" style="position:relative;">
+      <button class="close-modal" id="closeModal">×</button>
+      <h2>📊 Подробнее о системе оценивания</h2>
+      <p>При оценивании конкурса используется уникальная система оценки скинов, разработанная администрацией МММ на основе 90 бальной шкалы РЗТ (Риса за творчество). Система максимально возможно стремится к объективности и состоит из 4 числовых критериев и 1 множителя.</p>
+      
+      <h3>🎨 Лайн / Образ (1-10)</h3>
+      <p>Оценивается общая идея лайна, то как грамотно и лаконично эта идея реализована, не перегружен ли он, насколько он интересно и необычно выглядит, какие-то необычные детали, идеи добавляют баллов. В рамках конкурса также оценивается соответствие скина идее Хэллоуина.</p>
+      
+      <h3>🌈 Палитра (1-10)</h3>
+      <p>Оценивается то, насколько хорошо подобраны цвета, насколько хорошо они соприкасаются и дополняют идею, оценивается подбор палитры как шейда, так и лайна и, конечно, насколько цвета в целом приятны глазу, не сливаются ли какие-либо части на скине друг с другом.</p>
+      
+      <h3>✨ Реализация / Шейд (1-10)</h3>
+      <p>Оценивается то, насколько хорошо реализован лайн (зачастую идея может быть хорошей, к примеру, но реализация этой идеи оставляет желать лучшего), насколько уместен шейдинг, как он дополняет идею скина.</p>
+      
+      <h3>🎯 Айдентика / Стилистика (1-10)</h3>
+      <p>Оценивется насколько стиль уникален и узнаваем среди других, пожалуй самый спорный, но несомненно важный критерий, ведь уникальность в большом потоке работ играет решающую роль.</p>
+      
+      <h3>💫 Общее впечатление / Вайб (множитель 1-10)</h3>
+      <p>Субъективный множитель, то, насколько оценивающему понравился скин, можно сравнить с обычной шкалой от 1 до 10, которая обычно используется при оценке.</p>
+      
+      <p style="margin-top:20px;padding:12px;background:rgba(138,43,226,0.15);border-radius:8px;border-left:3px solid var(--accent);"><strong>Итоговая формула:</strong><br>Балл = (Лайн + Палитра + Реализация + Стилистика) × 1.4 × Множитель_вайба<br><strong>Максимум: 90 баллов</strong></p>
+    </div>
   </div>
 
   <!-- SkinView3D -->
@@ -147,11 +186,21 @@
     const podiumSection = document.getElementById('podiumSection');
     const emptyMsg = document.getElementById('emptyMsg');
     const signBtn = document.getElementById('signBtn');
+    const infoBtn = document.getElementById('infoBtn');
+    const infoModal = document.getElementById('infoModal');
+    const closeModal = document.getElementById('closeModal');
 
     const ADMIN_EMAIL = "nmprokhorov@gmail.com";
     const MEDALS = ['🥇', '🥈', '🥉'];
 
     let currentUser = null;
+
+    // Модальное окно
+    infoBtn.addEventListener('click', () => infoModal.classList.add('active'));
+    closeModal.addEventListener('click', () => infoModal.classList.remove('active'));
+    infoModal.addEventListener('click', (e) => {
+      if (e.target === infoModal) infoModal.classList.remove('active');
+    });
 
     const provider = new GoogleAuthProvider();
     signBtn.addEventListener('click', async () => {
@@ -275,13 +324,19 @@
         const place = idx+1;
         const card = document.createElement('div');
         card.className = 'card';
+        
+        let placeDisplay = `<strong style="font-size:1.3rem;">#${place}</strong>`;
+        if (place === 1) placeDisplay = `<strong style="font-size:1.5rem;color:var(--gold);">🥇 ${place} место</strong>`;
+        else if (place === 2) placeDisplay = `<strong style="font-size:1.4rem;color:var(--silver);">🥈 ${place} место</strong>`;
+        else if (place === 3) placeDisplay = `<strong style="font-size:1.4rem;color:var(--bronze);">🥉 ${place} место</strong>`;
+        
         card.innerHTML = `
           <div class="thumb" id="thumb_${it.id}">
             <div class="loading-spinner"></div>
           </div>
           <div class="meta">
             <h2>${escapeHtml(it.authorName || '—')}</h2>
-            <div class="small">📍 Место: <strong>${place}</strong> • 👥 Оценок: ${it.judgeCount}</div>
+            <div class="small">📍 Место: ${placeDisplay} • 👥 Оценок: ${it.judgeCount}</div>
             <div class="score-badge">⭐ Средний балл: ${it.avgCeil} / 90</div>
           </div>
         `;
