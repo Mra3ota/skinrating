@@ -212,8 +212,8 @@
       skinDoc = { id: snap.id, ...snap.data() };
       authorTitle.textContent = 'Автор: ' + (skinDoc.authorName || '—');
       initViewer(skinDoc.skinData);
-      listenScores();
-      computePlaceAndUpdate();
+      await loadScoresOnce();
+      addRefreshButton();
     }
 
     let viewerInstance = null;
@@ -237,14 +237,16 @@
       }
     }
 
-    // слушаем contest_scores для этого скина
+    // слушаем contest_scores для этого скина - ОПТИМИЗИРОВАНО
     let scoreDocs = [];
     let judgesCache = {}; // Кеш для имен судей
     let usersCache = {}; // Кеш для ников из users
+    let scoresUnsubscribe = null;
     
-    function listenScores(){
-      const q = query(collection(db, 'contest_scores'), where('skinId','==', skinId));
-      onSnapshot(q, async snap => {
+    async function loadScoresOnce(){
+      try {
+        const q = query(collection(db, 'contest_scores'), where('skinId','==', skinId));
+        const snap = await getDocs(q);
         scoreDocs = [];
         snap.forEach(d => scoreDocs.push({ id: d.id, ...d.data() }));
         
@@ -279,7 +281,32 @@
         
         renderScores();
         computePlaceAndUpdate();
+      } catch(e) {
+        console.error('Ошибка загрузки оценок:', e);
+      }
+    }
+    
+    // Кнопка обновления оценок
+    function addRefreshButton() {
+      const refreshBtn = document.createElement('button');
+      refreshBtn.className = 'btn';
+      refreshBtn.textContent = '🔄 Обновить';
+      refreshBtn.style.cssText = 'margin-left:8px;';
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = '⏳';
+        await loadScoresOnce();
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = '🔄 Обновить';
       });
+      
+      const scoresHeader = scoresList.previousElementSibling;
+      if (scoresHeader) {
+        scoresHeader.style.display = 'flex';
+        scoresHeader.style.alignItems = 'center';
+        scoresHeader.style.gap = '8px';
+        scoresHeader.appendChild(refreshBtn);
+      }
     }
 
     function renderScores(){
