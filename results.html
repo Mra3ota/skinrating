@@ -95,7 +95,7 @@
   .file-label:hover{ background:#242430; border-color: rgba(138,43,226,0.4); }
   .admin-small{ color:var(--muted); font-size:0.85rem; margin-top:8px; }
   
-  .loading-spinner{ width:40px; height:40px; border:3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius:50%; animation: spin 0.8s linear infinite; margin:auto; }
+  .loading-spinner{ width:40px; height:40px; border:3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius:50%; animation: spin 0.8s linear infinite; }
   @keyframes spin{ to{ transform: rotate(360deg); } }
   
   @media (max-width:900px){
@@ -339,9 +339,9 @@
           </div>
         `;
         
-        el.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
+        column.querySelector('.place').addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         podiumWrap.appendChild(column);
-        init3DPreview(`pv_${it.id}`, it.skinData);
+        setTimeout(()=> init3DPreview(`pv_${it.id}`, it.skinData), 100);
       });
 
       listWrap.innerHTML = '';
@@ -367,12 +367,12 @@
         `;
         card.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         listWrap.appendChild(card);
-        init3DPreview(`thumb_${it.id}`, it.skinData);
+        setTimeout(()=> init3DPreview(`thumb_${it.id}`, it.skinData), 100);
       });
     }
 
-    // Простой 3D превью без сложностей
-    window.previewQueue = Promise.resolve();
+    // 3D превью как в вашем коде
+    window.previewQueue = (window.previewQueue || Promise.resolve());
     
     async function init3DPreview(containerId, skinDataUrl){
       const container = document.getElementById(containerId);
@@ -380,56 +380,72 @@
       
       window.previewQueue = window.previewQueue.then(async () => {
         try {
-          // Простая заглушка сразу
           const img = document.createElement('img');
           img.style.width = '100%';
           img.style.height = '100%';
-          img.style.objectFit = 'contain';
+          img.style.objectFit = 'cover';
+          img.style.opacity = '0.95';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          
+          // Временная заглушка
           img.src = skinDataUrl;
           container.innerHTML = '';
           container.appendChild(img);
           
-          // Генерация 3D в фоне
+          // Генерация 3D кадра
           const off = document.createElement('canvas');
-          off.width = 280;
-          off.height = 350;
+          const parentWidth = container.clientWidth || 180;
+          const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
+          const targetWidth = Math.max(180, Math.min(isMobile ? 360 : 420, parentWidth));
+          const targetHeight = Math.round(targetWidth * 1.35);
+          off.width = targetWidth;
+          off.height = targetHeight;
           
           const viewer = new skinview3d.SkinViewer({
             canvas: off,
-            width: 280,
-            height: 350,
+            width: targetWidth,
+            height: targetHeight,
             preserveDrawingBuffer: true
           });
           
-          viewer.renderer.setClearColor(0x15151c, 1);
-          await viewer.loadSkin(skinDataUrl);
-          viewer.zoom = 0.9;
-          viewer.autoRotate = false;
-          viewer.playerObject.rotation.y = -0.35;
+          try { viewer.renderer.setClearColor(0x15151c, 1); } catch(_) {}
           
-          await new Promise(res => setTimeout(res, 100));
+          await viewer.loadSkin(skinDataUrl);
+          viewer.zoom = 0.95;
+          viewer.autoRotate = false;
+          
+          try {
+            const walk = new skinview3d.WalkingAnimation(viewer);
+            walk.speed = 1.0;
+            walk.paused = true;
+            walk.progress = 0.30;
+            viewer.playerObject.rotation.y = -0.4;
+            viewer.camera.position.set(0, 24, 46);
+            viewer.camera.lookAt(0, 18, 0);
+          } catch(e) {
+            try { viewer.playerObject.rotation.y = -0.4; } catch(_) {}
+          }
+          
+          await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
           
           img.src = off.toDataURL('image/png');
-          viewer.dispose();
+          
+          try { viewer.dispose(); } catch(e) {}
         } catch(e) {
-          console.error('Preview error:', e);
+          console.error('3D preview error:', e);
+          const img = document.createElement('img');
+          img.src = skinDataUrl;
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          container.innerHTML = '';
+          container.appendChild(img);
         }
       });
     }
 
     function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-    
-    // Первая загрузка при старте
-    loadEntriesOnce();
-    
-    // Автообновление раз в 30 секунд
-    setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        loadEntriesOnce();
-      }
-    }, 30000);
   </script>
-</body>
-</html>
 </body>
 </html>
