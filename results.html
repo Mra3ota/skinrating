@@ -446,16 +446,6 @@
     }
 
     function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-    
-    // Первая загрузка при старте
-    loadEntriesOnce();
-    
-    // Автообновление раз в 30 секунд (экономия чтений)
-    setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        loadEntriesOnce();
-      }
-    }, 30000);
   </script>
 </body>
 </html>
