@@ -339,10 +339,9 @@
           </div>
         `;
         
-        el.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
+        column.querySelector('.place').addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         podiumWrap.appendChild(column);
-        // Пьедестал загружается сразу (их всего 3)
-        setTimeout(()=> init3DPreview(`pv_${it.id}`, it.skinData), 50);
+        setTimeout(()=> init3DPreview(`pv_${it.id}`, it.skinData), 100);
       });
 
       listWrap.innerHTML = '';
@@ -368,44 +367,38 @@
         `;
         card.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         listWrap.appendChild(card);
-        // 3D превью загрузится автоматически когда появится на экране
-        setTimeout(()=> init3DPreview(`thumb_${it.id}`, it.skinData), 50);
+        setTimeout(()=> init3DPreview(`thumb_${it.id}`, it.skinData), 100);
       });
     }
 
-    // 3D превью - ЛЕНИВАЯ ЗАГРУЗКА с Intersection Observer
-    const previewObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const container = entry.target;
-          const skinData = container.dataset.skinData;
-          if (skinData && !container.dataset.loaded) {
-            container.dataset.loaded = 'true';
-            generate3DPreview(container.id, skinData);
-          }
-        }
-      });
-    }, {
-      rootMargin: '100px', // Начинаем загрузку за 100px до появления
-      threshold: 0.1
-    });
-
-    window.previewQueue = Promise.resolve();
+    // 3D превью как в вашем коде
+    window.previewQueue = (window.previewQueue || Promise.resolve());
     
-    async function generate3DPreview(containerId, skinDataUrl){
+    async function init3DPreview(containerId, skinDataUrl){
       const container = document.getElementById(containerId);
       if (!container || !skinDataUrl) return;
       
-      return window.previewQueue = window.previewQueue.then(async () => {
+      window.previewQueue = window.previewQueue.then(async () => {
         try {
-          const img = container.querySelector('img');
-          if (!img) return;
+          const img = document.createElement('img');
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          img.style.opacity = '0.95';
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          
+          // Временная заглушка
+          img.src = skinDataUrl;
+          container.innerHTML = '';
+          container.appendChild(img);
           
           // Генерация 3D кадра
           const off = document.createElement('canvas');
+          const parentWidth = container.clientWidth || 180;
           const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
-          const targetWidth = isMobile ? 280 : 320;
-          const targetHeight = Math.round(targetWidth * 1.25);
+          const targetWidth = Math.max(180, Math.min(isMobile ? 360 : 420, parentWidth));
+          const targetHeight = Math.round(targetWidth * 1.35);
           off.width = targetWidth;
           off.height = targetHeight;
           
@@ -419,68 +412,40 @@
           try { viewer.renderer.setClearColor(0x15151c, 1); } catch(_) {}
           
           await viewer.loadSkin(skinDataUrl);
-          viewer.zoom = 0.9;
+          viewer.zoom = 0.95;
           viewer.autoRotate = false;
           
           try {
-            viewer.playerObject.rotation.y = -0.35;
-            viewer.camera.position.set(0, 22, 42);
-            viewer.camera.lookAt(0, 16, 0);
-          } catch(e) {}
+            const walk = new skinview3d.WalkingAnimation(viewer);
+            walk.speed = 1.0;
+            walk.paused = true;
+            walk.progress = 0.30;
+            viewer.playerObject.rotation.y = -0.4;
+            viewer.camera.position.set(0, 24, 46);
+            viewer.camera.lookAt(0, 18, 0);
+          } catch(e) {
+            try { viewer.playerObject.rotation.y = -0.4; } catch(_) {}
+          }
           
           await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
           
-          img.src = off.toDataURL('image/png', 0.85); // Сжатие для скорости
-          img.style.opacity = '1';
+          img.src = off.toDataURL('image/png');
           
           try { viewer.dispose(); } catch(e) {}
         } catch(e) {
           console.error('3D preview error:', e);
+          const img = document.createElement('img');
+          img.src = skinDataUrl;
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          container.innerHTML = '';
+          container.appendChild(img);
         }
       });
     }
-    
-    function init3DPreview(containerId, skinDataUrl) {
-      const container = document.getElementById(containerId);
-      if (!container) return;
-      
-      // Создаем placeholder IMG сразу
-      const img = document.createElement('img');
-      img.style.width = '100%';
-      img.style.height = '100%';
-      img.style.objectFit = 'contain';
-      img.style.opacity = '0.5';
-      img.style.transition = 'opacity 0.3s ease';
-      img.loading = 'lazy';
-      img.alt = 'skin preview';
-      
-      // Простая заглушка - серый силуэт
-      img.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"%3E%3Crect fill="%23222" width="64" height="64"/%3E%3Cpath fill="%23444" d="M20 16h24v16H20z M16 32h32v32H16z"/%3E%3C/svg%3E';
-      
-      container.innerHTML = '';
-      container.appendChild(img);
-      container.dataset.skinData = skinDataUrl;
-      
-      // Регистрируем в наблюдателе
-      previewObserver.observe(container);
-    }
 
     function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
-    
-    // Очистка наблюдателя при выходе
-    window.addEventListener('beforeunload', () => {
-      if (previewObserver) previewObserver.disconnect();
-    });
-    
-    // Первая загрузка при старте
-    loadEntriesOnce();
-    
-    // Автообновление раз в 30 секунд (экономия чтений)
-    setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        loadEntriesOnce();
-      }
-    }, 30000);
   </script>
 </body>
 </html>
