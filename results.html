@@ -293,6 +293,9 @@
     });
 
     function rebuild(){
+      // Очищаем предыдущие наблюдения
+      previewObserver.disconnect();
+      
       const arr = Object.values(entries).map(e => {
         const s = scores[e.id] || [];
         const judgeCount = s.length;
@@ -333,7 +336,7 @@
           </div>
           <div class="place">
             <div class="place-content">
-              <div class="place-preview" id="pv_${it.id}">
+              <div class="place-preview" id="pv_${it.id}" data-skin-id="${it.id}" data-skin-data="${it.skinData}" data-priority="high">
                 <div class="loading-spinner"></div>
               </div>
               <div class="place-author">${escapeHtml(it.authorName || '—')}</div>
@@ -344,7 +347,10 @@
         
         column.querySelector('.place').addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         podiumWrap.appendChild(column);
-        setTimeout(()=> init3DPreview(`pv_${it.id}`, it.skinData), 100);
+        
+        // Подключаем observer для ленивой загрузки
+        const previewEl = document.getElementById(`pv_${it.id}`);
+        if (previewEl) previewObserver.observe(previewEl);
       });
 
       listWrap.innerHTML = '';
@@ -356,7 +362,7 @@
         let placeDisplay = `<strong style="font-size:1.3rem;">#${place}</strong>`;
         
         card.innerHTML = `
-          <div class="thumb" id="thumb_${it.id}">
+          <div class="thumb" id="thumb_${it.id}" data-skin-id="${it.id}" data-skin-data="${it.skinData}">
             <div class="loading-spinner"></div>
           </div>
           <div class="meta">
@@ -367,79 +373,139 @@
         `;
         card.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         listWrap.appendChild(card);
-        setTimeout(()=> init3DPreview(`thumb_${it.id}`, it.skinData), 100);
+        
+        // Подключаем observer для ленивой загрузки
+        const thumbEl = document.getElementById(`thumb_${it.id}`);
+        if (thumbEl) previewObserver.observe(thumbEl);
       });
     }
 
-    window.previewQueue = (window.previewQueue || Promise.resolve());
+    // Кэш для сгенерированных превью
+    const previewCache = new Map();
+    
+    // Семафор для ограничения параллельных рендеров
+    let activeRenders = 0;
+    const MAX_PARALLEL_RENDERS = 3;
+    
+    // Intersection Observer для ленивой загрузки
+    const previewObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const container = entry.target;
+          const skinId = container.dataset.skinId;
+          const skinData = container.dataset.skinData;
+          const priority = container.dataset.priority === 'high';
+          
+          if (skinId && skinData && !container.dataset.loaded) {
+            container.dataset.loaded = 'true';
+            
+            // Приоритетные превью загружаем сразу
+            if (priority) {
+              init3DPreview(container.id, skinData);
+            } else {
+              // Остальные с небольшой задержкой
+              setTimeout(() => init3DPreview(container.id, skinData), 50);
+            }
+          }
+        }
+      });
+    }, {
+      rootMargin: '200px', // Начинаем загрузку за 200px до появления
+      threshold: 0.01
+    });
     
     async function init3DPreview(containerId, skinDataUrl){
       const container = document.getElementById(containerId);
       if (!container || !skinDataUrl) return;
       
-      window.previewQueue = window.previewQueue.then(async () => {
+      const isPriority = container.dataset.priority === 'high';
+      
+      // Проверяем кэш
+      if (previewCache.has(skinDataUrl)) {
+        const cachedImg = document.createElement('img');
+        cachedImg.src = previewCache.get(skinDataUrl);
+        cachedImg.style.width = '100%';
+        cachedImg.style.height = '100%';
+        cachedImg.style.objectFit = 'cover';
+        container.innerHTML = '';
+        container.appendChild(cachedImg);
+        return;
+      }
+      
+      // Ждём свободный слот для рендера
+      while (activeRenders >= MAX_PARALLEL_RENDERS) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      activeRenders++;
+      
+      try {
+        // Показываем оригинальный скин сразу
+        const img = document.createElement('img');
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.opacity = '0.95';
+        img.src = skinDataUrl;
+        container.innerHTML = '';
+        container.appendChild(img);
+        
+        // Генерируем 3D превью
+        const off = document.createElement('canvas');
+        const isMobile = window.innerWidth <= 640;
+        // Топ-3 получают лучшее качество, остальные - стандартное
+        const targetWidth = isPriority ? (isMobile ? 340 : 400) : (isMobile ? 280 : 320);
+        const targetHeight = Math.round(targetWidth * 1.35);
+        off.width = targetWidth;
+        off.height = targetHeight;
+        
+        const viewer = new skinview3d.SkinViewer({
+          canvas: off,
+          width: targetWidth,
+          height: targetHeight,
+          preserveDrawingBuffer: true
+        });
+        
+        try { viewer.renderer.setClearColor(0x15151c, 1); } catch(_) {}
+        
+        await viewer.loadSkin(skinDataUrl);
+        viewer.zoom = 0.95;
+        viewer.autoRotate = false;
+        
         try {
-          const img = document.createElement('img');
-          img.style.width = '100%';
-          img.style.height = '100%';
-          img.style.objectFit = 'cover';
-          img.style.opacity = '0.95';
-          img.loading = 'lazy';
-          img.decoding = 'async';
-          
-          img.src = skinDataUrl;
-          container.innerHTML = '';
-          container.appendChild(img);
-          
-          const off = document.createElement('canvas');
-          const parentWidth = container.clientWidth || 180;
-          const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
-          const targetWidth = Math.max(180, Math.min(isMobile ? 360 : 420, parentWidth));
-          const targetHeight = Math.round(targetWidth * 1.35);
-          off.width = targetWidth;
-          off.height = targetHeight;
-          
-          const viewer = new skinview3d.SkinViewer({
-            canvas: off,
-            width: targetWidth,
-            height: targetHeight,
-            preserveDrawingBuffer: true
-          });
-          
-          try { viewer.renderer.setClearColor(0x15151c, 1); } catch(_) {}
-          
-          await viewer.loadSkin(skinDataUrl);
-          viewer.zoom = 0.95;
-          viewer.autoRotate = false;
-          
-          try {
-            const walk = new skinview3d.WalkingAnimation(viewer);
-            walk.speed = 1.0;
-            walk.paused = true;
-            walk.progress = 0.30;
-            viewer.playerObject.rotation.y = -0.4;
-            viewer.camera.position.set(0, 24, 46);
-            viewer.camera.lookAt(0, 18, 0);
-          } catch(e) {
-            try { viewer.playerObject.rotation.y = -0.4; } catch(_) {}
-          }
-          
-          await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
-          
-          img.src = off.toDataURL('image/png');
-          
-          try { viewer.dispose(); } catch(e) {}
+          const walk = new skinview3d.WalkingAnimation(viewer);
+          walk.speed = 1.0;
+          walk.paused = true;
+          walk.progress = 0.30;
+          viewer.playerObject.rotation.y = -0.4;
+          viewer.camera.position.set(0, 24, 46);
+          viewer.camera.lookAt(0, 18, 0);
         } catch(e) {
-          console.error('3D preview error:', e);
-          const img = document.createElement('img');
-          img.src = skinDataUrl;
-          img.style.width = '100%';
-          img.style.height = '100%';
-          img.style.objectFit = 'cover';
-          container.innerHTML = '';
-          container.appendChild(img);
+          try { viewer.playerObject.rotation.y = -0.4; } catch(_) {}
         }
-      });
+        
+        await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+        
+        // Топ-3 сохраняем с лучшим качеством
+        const quality = isPriority ? 0.92 : 0.8;
+        const renderedDataUrl = off.toDataURL('image/png', quality);
+        previewCache.set(skinDataUrl, renderedDataUrl);
+        
+        img.src = renderedDataUrl;
+        
+        try { viewer.dispose(); } catch(e) {}
+      } catch(e) {
+        console.error('3D preview error:', e);
+        const img = document.createElement('img');
+        img.src = skinDataUrl;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        container.innerHTML = '';
+        container.appendChild(img);
+      } finally {
+        activeRenders--;
+      }
     }
 
     function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
