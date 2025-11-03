@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="icon" href="data:,">
+<title>Скин — Просмотр и оценка</title>
+<style>
+  :root{ --bg:#0e0e12; --card:#14141a; --accent:#8a2be2; --text:#eaeaf2; --muted:#9aa0b2; }
+  * { box-sizing: border-box; }
+  body{ margin:0; font-family:Inter,Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:20px; }
+  .wrap{ max-width:1200px; margin:0 auto; display:grid; grid-template-columns: 480px 1fr; gap:20px; align-items:start; }
+  .viewer{ background:#0b0b0d; border-radius:16px; padding:12px; border:1px solid rgba(255,255,255,0.05); position:relative; box-shadow: 0 8px 24px rgba(0,0,0,0.3); height:560px; }
+  .info{ background:var(--card); border-radius:16px; padding:16px; border:1px solid rgba(255,255,255,0.05); }
+  h1{ margin:0 0 10px 0; font-size:1.3rem; font-weight:800; letter-spacing:-0.3px; }
+  .small{ color:var(--muted); font-size:0.95rem; line-height:1.6; }
+  .list{ margin-top:14px; display:flex; flex-direction:column; gap:10px; }
+  .score-item{ padding:12px; background:rgba(255,255,255,0.02); border-radius:10px; display:flex; gap:12px; align-items:flex-start; transition: all 0.3s ease; border-left: 3px solid transparent; }
+  .score-item:hover{ background:rgba(255,255,255,0.05); border-left-color: var(--accent); transform: translateX(4px); box-shadow: 0 2px 8px rgba(138,43,226,0.15); }
+  .score-item b{ min-width:130px; display:inline-block; font-size:1rem; }
+  .btn{ background:var(--accent); color:#fff; padding:10px 14px; border-radius:8px; cursor:pointer; border:none; font-weight:700; transition: all 0.3s ease; font-size:0.95rem; }
+  .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(138,43,226,0.5); }
+  .btn-secondary{ background:#333; }
+  
+  input[type="range"] { width: 100%; -webkit-appearance: none; background: linear-gradient(90deg,#007bff,#8a2be2); height: 7px; border-radius: 7px; outline: none; transition: all 0.2s ease; }
+  input[type="range"]:hover { height: 9px; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: #fff; border-radius: 50%; cursor: pointer; border: 3px solid #8a2be2; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+  input[type="range"]::-webkit-slider-thumb:hover { width: 26px; height: 26px; box-shadow: 0 0 16px rgba(138,43,226,0.8); }
+  
+  .criterion { margin-bottom:14px; }
+  .criterion label { display:flex; justify-content:space-between; font-weight:600; margin-bottom:8px; font-size:0.95rem; }
+  .score-display { background:linear-gradient(135deg, #1e1e27, #252530); border-radius:12px; padding:16px; text-align:center; font-size:1.3em; font-weight:800; margin-top:14px; border: 2px solid rgba(138,43,226,0.3); box-shadow: 0 4px 12px rgba(138,43,226,0.2); }
+  textarea{ width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:#0a0a0f; color:var(--text); transition: all 0.3s ease; font-size:0.95rem; resize: vertical; min-height:100px; }
+  textarea:focus{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(138,43,226,0.1); }
+  .hidden{ display:none; }
+  
+  .score-grid{ display:grid; grid-template-columns: repeat(5, 1fr); gap:6px; margin-top:6px; font-size:0.85rem; }
+  .score-grid span{ background:rgba(138,43,226,0.15); padding:4px 6px; border-radius:6px; text-align:center; }
+  
+  @media (max-width:1024px){ .wrap{ grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div>
+      <div class="viewer" id="viewerWrap"></div>
+      <div style="margin-top:12px; display:flex; gap:10px;">
+        <button id="backBtn" class="btn btn-secondary">← Вернуться</button>
+        <button id="signBtn" class="btn" style="margin-left:auto">Войти</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="info">
+        <h1 id="skinTitle">Название: —</h1>
+        <div class="small" id="skinAuthor" style="margin-bottom:8px;">Автор: —</div>
+        <div class="small" id="skinStats">Средний балл: — / 90 • Оценок: 0</div>
+        
+        <div id="evalWrap" class="hidden" style="margin-top:24px; border-top:2px dashed rgba(255,255,255,0.05); padding-top:16px;">
+          <h3 style="margin:0 0 14px 0; font-size:1.15rem;">Оценить скин</h3>
+
+          <div class="criterion">
+            <label for="line">Лайн / Образ <span id="line-value">5</span></label>
+            <input type="range" id="line" min="1" max="10" value="5">
+          </div>
+
+          <div class="criterion">
+            <label for="palette">Палитра <span id="palette-value">5</span></label>
+            <input type="range" id="palette" min="1" max="10" value="5">
+          </div>
+
+          <div class="criterion">
+            <label for="shade">Реализация / Шейд <span id="shade-value">5</span></label>
+            <input type="range" id="shade" min="1" max="10" value="5">
+          </div>
+
+          <div class="criterion">
+            <label for="style">Айдентика / Стилистика <span id="style-value">5</span></label>
+            <input type="range" id="style" min="1" max="10" value="5">
+          </div>
+
+          <div class="criterion">
+            <label for="vibe">Общее впечатление / Вайб <span id="vibe-value">5</span></label>
+            <input type="range" id="vibe" min="1" max="10" value="5">
+          </div>
+
+          <textarea id="reviewText" placeholder="Напишите развёрнутую рецензию (необязательно)..."></textarea>
+
+          <div style="display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;">
+            <button id="submitEval" class="btn">Отправить оценку</button>
+            <div id="evalMsg" class="small"></div>
+          </div>
+
+          <div class="score-display" id="totalDisplay">Итоговый балл: 0 / 90</div>
+        </div>
+      </div>
+
+      <div class="info" style="margin-top:16px;">
+        <strong style="font-size:1.1rem;">Все оценки</strong>
+        <div id="scoresList" class="list" style="margin-top:10px;">
+          <div class="small">Загрузка оценок...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, collection, query, where, onSnapshot, addDoc, updateDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
+      authDomain: "skinsrzt.firebaseapp.com",
+      projectId: "skinsrzt",
+      storageBucket: "skinsrzt.appspot.com",
+      messagingSenderId: "1084042281569",
+      appId: "1:1084042281569:web:25872944cf7dac7fd66020"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    const urlParams = new URLSearchParams(location.search);
+    const skinId = urlParams.get('id');
+    if (!skinId) { alert('ID скина не указан'); location.href = 'index.html'; }
+
+    const viewerWrap = document.getElementById('viewerWrap');
+    const skinTitle = document.getElementById('skinTitle');
+    const skinAuthor = document.getElementById('skinAuthor');
+    const skinStats = document.getElementById('skinStats');
+    const scoresList = document.getElementById('scoresList');
+    const evalWrap = document.getElementById('evalWrap');
+    const lineIn = document.getElementById('line');
+    const paletteIn = document.getElementById('palette');
+    const shadeIn = document.getElementById('shade');
+    const styleIn = document.getElementById('style');
+    const vibeIn = document.getElementById('vibe');
+    const reviewText = document.getElementById('reviewText');
+    const submitEval = document.getElementById('submitEval');
+    const evalMsg = document.getElementById('evalMsg');
+    const totalDisplay = document.getElementById('totalDisplay');
+    const signBtn = document.getElementById('signBtn');
+    const backBtn = document.getElementById('backBtn');
+
+    backBtn.addEventListener('click', () => location.href = 'index.html');
+
+    const provider = new GoogleAuthProvider();
+    let currentUser = null;
+    let currentUserDisplayName = null;
+    
+    signBtn.addEventListener('click', async () => {
+      if (!currentUser) {
+        try { await signInWithPopup(auth, provider); } 
+        catch(e) { alert('Ошибка входа: ' + e.message); }
+      } else {
+        await signOut(auth);
+      }
+    });
+
+    onAuthStateChanged(auth, async user => {
+      currentUser = user;
+      signBtn.textContent = user ? 'Выйти (' + (user.email || user.displayName || '') + ')' : 'Войти';
+      
+      if (user) {
+        try {
+          const userDoc = await getDoc(doc(db, 'users', user.uid));
+          if (userDoc.exists() && userDoc.data().displayName) {
+            currentUserDisplayName = userDoc.data().displayName;
+          } else {
+            currentUserDisplayName = user.email ? user.email.split('@')[0] : user.displayName || 'Пользователь';
+          }
+        } catch(e) {
+          currentUserDisplayName = user.email ? user.email.split('@')[0] : user.displayName || 'Пользователь';
+        }
+        evalWrap.classList.remove('hidden');
+        await prefillUserEvaluation();
+      } else {
+        currentUserDisplayName = null;
+        evalWrap.classList.add('hidden');
+      }
+    });
+
+    let skinDoc = null;
+    let scoreDocs = [];
+    let usersCache = {};
+
+    async function loadSkin() {
+      const docRef = doc(db, 'skins', skinId);
+      const snap = await getDoc(docRef);
+      if (!snap.exists()) { 
+        alert('Скин не найден'); 
+        location.href = 'index.html';
+        return; 
+      }
+      skinDoc = { id: snap.id, ...snap.data() };
+      skinTitle.textContent = 'Название: ' + (skinDoc.name || '—');
+      skinAuthor.textContent = 'Автор: ' + (skinDoc.author || '—');
+      initViewer(skinDoc.skinData);
+    }
+
+    let viewerInstance = null;
+    function initViewer(skinDataUrl) {
+      viewerWrap.innerHTML = '';
+      const canvas = document.createElement('canvas');
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      viewerWrap.appendChild(canvas);
+      try {
+        viewerInstance = new skinview3d.SkinViewer({
+          canvas: canvas,
+          width: canvas.clientWidth,
+          height: canvas.clientHeight,
+          skin: skinDataUrl || ''
+        });
+        viewerInstance.autoRotate = true;
+        viewerInstance.autoRotateSpeed = 0.5;
+      } catch(e) {
+        viewerWrap.innerHTML = `<img src="${skinDataUrl || ''}" style="width:100%;height:100%;object-fit:contain" />`;
+      }
+    }
+
+    // Загрузка оценок
+    const scoresQ = query(collection(db, 'skin_scores'), where('skinId', '==', skinId));
+    onSnapshot(scoresQ, async snap => {
+      scoreDocs = [];
+      snap.forEach(d => scoreDocs.push({ id: d.id, ...d.data() }));
+      
+      for (const score of scoreDocs) {
+        if (score.userId && !usersCache[score.userId]) {
+          try {
+            const userDoc = await getDoc(doc(db, 'users', score.userId));
+            if (userDoc.exists()) {
+              usersCache[score.userId] = userDoc.data().displayName || null;
+            }
+          } catch(e) {
+            console.log('Не удалось загрузить ник:', e);
+          }
+        }
+      }
+      
+      renderScores();
+    });
+
+    function renderScores() {
+      if (!scoreDocs.length) {
+        scoresList.innerHTML = '<div class="small" style="text-align:center;padding:20px;opacity:0.6;">Оценок ещё нет.</div>';
+        skinStats.textContent = 'Средний балл: — / 90 • Оценок: 0';
+      } else {
+        const sum = scoreDocs.reduce((a, b) => a + (b.total || 0), 0);
+        const avg = Math.ceil(sum / scoreDocs.length);
+        skinStats.textContent = `Средний балл: ${avg} / 90 • Оценок: ${scoreDocs.length}`;
+        
+        scoresList.innerHTML = '';
+        scoreDocs.sort((a, b) => (b.total || 0) - (a.total || 0));
+        
+        scoreDocs.forEach(s => {
+          const userNick = usersCache[s.userId];
+          const displayName = userNick || s.userName || 'Пользователь';
+          
+          const div = document.createElement('div');
+          div.className = 'score-item';
+          div.innerHTML = `
+            <div style="flex:1;">
+              <b>${escapeHtml(displayName)}</b>
+              <div class="small" style="margin-top:6px;">Итоговый балл: <strong style="color:var(--accent);font-size:1.05rem;">${s.total || '-'} / 90</strong></div>
+              <div class="score-grid">
+                <span>L: ${s.line || '-'}</span>
+                <span>P: ${s.palette || '-'}</span>
+                <span>S: ${s.shade || '-'}</span>
+                <span>St: ${s.style || '-'}</span>
+                <span>V: ${s.vibe || '-'}</span>
+              </div>
+              ${s.reviewText ? `<div style="margin-top:10px;padding:10px;background:rgba(255,255,255,0.02);border-radius:8px;border-left:3px solid var(--accent);font-style:italic;font-size:0.9rem;line-height:1.5;">"${escapeHtml(s.reviewText)}"</div>` : ''}
+            </div>
+            <div style="text-align:right;">
+              <div class="small" style="color:var(--muted);font-size:0.8rem;">${new Date((s.createdAt && s.createdAt.seconds) ? s.createdAt.seconds * 1000 : Date.now()).toLocaleString('ru-RU')}</div>
+            </div>
+          `;
+          scoresList.appendChild(div);
+        });
+      }
+    }
+
+    async function prefillUserEvaluation() {
+      if (!currentUser) return;
+      const q = query(collection(db, 'skin_scores'), where('skinId', '==', skinId), where('userId', '==', currentUser.uid));
+      const snaps = await getDocs(q);
+      if (!snaps.empty) {
+        const d = snaps.docs[0].data();
+        lineIn.value = d.line || 5;
+        paletteIn.value = d.palette || 5;
+        shadeIn.value = d.shade || 5;
+        styleIn.value = d.style || 5;
+        vibeIn.value = d.vibe || 5;
+        reviewText.value = d.reviewText || '';
+        updateSliderLabels();
+        calculateAndShowTotal();
+      } else {
+        lineIn.value = 5; paletteIn.value = 5; shadeIn.value = 5; styleIn.value = 5; vibeIn.value = 5;
+        reviewText.value = '';
+        updateSliderLabels();
+        calculateAndShowTotal();
+      }
+    }
+
+    const vibeMultiplier = {
+      1: 1, 2: 1.0675, 3: 1.1349, 4: 1.2024, 5: 1.2699,
+      6: 1.3373, 7: 1.4048, 8: 1.4723, 9: 1.5397, 10: 1.6072
+    };
+
+    function calculateTotalFromSliders() {
+      const line = Number(lineIn.value || 0);
+      const palette = Number(paletteIn.value || 0);
+      const shade = Number(shadeIn.value || 0);
+      const style = Number(styleIn.value || 0);
+      const vibe = Number(vibeIn.value || 0);
+      const baseSum = line + palette + shade + style;
+      const scaled = baseSum * 1.4;
+      const multiplier = vibeMultiplier[vibe] || 1;
+      const total = Math.round(scaled * multiplier);
+      return Math.min(total, 90);
+    }
+
+    function calculateAndShowTotal() {
+      const total = calculateTotalFromSliders();
+      totalDisplay.textContent = `Итоговый балл: ${total} / 90`;
+      return total;
+    }
+
+    function updateSliderLabels() {
+      document.getElementById('line-value').textContent = lineIn.value;
+      document.getElementById('palette-value').textContent = paletteIn.value;
+      document.getElementById('shade-value').textContent = shadeIn.value;
+      document.getElementById('style-value').textContent = styleIn.value;
+      document.getElementById('vibe-value').textContent = vibeIn.value;
+    }
+
+    function debounce(fn, ms = 80) {
+      let t;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn(...args), ms);
+      };
+    }
+
+    [lineIn, paletteIn, shadeIn, styleIn, vibeIn].forEach(inp => {
+      inp.addEventListener('input', debounce(() => {
+        updateSliderLabels();
+        calculateAndShowTotal();
+      }, 60));
+    });
+
+    submitEval.addEventListener('click', async () => {
+      if (!currentUser) {
+        evalMsg.textContent = '⚠️ Требуется вход.';
+        evalMsg.style.color = '#f87171';
+        return;
+      }
+
+      const line = Number(lineIn.value) || 0;
+      const palette = Number(paletteIn.value) || 0;
+      const shade = Number(shadeIn.value) || 0;
+      const style = Number(styleIn.value) || 0;
+      const vibe = Number(vibeIn.value) || 0;
+      
+      for (const v of [line, palette, shade, style, vibe]) {
+        if (v < 1 || v > 10) {
+          evalMsg.textContent = '⚠️ Значения должны быть от 1 до 10.';
+          evalMsg.style.color = '#f87171';
+          return;
+        }
+      }
+      
+      const total = calculateTotalFromSliders();
+      const review = (reviewText.value || '').trim();
+      evalMsg.textContent = '⏳ Отправка...';
+      evalMsg.style.color = '';
+
+      try {
+        const q = query(collection(db, 'skin_scores'), where('skinId', '==', skinId), where('userId', '==', currentUser.uid));
+        const snaps = await getDocs(q);
+
+        if (!snaps.empty) {
+          const docRef = snaps.docs[0].ref;
+          await updateDoc(docRef, {
+            line, palette, shade, style, vibe, total,
+            reviewText: review,
+            userName: currentUserDisplayName,
+            createdAt: serverTimestamp()
+          });
+        } else {
+          await addDoc(collection(db, 'skin_scores'), {
+            skinId,
+            userId: currentUser.uid,
+            userName: currentUserDisplayName,
+            line, palette, shade, style, vibe, total,
+            reviewText: review,
+            createdAt: serverTimestamp()
+          });
+        }
+        
+        evalMsg.textContent = '✅ Оценка сохранена';
+        evalMsg.style.color = '#4ade80';
+        setTimeout(() => {
+          evalMsg.textContent = '';
+          evalMsg.style.color = '';
+        }, 3000);
+      } catch(e) {
+        console.error(e);
+        evalMsg.textContent = '❌ Ошибка: ' + (e.message || e);
+        evalMsg.style.color = '#f87171';
+      }
+    });
+
+    function escapeHtml(s) {
+      if (!s && s !== 0) return '';
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    await loadSkin();
+    updateSliderLabels();
+    calculateAndShowTotal();
+  </script>
+</body>
+</html>
