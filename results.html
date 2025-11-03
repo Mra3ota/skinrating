@@ -119,6 +119,7 @@
     <header>
       <h1 style="font-size:1.8rem; font-weight:800; margin:0;">🏆 Итоги конкурса</h1>
       <div style="margin-left:auto; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <button id="refreshBtn" class="info-btn" title="Обновить данные">🔄</button>
         <button id="infoBtn" class="info-btn">ℹ️ Система оценивания</button>
         <a href="index.html" class="btn" style="background:#333">Вернуться</a>
         <button id="signBtn" class="btn">Войти</button>
@@ -139,6 +140,7 @@
 
     <div id="podiumSection" style="display:none;">
       <div class="podium-title">ПРИЗЁРЫ КОНКУРСА</div>
+      <div id="cacheIndicator" style="text-align:center; font-size:0.85rem; color:var(--muted); margin-bottom:16px; opacity:0.7;"></div>
       <div id="podiumWrap" class="podium-wrapper"></div>
     </div>
     
@@ -178,7 +180,7 @@
   <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -193,6 +195,15 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
+    
+    // Включаем оффлайн кэширование Firebase (снижает reads при повторных загрузках)
+    enableIndexedDbPersistence(db).catch(err => {
+      if (err.code === 'failed-precondition') {
+        console.log('Persistence: несколько вкладок открыто');
+      } else if (err.code === 'unimplemented') {
+        console.log('Persistence: браузер не поддерживает');
+      }
+    });
 
     const adminWrap = document.getElementById('adminWrap');
     const authorInput = document.getElementById('authorInput');
@@ -207,19 +218,82 @@
     const infoBtn = document.getElementById('infoBtn');
     const infoModal = document.getElementById('infoModal');
     const closeModal = document.getElementById('closeModal');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const cacheIndicator = document.getElementById('cacheIndicator');
 
     const ADMIN_EMAIL = "nmprokhorov@gmail.com";
     const MEDALS = ['🥇', '🥈', '🥉'];
     const MEDAL_LABELS = ['1 место', '2 место', '3 место'];
     const MEDAL_COLORS = ['var(--gold)', 'var(--silver)', 'var(--bronze)'];
+    
+    const CACHE_KEY_ENTRIES = 'contest_entries_cache';
+    const CACHE_KEY_SCORES = 'contest_scores_cache';
+    const CACHE_KEY_TIMESTAMP = 'contest_cache_timestamp';
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 минут
 
     let currentUser = null;
+    let entries = {};
+    let scores = {};
+    let rebuildTimeout = null;
+    let unsubscribeEntries = null;
+    let unsubscribeScores = null;
+    
+    // Функции кэширования
+    function saveToCache(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch(e) {
+        console.log('Cache save error:', e);
+      }
+    }
+    
+    function loadFromCache(key) {
+      try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : null;
+      } catch(e) {
+        console.log('Cache load error:', e);
+        return null;
+      }
+    }
+    
+    function isCacheValid() {
+      const timestamp = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+      if (!timestamp) return false;
+      return (Date.now() - parseInt(timestamp)) < CACHE_DURATION;
+    }
+    
+    // Дебаунсинг rebuild для уменьшения перерисовок
+    function scheduleRebuild() {
+      if (rebuildTimeout) clearTimeout(rebuildTimeout);
+      rebuildTimeout = setTimeout(() => {
+        rebuild();
+        // Сохраняем в кэш после rebuild
+        saveToCache(CACHE_KEY_ENTRIES, entries);
+        saveToCache(CACHE_KEY_SCORES, scores);
+        saveToCache(CACHE_KEY_TIMESTAMP, Date.now().toString());
+      }, 300); // 300ms задержка
+    }
 
     // Модальное окно
     infoBtn.addEventListener('click', () => infoModal.classList.add('active'));
     closeModal.addEventListener('click', () => infoModal.classList.remove('active'));
     infoModal.addEventListener('click', (e) => {
       if (e.target === infoModal) infoModal.classList.remove('active');
+    });
+    
+    // Принудительное обновление
+    refreshBtn.addEventListener('click', () => {
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = '⏳';
+      localStorage.removeItem(CACHE_KEY_TIMESTAMP); // Инвалидируем кэш
+      setupRealtimeListeners();
+      setTimeout(() => {
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = '🔄';
+        if (unsubscribeEntries) unsubscribeEntries();
+        if (unsubscribeScores) unsubscribeScores();
+      }, 5000); // 5 секунд на обновление
     });
 
     const provider = new GoogleAuthProvider();
@@ -237,6 +311,11 @@
       currentUser = user;
       signBtn.textContent = user ? 'Выйти (' + (user.email || user.displayName || '') + ')' : 'Войти';
       adminWrap.classList.toggle('hidden', !(user && user.email === ADMIN_EMAIL));
+      
+      // Админ всегда получает свежие данные
+      if (user && user.email === ADMIN_EMAIL) {
+        setupRealtimeListeners();
+      }
     });
 
     addBtn.addEventListener('click', async () => {
@@ -258,6 +337,8 @@
           });
           adminMsg.textContent = '✅ Добавлено!';
           authorInput.value = ''; fileInput.value = '';
+          // Инвалидируем кэш после добавления
+          localStorage.removeItem(CACHE_KEY_TIMESTAMP);
           setTimeout(()=> adminMsg.textContent = '',2000);
         } catch(e) {
           console.error(e);
@@ -267,34 +348,113 @@
       reader.readAsDataURL(f);
     });
 
-    let entries = {};
-    let scores = {};
-
-    const entriesQ = query(collection(db, 'contest_entries'), orderBy('createdAt','desc'));
-    onSnapshot(entriesQ, snap => {
-      snap.docChanges().forEach(ch => {
-        const id = ch.doc.id;
-        if (ch.type === 'removed') delete entries[id];
-        else entries[id] = { id, ...ch.doc.data() };
+    // Загрузка данных с использованием кэша
+    async function loadData() {
+      // Проверяем кэш
+      if (isCacheValid()) {
+        const cachedEntries = loadFromCache(CACHE_KEY_ENTRIES);
+        const cachedScores = loadFromCache(CACHE_KEY_SCORES);
+        
+        if (cachedEntries && cachedScores) {
+          console.log('📦 Загружено из кэша');
+          entries = cachedEntries;
+          scores = cachedScores;
+          rebuild();
+        }
+      }
+      
+      // Подписываемся на изменения (только если пользователь админ или кэш устарел)
+      if (!isCacheValid() || (currentUser && currentUser.email === ADMIN_EMAIL)) {
+        setupRealtimeListeners();
+      }
+    }
+    
+    function setupRealtimeListeners() {
+      // Отписываемся от предыдущих подписок
+      if (unsubscribeEntries) unsubscribeEntries();
+      if (unsubscribeScores) unsubscribeScores();
+      
+      console.log('🔄 Подписка на обновления Firebase');
+      
+      const entriesQ = query(collection(db, 'contest_entries'), orderBy('createdAt','desc'));
+      unsubscribeEntries = onSnapshot(entriesQ, snap => {
+        snap.docChanges().forEach(ch => {
+          const id = ch.doc.id;
+          if (ch.type === 'removed') {
+            delete entries[id];
+          } else {
+            entries[id] = { id, ...ch.doc.data() };
+          }
+        });
+        scheduleRebuild();
       });
-      rebuild();
-    });
 
-    const scoresQ = query(collection(db, 'contest_scores'), orderBy('createdAt','asc'));
-    onSnapshot(scoresQ, snap => {
-      scores = {};
-      snap.forEach(d => {
-        const o = d.data();
-        const sid = o.skinId;
-        if (!scores[sid]) scores[sid] = [];
-        scores[sid].push({ id: d.id, ...o });
+      const scoresQ = query(collection(db, 'contest_scores'), orderBy('createdAt','asc'));
+      unsubscribeScores = onSnapshot(scoresQ, snap => {
+        // Инкрементальное обновление вместо полной перезаписи
+        snap.docChanges().forEach(ch => {
+          const o = ch.doc.data();
+          const sid = o.skinId;
+          
+          if (ch.type === 'removed') {
+            if (scores[sid]) {
+              scores[sid] = scores[sid].filter(s => s.id !== ch.doc.id);
+              if (scores[sid].length === 0) delete scores[sid];
+            }
+          } else {
+            if (!scores[sid]) scores[sid] = [];
+            const existingIndex = scores[sid].findIndex(s => s.id === ch.doc.id);
+            if (existingIndex >= 0) {
+              scores[sid][existingIndex] = { id: ch.doc.id, ...o };
+            } else {
+              scores[sid].push({ id: ch.doc.id, ...o });
+            }
+          }
+        });
+        scheduleRebuild();
       });
-      rebuild();
+    }
+    
+    // Периодическое обновление (раз в 10 минут)
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && !isCacheValid()) {
+        console.log('⏰ Периодическое обновление');
+        setupRealtimeListeners();
+        // Отписываемся через 10 секунд после обновления
+        setTimeout(() => {
+          if (unsubscribeEntries) {
+            unsubscribeEntries();
+            unsubscribeEntries = null;
+          }
+          if (unsubscribeScores) {
+            unsubscribeScores();
+            unsubscribeScores = null;
+          }
+        }, 10000);
+      }
+    }, 10 * 60 * 1000);
+    
+    // Обновление при возврате на вкладку
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && !isCacheValid()) {
+        loadData();
+      }
     });
 
     function rebuild(){
       // Очищаем предыдущие наблюдения
       previewObserver.disconnect();
+      
+      // Обновляем индикатор кэша
+      if (cacheIndicator) {
+        const timestamp = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+        if (timestamp && isCacheValid()) {
+          const minutes = Math.floor((Date.now() - parseInt(timestamp)) / 60000);
+          cacheIndicator.textContent = `📦 Данные из кэша (обновлено ${minutes} мин назад)`;
+        } else {
+          cacheIndicator.textContent = '🔄 Актуальные данные';
+        }
+      }
       
       const arr = Object.values(entries).map(e => {
         const s = scores[e.id] || [];
@@ -509,6 +669,11 @@
     }
 
     function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+    
+    // Загружаем данные при старте
+    console.log('🚀 Система оптимизации Firebase reads активна');
+    console.log('💾 Кэш действителен:', isCacheValid());
+    loadData();
   </script>
 </body>
 </html>
