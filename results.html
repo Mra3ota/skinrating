@@ -394,4 +394,55 @@
           const off = document.createElement('canvas');
           const parentWidth = container.clientWidth || 180;
           const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
-          const targetWidth = Math.max(180, Math.min
+          const targetWidth = Math.max(180, Math.min(isMobile ? 360 : 420, parentWidth));
+          const targetHeight = Math.round(targetWidth * 1.35);
+          off.width = targetWidth;
+          off.height = targetHeight;
+          
+          const viewer = new skinview3d.SkinViewer({
+            canvas: off,
+            width: targetWidth,
+            height: targetHeight,
+            preserveDrawingBuffer: true
+          });
+          
+          try { viewer.renderer.setClearColor(0x15151c, 1); } catch(_) {}
+          
+          await viewer.loadSkin(skinDataUrl);
+          viewer.zoom = 0.95;
+          viewer.autoRotate = false;
+          
+          try {
+            const walk = new skinview3d.WalkingAnimation(viewer);
+            walk.speed = 1.0;
+            walk.paused = true;
+            walk.progress = 0.30;
+            viewer.playerObject.rotation.y = -0.4;
+            viewer.camera.position.set(0, 24, 46);
+            viewer.camera.lookAt(0, 18, 0);
+          } catch(e) {
+            try { viewer.playerObject.rotation.y = -0.4; } catch(_) {}
+          }
+          
+          await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+          
+          img.src = off.toDataURL('image/png');
+          
+          try { viewer.dispose(); } catch(e) {}
+        } catch(e) {
+          console.error('3D preview error:', e);
+          const img = document.createElement('img');
+          img.src = skinDataUrl;
+          img.style.width = '100%';
+          img.style.height = '100%';
+          img.style.objectFit = 'cover';
+          container.innerHTML = '';
+          container.appendChild(img);
+        }
+      });
+    }
+
+    function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  </script>
+</body>
+</html>
