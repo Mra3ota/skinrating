@@ -23,9 +23,21 @@
   
   .podium-column{ display:flex; flex-direction:column; align-items:center; }
   
-  .podium-medal-single{ text-align:center; margin-bottom:16px; }
-  .podium-medal-icon{ font-size:4rem; filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6)); display:block; margin-bottom:8px; }
-  .podium-medal-label{ font-size:0.95rem; font-weight:700; }
+  .podium-place-number{ 
+    font-size:6rem; 
+    font-weight:900; 
+    line-height:1; 
+    margin-bottom:16px;
+    font-family: 'Arial Black', sans-serif;
+    letter-spacing: -0.05em;
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.6));
+    -webkit-text-stroke: 2px rgba(0,0,0,0.3);
+  }
+  .podium-place-number-1{ background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .podium-place-number-2{ background: linear-gradient(135deg, #C0C0C0 0%, #E8E8E8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .podium-place-number-3{ background: linear-gradient(135deg, #CD7F32 0%, #E89B5F 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  
+  .podium-medal-label{ font-size:1.1rem; font-weight:700; margin-bottom:20px; }
   
   .place{ background:linear-gradient(135deg, rgba(138,43,226,0.1), rgba(20,16,30,0.6)); border-radius:12px; padding:16px; border:2px solid rgba(138,43,226,0.15); cursor:pointer; position:relative; overflow:hidden; transition: all 0.3s ease; display:flex; flex-direction:column; align-items:center; width:100%; }
   .place:hover{ transform: translateY(-8px); box-shadow: 0 12px 32px rgba(138,43,226,0.4); border-color: rgba(138,43,226,0.5); }
@@ -95,7 +107,7 @@
   .file-label:hover{ background:#242430; border-color: rgba(138,43,226,0.4); }
   .admin-small{ color:var(--muted); font-size:0.85rem; margin-top:8px; }
   
-  .loading-spinner{ width:40px; height:40px; border:3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius:50%; animation: spin 0.8s linear infinite; }
+  .loading-spinner{ width:40px; height:40px; border:3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius:50%; animation: spin 0.8s linear infinite; margin:auto; }
   @keyframes spin{ to{ transform: rotate(360deg); } }
   
   @media (max-width:900px){
@@ -103,7 +115,8 @@
     .podium-wrapper{ flex-direction:column; align-items:center; gap:20px; padding:0; }
     .podium-column{ width:100% !important; max-width:340px; order:initial !important; }
     .podium-column .place{ width:100% !important; min-height:300px !important; }
-    .podium-medal-icon{ font-size:3.5rem; }
+    .podium-place-number{ font-size:4.5rem; margin-bottom:12px; }
+    .podium-medal-label{ font-size:1rem; margin-bottom:16px; }
     .place-author{ font-size:1.05rem; }
     .podium-title{ font-size:1.4rem; }
     .place-preview{ width:130px; height:170px; }
@@ -339,9 +352,9 @@
           </div>
         `;
         
-        column.querySelector('.place').addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
+        el.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         podiumWrap.appendChild(column);
-        setTimeout(()=> init3DPreview(`pv_${it.id}`, it.skinData), 100);
+        init3DPreview(`pv_${it.id}`, it.skinData);
       });
 
       listWrap.innerHTML = '';
@@ -367,12 +380,12 @@
         `;
         card.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         listWrap.appendChild(card);
-        setTimeout(()=> init3DPreview(`thumb_${it.id}`, it.skinData), 100);
+        init3DPreview(`thumb_${it.id}`, it.skinData);
       });
     }
 
-    // 3D превью как в вашем коде
-    window.previewQueue = (window.previewQueue || Promise.resolve());
+    // Простой 3D превью без сложностей
+    window.previewQueue = Promise.resolve();
     
     async function init3DPreview(containerId, skinDataUrl){
       const container = document.getElementById(containerId);
@@ -380,72 +393,56 @@
       
       window.previewQueue = window.previewQueue.then(async () => {
         try {
+          // Простая заглушка сразу
           const img = document.createElement('img');
           img.style.width = '100%';
           img.style.height = '100%';
-          img.style.objectFit = 'cover';
-          img.style.opacity = '0.95';
-          img.loading = 'lazy';
-          img.decoding = 'async';
-          
-          // Временная заглушка
+          img.style.objectFit = 'contain';
           img.src = skinDataUrl;
           container.innerHTML = '';
           container.appendChild(img);
           
-          // Генерация 3D кадра
+          // Генерация 3D в фоне
           const off = document.createElement('canvas');
-          const parentWidth = container.clientWidth || 180;
-          const isMobile = window.matchMedia && window.matchMedia('(max-width: 640px)').matches;
-          const targetWidth = Math.max(180, Math.min(isMobile ? 360 : 420, parentWidth));
-          const targetHeight = Math.round(targetWidth * 1.35);
-          off.width = targetWidth;
-          off.height = targetHeight;
+          off.width = 280;
+          off.height = 350;
           
           const viewer = new skinview3d.SkinViewer({
             canvas: off,
-            width: targetWidth,
-            height: targetHeight,
+            width: 280,
+            height: 350,
             preserveDrawingBuffer: true
           });
           
-          try { viewer.renderer.setClearColor(0x15151c, 1); } catch(_) {}
-          
+          viewer.renderer.setClearColor(0x15151c, 1);
           await viewer.loadSkin(skinDataUrl);
-          viewer.zoom = 0.95;
+          viewer.zoom = 0.9;
           viewer.autoRotate = false;
+          viewer.playerObject.rotation.y = -0.35;
           
-          try {
-            const walk = new skinview3d.WalkingAnimation(viewer);
-            walk.speed = 1.0;
-            walk.paused = true;
-            walk.progress = 0.30;
-            viewer.playerObject.rotation.y = -0.4;
-            viewer.camera.position.set(0, 24, 46);
-            viewer.camera.lookAt(0, 18, 0);
-          } catch(e) {
-            try { viewer.playerObject.rotation.y = -0.4; } catch(_) {}
-          }
-          
-          await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+          await new Promise(res => setTimeout(res, 100));
           
           img.src = off.toDataURL('image/png');
-          
-          try { viewer.dispose(); } catch(e) {}
+          viewer.dispose();
         } catch(e) {
-          console.error('3D preview error:', e);
-          const img = document.createElement('img');
-          img.src = skinDataUrl;
-          img.style.width = '100%';
-          img.style.height = '100%';
-          img.style.objectFit = 'cover';
-          container.innerHTML = '';
-          container.appendChild(img);
+          console.error('Preview error:', e);
         }
       });
     }
 
     function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+    
+    // Первая загрузка при старте
+    loadEntriesOnce();
+    
+    // Автообновление раз в 30 секунд
+    setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        loadEntriesOnce();
+      }
+    }, 30000);
   </script>
+</body>
+</html>
 </body>
 </html>
