@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="icon" href="data:,">
+<title>Миграция скинов в Storage</title>
+<style>
+  :root{ --bg:#0e0e12; --card:#14141a; --accent:#8a2be2; --text:#eaeaf2; --muted:#9aa0b2; }
+  * { box-sizing: border-box; }
+  body{ margin:0; font-family:Inter,Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:40px; }
+  .container{ max-width:800px; margin:0 auto; background:var(--card); border-radius:16px; padding:32px; border:1px solid rgba(255,255,255,0.05); }
+  h1{ margin:0 0 16px 0; font-size:2rem; font-weight:800; color:var(--accent); }
+  .warning{ background:rgba(255,77,77,0.1); border:1px solid rgba(255,77,77,0.3); border-radius:8px; padding:16px; margin:20px 0; }
+  .warning strong{ color:#ff4d4d; }
+  .btn{ background:var(--accent); color:#fff; padding:14px 24px; border-radius:8px; cursor:pointer; border:none; font-weight:700; transition: all 0.3s ease; font-size:1rem; }
+  .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(138,43,226,0.5); }
+  .btn:disabled{ background:#555; cursor:not-allowed; opacity:0.5; }
+  .btn-secondary{ background:#333; }
+  .progress-section{ margin:24px 0; display:none; }
+  .progress-section.active{ display:block; }
+  .progress-bar{ width:100%; height:12px; background:rgba(255,255,255,0.1); border-radius:12px; overflow:hidden; margin:12px 0; }
+  .progress-fill{ height:100%; background:linear-gradient(90deg, var(--accent), #9b4dff); transition:width 0.3s; border-radius:12px; }
+  .status{ font-size:1rem; margin:8px 0; color:var(--muted); }
+  .status.success{ color:#4ade80; }
+  .status.error{ color:#f87171; }
+  .log{ background:#0a0a0f; border-radius:8px; padding:16px; margin:16px 0; max-height:300px; overflow-y:auto; font-family:monospace; font-size:0.85rem; line-height:1.6; }
+  .log-item{ margin:4px 0; }
+  .log-item.success{ color:#4ade80; }
+  .log-item.error{ color:#f87171; }
+  .log-item.info{ color:#a9a9b8; }
+  .stats{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; margin:24px 0; }
+  .stat-card{ background:rgba(138,43,226,0.1); border:1px solid rgba(138,43,226,0.3); border-radius:8px; padding:16px; text-align:center; }
+  .stat-value{ font-size:2rem; font-weight:800; color:var(--accent); }
+  .stat-label{ font-size:0.9rem; color:var(--muted); margin-top:8px; }
+  .hidden{ display:none; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 Миграция скинов в Firebase Storage</h1>
+    <p style="color:var(--muted); margin-bottom:24px;">Этот инструмент переносит изображения скинов из Firestore (base64) в Firebase Storage для уменьшения затрат и увеличения производительности.</p>
+    
+    <div class="warning">
+      <strong>⚠️ ВНИМАНИЕ!</strong>
+      <ul style="margin:8px 0 0 0; padding-left:20px;">
+        <li>Доступно только для администратора (nmprokhorov@gmail.com)</li>
+        <li>Создайте backup Firestore перед запуском (Firebase Console → Export)</li>
+        <li>Процесс может занять несколько минут</li>
+        <li>Поле skinData НЕ будет удалено (остается как fallback)</li>
+        <li>Не закрывайте страницу до завершения</li>
+      </ul>
+    </div>
+    
+    <div id="authSection">
+      <button id="signInBtn" class="btn">Войти через Google</button>
+      <p id="authStatus" style="margin-top:12px; color:var(--muted);"></p>
+    </div>
+    
+    <div id="mainSection" class="hidden">
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-value" id="totalSkins">0</div>
+          <div class="stat-label">Всего скинов</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="toMigrate">0</div>
+          <div class="stat-label">К миграции</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="migrated">0</div>
+          <div class="stat-label">Мигрировано</div>
+        </div>
+      </div>
+      
+      <div style="display:flex; gap:12px; margin-bottom:24px;">
+        <button id="startBtn" class="btn">🚀 Начать миграцию</button>
+        <button id="testBtn" class="btn btn-secondary">🧪 Тест (3 скина)</button>
+        <button id="backBtn" class="btn btn-secondary" onclick="location.href='index.html'">← Вернуться</button>
+      </div>
+      
+      <div class="progress-section" id="progressSection">
+        <h3 style="margin:0 0 12px 0;">Прогресс миграции</h3>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="status" id="progressStatus">Готовность: 0/0</div>
+      </div>
+      
+      <div>
+        <h3 style="margin:24px 0 12px 0;">Журнал операций</h3>
+        <div class="log" id="logContainer">
+          <div class="log-item info">Ожидание запуска...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
+      authDomain: "skinsrzt.firebaseapp.com",
+      projectId: "skinsrzt",
+      storageBucket: "skinsrzt.appspot.com",
+      messagingSenderId: "1084042281569",
+      appId: "1:1084042281569:web:25872944cf7dac7fd66020"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const storage = getStorage(app);
+    const ADMIN_EMAIL = "nmprokhorov@gmail.com";
+
+    const authSection = document.getElementById('authSection');
+    const mainSection = document.getElementById('mainSection');
+    const signInBtn = document.getElementById('signInBtn');
+    const authStatus = document.getElementById('authStatus');
+    const totalSkins = document.getElementById('totalSkins');
+    const toMigrate = document.getElementById('toMigrate');
+    const migrated = document.getElementById('migrated');
+    const startBtn = document.getElementById('startBtn');
+    const testBtn = document.getElementById('testBtn');
+    const progressSection = document.getElementById('progressSection');
+    const progressFill = document.getElementById('progressFill');
+    const progressStatus = document.getElementById('progressStatus');
+    const logContainer = document.getElementById('logContainer');
+
+    let currentUser = null;
+
+    const provider = new GoogleAuthProvider();
+    signInBtn.addEventListener('click', async () => {
+      try {
+        await signInWithPopup(auth, provider);
+      } catch(e) {
+        authStatus.textContent = 'Ошибка входа: ' + e.message;
+        authStatus.style.color = '#f87171';
+      }
+    });
+
+    onAuthStateChanged(auth, async user => {
+      currentUser = user;
+      if (user) {
+        if (user.email === ADMIN_EMAIL) {
+          authSection.classList.add('hidden');
+          mainSection.classList.remove('hidden');
+          await loadStats();
+        } else {
+          authStatus.textContent = '❌ Доступ запрещен. Требуется вход с ' + ADMIN_EMAIL;
+          authStatus.style.color = '#f87171';
+        }
+      } else {
+        authSection.classList.remove('hidden');
+        mainSection.classList.add('hidden');
+        authStatus.textContent = 'Войдите с аккаунтом администратора';
+      }
+    });
+
+    async function loadStats() {
+      try {
+        const snapshot = await getDocs(collection(db, 'skins'));
+        const total = snapshot.size;
+        let needMigration = 0;
+        let alreadyMigrated = 0;
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.skinData && !data.skinUrl) {
+            needMigration++;
+          } else if (data.skinUrl) {
+            alreadyMigrated++;
+          }
+        });
+
+        totalSkins.textContent = total;
+        toMigrate.textContent = needMigration;
+        migrated.textContent = alreadyMigrated;
+        
+        addLog('info', `Загружено: ${total} скинов, к миграции: ${needMigration}`);
+      } catch(e) {
+        addLog('error', 'Ошибка загрузки статистики: ' + e.message);
+      }
+    }
+
+    function addLog(type, message) {
+      const logItem = document.createElement('div');
+      logItem.className = `log-item ${type}`;
+      logItem.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logContainer.appendChild(logItem);
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+
+    function dataURLtoBlob(dataURL) {
+      const arr = dataURL.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while(n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], {type: mime});
+    }
+
+    async function migrateSkin(docId, skinData) {
+      try {
+        // Конвертируем base64 в Blob
+        const blob = dataURLtoBlob(skinData);
+        
+        // Загружаем в Storage
+        const storageRef = ref(storage, `gallery-skins/${docId}.png`);
+        await uploadBytes(storageRef, blob);
+        
+        // Получаем URL
+        const downloadURL = await getDownloadURL(storageRef);
+        
+        // Обновляем документ (НЕ удаляем skinData)
+        const docRef = doc(db, 'skins', docId);
+        await updateDoc(docRef, {
+          skinUrl: downloadURL
+        });
+        
+        return { success: true, url: downloadURL };
+      } catch(e) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    async function startMigration(testMode = false) {
+      try {
+        startBtn.disabled = true;
+        testBtn.disabled = true;
+        progressSection.classList.add('active');
+        
+        addLog('info', testMode ? 'Запуск тестовой миграции (3 скина)...' : 'Запуск полной миграции...');
+        
+        const snapshot = await getDocs(collection(db, 'skins'));
+        const skinsToMigrate = [];
+        
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.skinData && !data.skinUrl) {
+            skinsToMigrate.push({ id: doc.id, data });
+          }
+        });
+        
+        if (!skinsToMigrate.length) {
+          addLog('info', 'Нет скинов для миграции');
+          startBtn.disabled = false;
+          testBtn.disabled = false;
+          return;
+        }
+        
+        const toProcess = testMode ? skinsToMigrate.slice(0, 3) : skinsToMigrate;
+        addLog('info', `Найдено ${toProcess.length} скинов для миграции`);
+        
+        let processed = 0;
+        let succeeded = 0;
+        let failed = 0;
+        
+        const BATCH_SIZE = 5;
+        for (let i = 0; i < toProcess.length; i += BATCH_SIZE) {
+          const batch = toProcess.slice(i, i + BATCH_SIZE);
+          
+          const results = await Promise.allSettled(
+            batch.map(skin => migrateSkin(skin.id, skin.data.skinData))
+          );
+          
+          results.forEach((result, idx) => {
+            const skin = batch[idx];
+            processed++;
+            
+            if (result.status === 'fulfilled' && result.value.success) {
+              succeeded++;
+              addLog('success', `✓ ${skin.data.name || skin.id}: ${result.value.url.substring(0, 50)}...`);
+            } else {
+              failed++;
+              const error = result.status === 'rejected' ? result.reason : result.value.error;
+              addLog('error', `✗ ${skin.data.name || skin.id}: ${error}`);
+            }
+            
+            const progress = (processed / toProcess.length) * 100;
+            progressFill.style.width = progress + '%';
+            progressStatus.textContent = `Обработано: ${processed}/${toProcess.length}`;
+            migrated.textContent = parseInt(migrated.textContent) + (result.status === 'fulfilled' && result.value.success ? 1 : 0);
+            toMigrate.textContent = parseInt(toMigrate.textContent) - 1;
+          });
+          
+          // Небольшая задержка между батчами
+          if (i + BATCH_SIZE < toProcess.length) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
+        
+        addLog('info', `Миграция завершена! Успешно: ${succeeded}, Ошибок: ${failed}`);
+        progressStatus.className = 'status success';
+        
+        startBtn.disabled = false;
+        testBtn.disabled = false;
+        
+      } catch(e) {
+        addLog('error', 'Критическая ошибка: ' + e.message);
+        console.error(e);
+        startBtn.disabled = false;
+        testBtn.disabled = false;
+      }
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (confirm('Начать полную миграцию всех скинов? Процесс может занять несколько минут.')) {
+        startMigration(false);
+      }
+    });
+
+    testBtn.addEventListener('click', () => {
+      if (confirm('Запустить тестовую миграцию (3 скина)?')) {
+        startMigration(true);
+      }
+    });
+  </script>
+</body>
+</html>
