@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="data:,">
 <title>Миграция скинов в Storage</title>
 <style>
@@ -34,6 +34,9 @@
   .stat-value{ font-size:2rem; font-weight:800; color:var(--accent); }
   .stat-label{ font-size:0.9rem; color:var(--muted); margin-top:8px; }
   .hidden{ display:none; }
+  .cors-fix{ background:rgba(255,165,0,0.1); border:1px solid rgba(255,165,0,0.3); border-radius:8px; padding:16px; margin:20px 0; }
+  .cors-fix code{ background:#000; padding:2px 6px; border-radius:4px; font-family:monospace; font-size:0.9rem; }
+  .cors-fix pre{ background:#000; padding:12px; border-radius:6px; overflow-x:auto; margin:8px 0; }
 </style>
 </head>
 <body>
@@ -45,11 +48,30 @@
       <strong>⚠️ ВНИМАНИЕ!</strong>
       <ul style="margin:8px 0 0 0; padding-left:20px;">
         <li>Доступно только для администратора (nmprokhorov@gmail.com)</li>
-        <li>Создайте backup Firestore перед запуском (Firebase Console → Export)</li>
+        <li>Создайте backup Firestore перед запуском</li>
         <li>Процесс может занять несколько минут</li>
-        <li>Поле skinData НЕ будет удалено (остается как fallback)</li>
         <li>Не закрывайте страницу до завершения</li>
       </ul>
+    </div>
+
+    <div class="cors-fix">
+      <strong>📋 Настройка CORS (обязательно!):</strong>
+      <ol style="margin:8px 0 0 0; padding-left:20px; line-height:1.8;">
+        <li>Установите <a href="https://cloud.google.com/sdk/docs/install" target="_blank" style="color:var(--accent);">Google Cloud SDK</a></li>
+        <li>Авторизуйтесь: <code>gcloud auth login</code></li>
+        <li>Создайте файл <code>cors.json</code>:</li>
+      </ol>
+      <pre>[
+  {
+    "origin": ["*"],
+    "method": ["GET", "HEAD", "PUT", "POST", "DELETE", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"],
+    "maxAgeSeconds": 3600
+  }
+]</pre>
+      <ol start="4" style="margin:0; padding-left:20px; line-height:1.8;">
+        <li>Примените: <code>gsutil cors set cors.json gs://skinsrzt.appspot.com</code></li>
+      </ol>
     </div>
     
     <div id="authSection">
@@ -75,7 +97,7 @@
       
       <div style="display:flex; gap:12px; margin-bottom:24px;">
         <button id="startBtn" class="btn">🚀 Начать миграцию</button>
-        <button id="testBtn" class="btn btn-secondary">🧪 Тест (3 скина)</button>
+        <button id="testBtn" class="btn btn-secondary">🧪 Тест (1 скин)</button>
         <button id="backBtn" class="btn btn-secondary" onclick="location.href='index.html'">← Вернуться</button>
       </div>
       
@@ -100,7 +122,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+    import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
@@ -151,7 +173,7 @@
           mainSection.classList.remove('hidden');
           await loadStats();
         } else {
-          authStatus.textContent = '❌ Доступ запрещен. Требуется вход с ' + ADMIN_EMAIL;
+          authStatus.textContent = '✗ Доступ запрещен. Требуется вход с ' + ADMIN_EMAIL;
           authStatus.style.color = '#f87171';
         }
       } else {
@@ -181,7 +203,7 @@
         toMigrate.textContent = needMigration;
         migrated.textContent = alreadyMigrated;
         
-        addLog('info', `Загружено: ${total} скинов, к миграции: ${needMigration}`);
+        addLog('info', `Загружено: ${total} скинов, К миграции: ${needMigration}`);
       } catch(e) {
         addLog('error', 'Ошибка загрузки статистики: ' + e.message);
       }
@@ -195,38 +217,42 @@
       logContainer.scrollTop = logContainer.scrollHeight;
     }
 
-    function dataURLtoBlob(dataURL) {
-      const arr = dataURL.split(',');
-      const mime = arr[0].match(/:(.*?);/)[1];
-      const bstr = atob(arr[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while(n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-      }
-      return new Blob([u8arr], {type: mime});
-    }
-
-    async function migrateSkin(docId, skinData) {
+    async function migrateSkin(docId, skinData, skinName) {
       try {
-        // Конвертируем base64 в Blob
-        const blob = dataURLtoBlob(skinData);
+        addLog('info', `Миграция: ${skinName || docId}`);
         
-        // Загружаем в Storage
+        // Используем uploadString вместо uploadBytes - это обходит некоторые CORS проблемы
         const storageRef = ref(storage, `gallery-skins/${docId}.png`);
-        await uploadBytes(storageRef, blob);
         
-        // Получаем URL
-        const downloadURL = await getDownloadURL(storageRef);
-        
-        // Обновляем документ (НЕ удаляем skinData)
-        const docRef = doc(db, 'skins', docId);
-        await updateDoc(docRef, {
-          skinUrl: downloadURL
+        // Загружаем напрямую data URL
+        const uploadResult = await uploadString(storageRef, skinData, 'data_url', {
+          contentType: 'image/png'
         });
+        
+        addLog('info', `Файл загружен, получение URL...`);
+        
+        // Небольшая задержка перед получением URL
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const downloadURL = await getDownloadURL(storageRef);
+        addLog('success', `URL: ${downloadURL.substring(0, 60)}...`);
+        
+        const docRef = doc(db, 'skins', docId);
+        await updateDoc(docRef, { skinUrl: downloadURL });
+        addLog('success', `✓ ${skinName || docId} - завершено`);
         
         return { success: true, url: downloadURL };
       } catch(e) {
+        console.error('Migration error:', e);
+        
+        if (e.code === 'storage/unauthorized') {
+          addLog('error', `Ошибка авторизации для ${skinName || docId}`);
+        } else if (e.message.includes('CORS') || e.message.includes('Failed to fetch')) {
+          addLog('error', `CORS ошибка для ${skinName || docId}. Настройте CORS через gsutil!`);
+        } else {
+          addLog('error', `${skinName || docId}: ${e.message}`);
+        }
+        
         return { success: false, error: e.message };
       }
     }
@@ -237,7 +263,7 @@
         testBtn.disabled = true;
         progressSection.classList.add('active');
         
-        addLog('info', testMode ? 'Запуск тестовой миграции (3 скина)...' : 'Запуск полной миграции...');
+        addLog('info', testMode ? 'Запуск тестовой миграции (1 скин)...' : 'Запуск полной миграции...');
         
         const snapshot = await getDocs(collection(db, 'skins'));
         const skinsToMigrate = [];
@@ -256,49 +282,40 @@
           return;
         }
         
-        const toProcess = testMode ? skinsToMigrate.slice(0, 3) : skinsToMigrate;
+        const toProcess = testMode ? skinsToMigrate.slice(0, 1) : skinsToMigrate;
         addLog('info', `Найдено ${toProcess.length} скинов для миграции`);
         
         let processed = 0;
         let succeeded = 0;
         let failed = 0;
         
-        const BATCH_SIZE = 5;
-        for (let i = 0; i < toProcess.length; i += BATCH_SIZE) {
-          const batch = toProcess.slice(i, i + BATCH_SIZE);
+        // Обрабатываем по одному с задержкой
+        for (const skin of toProcess) {
+          const result = await migrateSkin(skin.id, skin.data.skinData, skin.data.name);
+          processed++;
           
-          const results = await Promise.allSettled(
-            batch.map(skin => migrateSkin(skin.id, skin.data.skinData))
-          );
-          
-          results.forEach((result, idx) => {
-            const skin = batch[idx];
-            processed++;
-            
-            if (result.status === 'fulfilled' && result.value.success) {
-              succeeded++;
-              addLog('success', `✓ ${skin.data.name || skin.id}: ${result.value.url.substring(0, 50)}...`);
-            } else {
-              failed++;
-              const error = result.status === 'rejected' ? result.reason : result.value.error;
-              addLog('error', `✗ ${skin.data.name || skin.id}: ${error}`);
-            }
-            
-            const progress = (processed / toProcess.length) * 100;
-            progressFill.style.width = progress + '%';
-            progressStatus.textContent = `Обработано: ${processed}/${toProcess.length}`;
-            migrated.textContent = parseInt(migrated.textContent) + (result.status === 'fulfilled' && result.value.success ? 1 : 0);
+          if (result.success) {
+            succeeded++;
+            migrated.textContent = parseInt(migrated.textContent) + 1;
             toMigrate.textContent = parseInt(toMigrate.textContent) - 1;
-          });
+          } else {
+            failed++;
+          }
           
-          // Небольшая задержка между батчами
-          if (i + BATCH_SIZE < toProcess.length) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+          const progress = (processed / toProcess.length) * 100;
+          progressFill.style.width = progress + '%';
+          progressStatus.textContent = `Обработано: ${processed}/${toProcess.length}`;
+          
+          // Задержка между скинами чтобы не перегрузить Storage
+          if (processed < toProcess.length) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
           }
         }
         
-        addLog('info', `Миграция завершена! Успешно: ${succeeded}, Ошибок: ${failed}`);
-        progressStatus.className = 'status success';
+        addLog('info', `✓ Миграция завершена! Успешно: ${succeeded}, Ошибок: ${failed}`);
+        if (succeeded > 0) {
+          progressStatus.className = 'status success';
+        }
         
         startBtn.disabled = false;
         testBtn.disabled = false;
@@ -318,7 +335,7 @@
     });
 
     testBtn.addEventListener('click', () => {
-      if (confirm('Запустить тестовую миграцию (3 скина)?')) {
+      if (confirm('Запустить тестовую миграцию (1 скин)?')) {
         startMigration(true);
       }
     });
