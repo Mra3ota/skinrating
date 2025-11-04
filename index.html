@@ -19,25 +19,57 @@
   header h1{ font-size:1.8rem; font-weight:800; margin:0; letter-spacing:-0.5px; }
   header .nav{ margin-left:auto; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   
-  .btn{ background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; font-weight:700; cursor:pointer; border:none; transition: all 0.3s ease; font-size:0.95rem; display:inline-block; }
+  .btn{ background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; font-weight:700; cursor:pointer; border:none; transition: all 0.3s ease; font-size:0.95rem; display:inline-flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; }
   .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(138,43,226,0.4); }
-  .btn-secondary{ background:#333; }
+  .btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-secondary{ background:#1f1f28; border: 1px solid rgba(255,255,255,0.08); }
+  .btn-secondary:hover{ background:#2a2a35; box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
   
-  .controls{ display:flex; gap:12px; margin-bottom:24px; align-items:center; flex-wrap:wrap; }
-  .controls select{ background:#1a1a22; color:var(--text); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 14px; font-size:0.95rem; cursor:pointer; font-weight:600; }
-  .controls select:focus{ outline:none; border-color:var(--accent); }
+  .controls{ display:flex; gap:12px; margin-bottom:24px; align-items:center; flex-wrap:wrap; position:relative; }
+  .controls select, .controls input[type="text"]{ background:#1a1a22; color:var(--text); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 14px; font-size:0.95rem; cursor:pointer; font-weight:600; min-height:44px; transition: all 0.3s ease; }
+  .controls select:hover, .controls input[type="text"]:hover{ border-color: rgba(138,43,226,0.3); background:#1f1f28; }
+  .controls select:focus, .controls input[type="text"]:focus{ outline:none; border-color:var(--accent); box-shadow: 0 0 0 3px rgba(138,43,226,0.1); }
+  .controls input[type="text"]{ width:280px; }
   
-  .admin-form{ margin-bottom:24px; padding:20px; background:rgba(138,43,226,0.05); border:1px solid rgba(138,43,226,0.2); border-radius:12px; }
-  .admin-form h3{ margin:0 0 16px 0; font-size:1.2rem; }
+  .cache-section{ margin-left:auto; display:flex; align-items:center; gap:8px; }
+  .cache-info{ font-size:0.85rem; color:var(--muted); }
+  
+  .admin-form{ margin-bottom:24px; padding:24px; background:rgba(138,43,226,0.05); border:1px solid rgba(138,43,226,0.2); border-radius:12px; }
+  .admin-form h3{ margin:0 0 16px 0; font-size:1.2rem; color:var(--accent); font-weight:800; }
   .admin-form .form-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
-  .admin-form input[type="text"]{ flex:1; min-width:200px; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:#0e0e12; color:var(--text); font-size:0.95rem; }
+  .admin-form input[type="text"]{ flex:1; min-width:200px; padding:10px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:#0e0e12; color:var(--text); font-size:0.95rem; min-height:44px; transition: all 0.3s ease; }
+  .admin-form input[type="text"]:hover{ border-color: rgba(138,43,226,0.3); }
   .admin-form input[type="text"]:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(138,43,226,0.1); }
-  .file-label{ display:inline-block; padding:10px 14px; background:#1a1a22; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.08); transition: all 0.2s ease; font-size:0.95rem; font-weight:600; }
-  .file-label:hover{ background:#242430; border-color: rgba(138,43,226,0.4); }
+  .file-label{ display:inline-flex; align-items:center; padding:10px 14px; background:#1a1a22; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.08); transition: all 0.3s ease; font-size:0.95rem; font-weight:600; min-height:44px; }
+  .file-label:hover{ background:#2a2a35; border-color: rgba(138,43,226,0.4); transform: translateY(-1px); }
+  
+  .dropzone{ border:2px dashed rgba(138,43,226,0.3); border-radius:12px; padding:40px; text-align:center; background:rgba(138,43,226,0.05); cursor:pointer; transition:all 0.3s; margin-top:16px; }
+  .dropzone:hover, .dropzone.dragover{ background:rgba(138,43,226,0.15); border-color:var(--accent); }
+  .dropzone-text{ color:var(--muted); font-size:0.95rem; }
+  
+  .upload-progress{ margin-top:12px; display:none; }
+  .progress-bar{ width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:8px; overflow:hidden; }
+  .progress-fill{ height:100%; background:linear-gradient(90deg, var(--accent), #9b4dff); transition:width 0.3s; border-radius:8px; }
+  
+  .preview-mini{ margin-top:12px; width:80px; height:120px; background:#0a0a0f; border-radius:8px; display:none; overflow:hidden; border: 1px solid rgba(255,255,255,0.08); }
+  .preview-mini img{ width:100%; height:100%; object-fit:contain; }
   
   .gallery{ display:grid; grid-template-columns:repeat(5, 1fr); gap:16px; }
-  .skin-card{ background:var(--card); border-radius:12px; padding:12px; border:1px solid rgba(255,255,255,0.05); cursor:pointer; transition: all 0.3s ease; display:flex; flex-direction:column; }
+  .skin-card{ background:var(--card); border-radius:12px; padding:12px; border:1px solid rgba(255,255,255,0.05); cursor:pointer; transition: all 0.3s ease; display:flex; flex-direction:column; opacity:0; animation:fadeInUp 0.5s forwards; }
   .skin-card:hover{ transform: translateY(-4px); box-shadow: 0 8px 24px rgba(138,43,226,0.3); border-color: rgba(138,43,226,0.4); }
+  
+  @keyframes fadeInUp {
+    from{ opacity:0; transform:translateY(20px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  
+  .skeleton{ background:linear-gradient(90deg, #1a1a22 25%, #242430 50%, #1a1a22 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
+  @keyframes shimmer{ 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
+  
+  .skeleton-card{ background:var(--card); border-radius:12px; padding:12px; border:1px solid rgba(255,255,255,0.05); }
+  .skeleton-preview{ width:100%; aspect-ratio:3/4; border-radius:10px; }
+  .skeleton-text{ height:16px; margin:8px 0; border-radius:4px; }
+  .skeleton-text.short{ width:60%; }
   
   .skin-preview{ width:100%; aspect-ratio:3/4; border-radius:10px; overflow:hidden; background:#0a0a0f; margin-bottom:12px; position:relative; }
   .skin-preview img{ width:100%; height:100%; object-fit:contain; }
@@ -47,15 +79,19 @@
   .skin-info{ flex:1; }
   .skin-name{ font-weight:700; font-size:1.05rem; margin-bottom:6px; line-height:1.3; }
   .skin-author{ color:var(--muted); font-size:0.9rem; margin-bottom:8px; }
-  .skin-stats{ display:flex; gap:12px; font-size:0.85rem; color:var(--muted); margin-bottom:8px; }
-  .skin-score{ background:rgba(138,43,226,0.2); padding:6px 12px; border-radius:8px; font-weight:700; text-align:center; border: 1px solid rgba(138,43,226,0.3); }
+  .skin-stats{ display:flex; gap:12px; font-size:0.85rem; color:var(--muted); margin-bottom:8px; flex-wrap:wrap; }
+  .skin-score{ background:linear-gradient(135deg, rgba(138,43,226,0.2), rgba(155,77,255,0.2)); padding:8px 12px; border-radius:8px; font-weight:700; text-align:center; border: 1px solid rgba(138,43,226,0.3); font-size:0.95rem; }
   
   .empty-msg{ text-align:center; padding:60px 20px; color:var(--muted); font-size:1.1rem; }
-  .hidden{ display:none; }
+  .hidden{ display:none !important; }
   
   @media (max-width:1200px){ .gallery{ grid-template-columns:repeat(4, 1fr); } }
   @media (max-width:900px){ .gallery{ grid-template-columns:repeat(3, 1fr); } }
-  @media (max-width:640px){ .gallery{ grid-template-columns:repeat(2, 1fr); } }
+  @media (max-width:640px){ 
+    .gallery{ grid-template-columns:repeat(2, 1fr); }
+    .controls input[type="text"]{ width:100%; }
+    .cache-section{ margin-left:0; width:100%; }
+  }
 </style>
 </head>
 <body>
@@ -63,47 +99,64 @@
     <header>
       <div class="logo-section">
         <a href="https://t.me/MeatMakers" target="_blank">
-          <img src="assets/МММ_ЛОГО_ОРИГИНАЛ.png" alt="Логотип" onerror="this.style.display='none'">
+          <img src="assets/МММ_ЛОГО_ОРИГИНАЛ.png" alt="Логотип МММ" onerror="this.style.display='none'">
         </a>
         <h1>Оценка скинов</h1>
       </div>
       <div class="nav">
-        <a href="results.html" class="btn btn-secondary">Итоги конкурса</a>
-        <button id="infoBtn" class="btn btn-secondary">ℹ️ Оценивание</button>
-        <button id="signBtn" class="btn">Войти</button>
+        <a href="results.html" class="btn btn-secondary" aria-label="Перейти к итогам конкурса">Итоги конкурса</a>
+        <button id="infoBtn" class="btn btn-secondary" aria-label="Информация о системе оценивания">ℹ️ Оценивание</button>
+        <button id="signBtn" class="btn" aria-label="Войти в аккаунт">Войти</button>
       </div>
     </header>
 
     <div id="adminWrap" class="admin-form hidden">
       <h3>Добавить скин (админ)</h3>
       <div class="form-row">
-        <input id="skinName" type="text" placeholder="Название скина" maxlength="100">
-        <input id="skinAuthor" type="text" placeholder="Автор" maxlength="100">
-        <label class="file-label">Выбрать файл <input id="fileInput" type="file" accept=".png,.jpg,.jpeg" style="display:none"></label>
+        <input id="skinName" type="text" placeholder="Название скина" maxlength="100" aria-label="Название скина">
+        <input id="skinAuthor" type="text" placeholder="Автор" maxlength="100" aria-label="Имя автора">
+        <label class="file-label" tabindex="0">Выбрать файл <input id="fileInput" type="file" accept=".png,.jpg,.jpeg" style="display:none" aria-label="Выбрать файл скина"></label>
         <button id="addBtn" class="btn">Добавить</button>
         <span id="adminMsg" style="margin-left:8px; font-size:0.9rem;"></span>
+      </div>
+      <div class="dropzone" id="dropzone">
+        <div class="dropzone-text">📁 Перетащите файл сюда или нажмите для выбора</div>
+      </div>
+      <div class="preview-mini" id="previewMini"><img id="previewImg" alt="Предпросмотр скина"></div>
+      <div class="upload-progress" id="uploadProgress">
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+        <div style="margin-top:4px; font-size:0.85rem; color:var(--muted);" id="progressText">Загрузка: 0%</div>
       </div>
     </div>
 
     <div class="controls">
       <label style="font-weight:600; margin-right:8px;">Сортировка:</label>
-      <select id="sortSelect">
+      <select id="sortSelect" aria-label="Выбрать сортировку">
         <option value="date">По дате добавления</option>
         <option value="rating">По средней оценке</option>
       </select>
+      
+      <input type="text" id="searchInput" placeholder="🔍 Поиск по автору..." aria-label="Поиск по автору">
+      
+      <div class="cache-section">
+        <button id="refreshBtn" class="btn btn-secondary" style="padding:8px 12px; min-width:auto;" title="Обновить данные" aria-label="Обновить данные">🔄</button>
+        <div class="cache-info">
+          <div id="cacheIndicator" style="font-size:0.8rem;"></div>
+        </div>
+      </div>
     </div>
 
     <div id="gallery" class="gallery">
-      <div class="empty-msg">Загрузка скинов...</div>
+      <!-- Skeleton loaders -->
     </div>
   </div>
 
-  <!-- Модальное окно с информацией -->
-  <div id="infoModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px);">
+  <!-- Модальное окно -->
+  <div id="infoModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px);" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div style="background:var(--card); border-radius:16px; padding:24px; max-width:700px; width:100%; max-height:80vh; overflow-y:auto; border:1px solid rgba(138,43,226,0.2); box-shadow:0 8px 32px rgba(0,0,0,0.6); position:relative;">
-      <button id="closeModal" style="position:absolute; top:12px; right:12px; width:32px; height:32px; background:rgba(255,255,255,0.08); border:none; border-radius:8px; cursor:pointer; font-size:1.5rem; color:var(--text); transition:all 0.2s ease; display:flex; align-items:center; justify-content:center;">×</button>
-      <h2 style="margin:0 0 16px 0; font-size:1.5rem; color:var(--accent); font-weight:800; letter-spacing:-0.5px;">Система оценивания</h2>
-      <p style="line-height:1.7; color:var(--muted); margin:0 0 12px 0;">При оценивании используется система на основе 90 бальной шкалы. Система состоит из 4 числовых критериев и 1 множителя.</p>
+      <button id="closeModal" style="position:absolute; top:12px; right:12px; width:32px; height:32px; background:rgba(255,255,255,0.08); border:none; border-radius:8px; cursor:pointer; font-size:1.5rem; color:var(--text); transition:all 0.2s ease; display:flex; align-items:center; justify-content:center;" aria-label="Закрыть модальное окно">×</button>
+      <h2 id="modalTitle" style="margin:0 0 16px 0; font-size:1.5rem; color:var(--accent); font-weight:800; letter-spacing:-0.5px;">Система оценивания</h2>
+      <p style="line-height:1.7; color:var(--muted); margin:0 0 12px 0;">При оценивании используется система на основе 90 балльной шкалы. Система состоит из 4 числовых критериев и 1 множитель.</p>
       
       <h3 style="margin:16px 0 8px 0; font-size:1.1rem; color:var(--text); font-weight:700; letter-spacing:-0.2px;">Лайн / Образ (1-10)</h3>
       <p style="line-height:1.7; color:var(--muted); margin:0 0 12px 0;">Оценивается общая идея лайна, его реализация, оригинальность и интересность деталей.</p>
@@ -128,8 +181,9 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, where, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
@@ -143,8 +197,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
+    const storage = getStorage(app);
 
     const ADMIN_EMAIL = "nmprokhorov@gmail.com";
+    const CACHE_DURATION = 2 * 60 * 60 * 1000; // 2 часа
+    const CACHE_KEY_SKINS = 'skins_cache';
+    const CACHE_KEY_SCORES = 'skin_scores_cache';
+    const CACHE_KEY_TIMESTAMP = 'cache_timestamp';
     
     const adminWrap = document.getElementById('adminWrap');
     const skinName = document.getElementById('skinName');
@@ -158,10 +217,62 @@
     const infoBtn = document.getElementById('infoBtn');
     const infoModal = document.getElementById('infoModal');
     const closeModal = document.getElementById('closeModal');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const cacheIndicator = document.getElementById('cacheIndicator');
+    const searchInput = document.getElementById('searchInput');
+    const dropzone = document.getElementById('dropzone');
+    const previewMini = document.getElementById('previewMini');
+    const previewImg = document.getElementById('previewImg');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
 
     let currentUser = null;
     let skins = {};
     let scores = {};
+    let searchTerm = '';
+    
+    // Кэширование
+    function saveToCache(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch(e) {
+        console.log('Cache save error:', e);
+      }
+    }
+    
+    function loadFromCache(key) {
+      try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : null;
+      } catch(e) {
+        console.log('Cache load error:', e);
+        return null;
+      }
+    }
+    
+    function isCacheValid() {
+      const timestamp = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+      if (!timestamp) return false;
+      return (Date.now() - parseInt(timestamp)) < CACHE_DURATION;
+    }
+    
+    function updateCacheIndicator() {
+      const timestamp = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+      if (timestamp && isCacheValid()) {
+        const date = new Date(parseInt(timestamp));
+        cacheIndicator.textContent = `Данные от ${date.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})}`;
+      } else {
+        cacheIndicator.textContent = 'Актуальные данные';
+      }
+    }
+    
+    // Получение URL скина
+    function getSkinUrl(skin) {
+      if (skin.skinUrl) return skin.skinUrl;
+      if (skin.skinData) return skin.skinData;
+      return '/assets/placeholder.png';
+    }
 
     // Модальное окно
     infoBtn.addEventListener('click', () => { infoModal.style.display = 'flex'; });
@@ -185,7 +296,44 @@
       adminWrap.classList.toggle('hidden', !(user && user.email === ADMIN_EMAIL));
     });
 
-    // Добавление скина (админ)
+    // Drag and drop
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFileSelect(file);
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleFileSelect(file);
+    });
+    
+    function handleFileSelect(file) {
+      if (!file.type.includes('png') && !file.type.includes('jpeg')) {
+        alert('Только PNG и JPEG файлы');
+        return;
+      }
+      if (file.size > 1024 * 1024) {
+        alert('Максимальный размер файла: 1MB');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        previewMini.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Добавление скина (загрузка в Storage)
     addBtn.addEventListener('click', async () => {
       adminMsg.textContent = '';
       if (!currentUser || currentUser.email !== ADMIN_EMAIL) { 
@@ -201,76 +349,168 @@
       if (!author) { adminMsg.textContent = 'Введите автора'; return; }
       if (!file) { adminMsg.textContent = 'Выберите файл'; return; }
       
-      adminMsg.textContent = 'Загрузка...';
-      
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        try {
-          const dataUrl = ev.target.result;
-          await addDoc(collection(db, 'skins'), {
-            name: name,
-            author: author,
-            skinData: dataUrl,
-            createdAt: serverTimestamp()
-          });
-          adminMsg.textContent = 'Добавлено успешно';
-          adminMsg.style.color = '#4ade80';
-          skinName.value = '';
-          skinAuthor.value = '';
-          fileInput.value = '';
-          setTimeout(() => { adminMsg.textContent = ''; adminMsg.style.color = ''; }, 2000);
-        } catch(e) {
-          console.error(e);
-          adminMsg.textContent = 'Ошибка: ' + (e.message || e);
-          adminMsg.style.color = '#f87171';
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-
-    // Загрузка скинов
-    const skinsQ = query(collection(db, 'skins'), orderBy('createdAt', 'desc'));
-    onSnapshot(skinsQ, snap => {
-      snap.docChanges().forEach(ch => {
-        const id = ch.doc.id;
-        if (ch.type === 'removed') {
-          delete skins[id];
-        } else {
-          skins[id] = { id, ...ch.doc.data() };
-        }
-      });
-      renderGallery();
-    });
-
-    // Загрузка оценок
-    const scoresQ = query(collection(db, 'skin_scores'), orderBy('createdAt', 'asc'));
-    onSnapshot(scoresQ, snap => {
-      snap.docChanges().forEach(ch => {
-        const data = ch.doc.data();
-        const skinId = data.skinId;
+      try {
+        uploadProgress.style.display = 'block';
+        addBtn.disabled = true;
         
-        if (ch.type === 'removed') {
-          if (scores[skinId]) {
-            scores[skinId] = scores[skinId].filter(s => s.id !== ch.doc.id);
-            if (scores[skinId].length === 0) delete scores[skinId];
+        // Создаем документ сначала
+        const docRef = doc(collection(db, 'skins'));
+        const docId = docRef.id;
+        
+        // Загружаем в Storage
+        const storageRef = ref(storage, `gallery-skins/${docId}.png`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+        
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            progressFill.style.width = progress + '%';
+            progressText.textContent = `Загрузка: ${Math.round(progress)}%`;
+          },
+          (error) => {
+            console.error(error);
+            adminMsg.textContent = 'Ошибка загрузки: ' + error.message;
+            adminMsg.style.color = '#f87171';
+            uploadProgress.style.display = 'none';
+            addBtn.disabled = false;
+          },
+          async () => {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            
+            await setDoc(docRef, {
+              name: name,
+              author: author,
+              skinUrl: downloadURL,
+              createdAt: serverTimestamp()
+            });
+            
+            adminMsg.textContent = 'Добавлено успешно';
+            adminMsg.style.color = '#4ade80';
+            skinName.value = '';
+            skinAuthor.value = '';
+            fileInput.value = '';
+            previewMini.style.display = 'none';
+            uploadProgress.style.display = 'none';
+            progressFill.style.width = '0%';
+            addBtn.disabled = false;
+            
+            localStorage.removeItem(CACHE_KEY_TIMESTAMP);
+            
+            setTimeout(() => { adminMsg.textContent = ''; adminMsg.style.color = ''; }, 2000);
           }
-        } else {
-          if (!scores[skinId]) scores[skinId] = [];
-          const existingIndex = scores[skinId].findIndex(s => s.id === ch.doc.id);
-          if (existingIndex >= 0) {
-            scores[skinId][existingIndex] = { id: ch.doc.id, ...data };
-          } else {
-            scores[skinId].push({ id: ch.doc.id, ...data });
-          }
-        }
-      });
-      renderGallery();
+        );
+      } catch(e) {
+        console.error(e);
+        adminMsg.textContent = 'Ошибка: ' + (e.message || e);
+        adminMsg.style.color = '#f87171';
+        addBtn.disabled = false;
+        uploadProgress.style.display = 'none';
+      }
     });
+
+    // Поиск
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchTerm = e.target.value.trim().toLowerCase();
+        renderGallery();
+      }, 300);
+    });
+
+    // Загрузка данных
+    async function loadData() {
+      if (isCacheValid()) {
+        const cachedSkins = loadFromCache(CACHE_KEY_SKINS);
+        const cachedScores = loadFromCache(CACHE_KEY_SCORES);
+        
+        if (cachedSkins && cachedScores) {
+          console.log('Загружено из кэша');
+          skins = cachedSkins;
+          scores = cachedScores;
+          updateCacheIndicator();
+          renderGallery();
+          return;
+        }
+      }
+      
+      showSkeletons();
+      setupRealtimeListeners();
+    }
+    
+    function showSkeletons() {
+      gallery.innerHTML = '';
+      for (let i = 0; i < 10; i++) {
+        const skeleton = document.createElement('div');
+        skeleton.className = 'skeleton-card';
+        skeleton.innerHTML = `
+          <div class="skeleton skeleton-preview"></div>
+          <div class="skeleton skeleton-text"></div>
+          <div class="skeleton skeleton-text short"></div>
+          <div class="skeleton skeleton-text short"></div>
+        `;
+        gallery.appendChild(skeleton);
+      }
+    }
+    
+    function setupRealtimeListeners() {
+      const skinsQ = query(collection(db, 'skins'), orderBy('createdAt', 'desc'));
+      onSnapshot(skinsQ, snap => {
+        snap.docChanges().forEach(ch => {
+          const id = ch.doc.id;
+          if (ch.type === 'removed') {
+            delete skins[id];
+          } else {
+            skins[id] = { id, ...ch.doc.data() };
+          }
+        });
+        saveToCache(CACHE_KEY_SKINS, skins);
+        localStorage.setItem(CACHE_KEY_TIMESTAMP, Date.now().toString());
+        updateCacheIndicator();
+        renderGallery();
+      });
+
+      const scoresQ = query(collection(db, 'skin_scores'), orderBy('createdAt', 'asc'));
+      onSnapshot(scoresQ, snap => {
+        snap.docChanges().forEach(ch => {
+          const data = ch.doc.data();
+          const skinId = data.skinId;
+          
+          if (ch.type === 'removed') {
+            if (scores[skinId]) {
+              scores[skinId] = scores[skinId].filter(s => s.id !== ch.doc.id);
+              if (scores[skinId].length === 0) delete scores[skinId];
+            }
+          } else {
+            if (!scores[skinId]) scores[skinId] = [];
+            const existingIndex = scores[skinId].findIndex(s => s.id === ch.doc.id);
+            if (existingIndex >= 0) {
+              scores[skinId][existingIndex] = { id: ch.doc.id, ...data };
+            } else {
+              scores[skinId].push({ id: ch.doc.id, ...data });
+            }
+          }
+        });
+        saveToCache(CACHE_KEY_SCORES, scores);
+        renderGallery();
+      });
+    }
 
     sortSelect.addEventListener('change', renderGallery);
+    refreshBtn.addEventListener('click', () => {
+      localStorage.removeItem(CACHE_KEY_TIMESTAMP);
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = '⏳';
+      showSkeletons();
+      setupRealtimeListeners();
+      setTimeout(() => {
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = '🔄';
+      }, 2000);
+    });
 
     function renderGallery() {
-      const arr = Object.values(skins).map(skin => {
+      let arr = Object.values(skins).map(skin => {
         const skinScores = scores[skin.id] || [];
         const count = skinScores.length;
         const sum = skinScores.reduce((a, b) => a + (b.total || 0), 0);
@@ -278,8 +518,13 @@
         return { ...skin, scoreCount: count, avgScore: avg };
       });
 
+      // Поиск
+      if (searchTerm) {
+        arr = arr.filter(s => s.author && s.author.toLowerCase().includes(searchTerm));
+      }
+
       if (!arr.length) {
-        gallery.innerHTML = '<div class="empty-msg">Пока нет скинов. Будьте первым!</div>';
+        gallery.innerHTML = '<div class="empty-msg">Ничего не найдено</div>';
         return;
       }
 
@@ -296,9 +541,10 @@
 
       gallery.innerHTML = '';
       
-      arr.forEach(skin => {
+      arr.forEach((skin, idx) => {
         const card = document.createElement('div');
         card.className = 'skin-card';
+        card.style.animationDelay = `${idx * 0.05}s`;
         
         const dateStr = skin.createdAt ? new Date(skin.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : '';
         
@@ -318,31 +564,49 @@
         `;
         
         card.addEventListener('click', () => location.href = `skin-view.html?id=${skin.id}`);
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `Открыть скин ${skin.name} автора ${skin.author}`);
+        card.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') location.href = `skin-view.html?id=${skin.id}`;
+        });
         gallery.appendChild(card);
         
-        // Генерируем 3D превью
-        if (skin.skinData) {
-          setTimeout(() => init3DPreview(`preview_${skin.id}`, skin.skinData), 50);
+        if (skin.skinUrl || skin.skinData) {
+          setTimeout(() => init3DPreview(`preview_${skin.id}`, getSkinUrl(skin)), 50);
         }
       });
     }
 
     const previewCache = new Map();
-    async function init3DPreview(containerId, skinDataUrl) {
+    let activeViewers = 0;
+    const MAX_VIEWERS = 10;
+    
+    async function init3DPreview(containerId, skinUrl) {
       const container = document.getElementById(containerId);
-      if (!container || !skinDataUrl) return;
+      if (!container || !skinUrl) return;
       
-      if (previewCache.has(skinDataUrl)) {
+      if (previewCache.has(skinUrl)) {
         const img = document.createElement('img');
-        img.src = previewCache.get(skinDataUrl);
+        img.src = previewCache.get(skinUrl);
+        img.alt = "Превью скина";
+        img.loading = "lazy";
         container.innerHTML = '';
         container.appendChild(img);
         return;
       }
       
+      while (activeViewers >= MAX_VIEWERS) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      activeViewers++;
+      
       try {
         const img = document.createElement('img');
-        img.src = skinDataUrl;
+        img.src = skinUrl;
+        img.alt = "Превью скина";
+        img.loading = "lazy";
         img.style.width = '100%';
         img.style.height = '100%';
         img.style.objectFit = 'cover';
@@ -363,7 +627,7 @@
         });
         
         try { viewer.renderer.setClearColor(0x15151c, 1); } catch(_) {}
-        await viewer.loadSkin(skinDataUrl);
+        await viewer.loadSkin(skinUrl);
         viewer.zoom = 0.95;
         viewer.autoRotate = false;
         
@@ -382,12 +646,19 @@
         await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
         
         const renderedDataUrl = off.toDataURL('image/png', 0.8);
-        previewCache.set(skinDataUrl, renderedDataUrl);
+        if (previewCache.size >= 50) {
+          const firstKey = previewCache.keys().next().value;
+          previewCache.delete(firstKey);
+        }
+        previewCache.set(skinUrl, renderedDataUrl);
+        
         img.src = renderedDataUrl;
         
         try { viewer.dispose(); } catch(e) {}
       } catch(e) {
         console.error('3D preview error:', e);
+      } finally {
+        activeViewers--;
       }
     }
 
@@ -395,6 +666,9 @@
       if (!s && s !== 0) return '';
       return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
+    
+    updateCacheIndicator();
+    loadData();
   </script>
 </body>
 </html>
