@@ -11,31 +11,57 @@
   body{ margin:0; font-family:Inter,Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:20px; }
   .wrap{ max-width:1200px; margin:0 auto; display:grid; grid-template-columns: 480px 1fr; gap:20px; align-items:start; }
   .viewer{ background:#0b0b0d; border-radius:16px; padding:12px; border:1px solid rgba(255,255,255,0.05); position:relative; box-shadow: 0 8px 24px rgba(0,0,0,0.3); height:560px; }
-  .info{ background:var(--card); border-radius:16px; padding:16px; border:1px solid rgba(255,255,255,0.05); }
-  h1{ margin:0 0 10px 0; font-size:1.3rem; font-weight:800; letter-spacing:-0.3px; }
+  .info{ background:var(--card); border-radius:16px; padding:20px; border:1px solid rgba(255,255,255,0.05); }
+  h1{ margin:0 0 10px 0; font-size:1.4rem; font-weight:800; letter-spacing:-0.3px; }
   .small{ color:var(--muted); font-size:0.95rem; line-height:1.6; }
   .list{ margin-top:14px; display:flex; flex-direction:column; gap:10px; }
-  .score-item{ padding:12px; background:rgba(255,255,255,0.02); border-radius:10px; display:flex; gap:12px; align-items:flex-start; transition: all 0.3s ease; border-left: 3px solid transparent; }
+  .score-item{ padding:14px; background:rgba(255,255,255,0.02); border-radius:10px; display:flex; gap:12px; align-items:flex-start; transition: all 0.3s ease; border-left: 3px solid transparent; }
   .score-item:hover{ background:rgba(255,255,255,0.05); border-left-color: var(--accent); transform: translateX(4px); box-shadow: 0 2px 8px rgba(138,43,226,0.15); }
   .score-item b{ min-width:130px; display:inline-block; font-size:1rem; }
-  .btn{ background:var(--accent); color:#fff; padding:10px 14px; border-radius:8px; cursor:pointer; border:none; font-weight:700; transition: all 0.3s ease; font-size:0.95rem; }
+  .btn{ background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; cursor:pointer; border:none; font-weight:700; transition: all 0.3s ease; font-size:0.95rem; min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center; }
   .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(138,43,226,0.5); }
-  .btn-secondary{ background:#333; }
+  .btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-secondary{ background:#1f1f28; border: 1px solid rgba(255,255,255,0.08); }
+  .btn-secondary:hover{ background:#2a2a35; box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
   
-  input[type="range"] { width: 100%; -webkit-appearance: none; background: linear-gradient(90deg,#007bff,#8a2be2); height: 7px; border-radius: 7px; outline: none; transition: all 0.2s ease; }
-  input[type="range"]:hover { height: 9px; }
-  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; background: #fff; border-radius: 50%; cursor: pointer; border: 3px solid #8a2be2; transition: all 0.2s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
-  input[type="range"]::-webkit-slider-thumb:hover { width: 26px; height: 26px; box-shadow: 0 0 16px rgba(138,43,226,0.8); }
+  input[type="range"] { width: 100%; -webkit-appearance: none; background: linear-gradient(90deg,#007bff,#8a2be2); height: 8px; border-radius: 8px; outline: none; transition: all 0.2s ease; }
+  input[type="range"]:hover { height: 10px; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; background: #fff; border-radius: 50%; cursor: pointer; border: 3px solid #8a2be2; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  input[type="range"]::-webkit-slider-thumb:hover { width: 28px; height: 28px; box-shadow: 0 0 16px rgba(138,43,226,0.8); }
+  input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; background: #fff; border-radius: 50%; cursor: pointer; border: 3px solid #8a2be2; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  input[type="range"]::-moz-range-thumb:hover { width: 28px; height: 28px; box-shadow: 0 0 16px rgba(138,43,226,0.8); }
   
-  .criterion { margin-bottom:14px; }
-  .criterion label { display:flex; justify-content:space-between; font-weight:600; margin-bottom:8px; font-size:0.95rem; }
-  .score-display { background:linear-gradient(135deg, #1e1e27, #252530); border-radius:12px; padding:16px; text-align:center; font-size:1.3em; font-weight:800; margin-top:14px; border: 2px solid rgba(138,43,226,0.3); box-shadow: 0 4px 12px rgba(138,43,226,0.2); }
-  textarea{ width:100%; padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:#0a0a0f; color:var(--text); transition: all 0.3s ease; font-size:0.95rem; resize: vertical; min-height:100px; }
+  .criterion { margin-bottom:16px; }
+  .criterion label { display:flex; justify-content:space-between; font-weight:600; margin-bottom:10px; font-size:0.95rem; }
+  .criterion label .value-display{ background:rgba(138,43,226,0.2); padding:4px 10px; border-radius:6px; min-width:40px; text-align:center; font-size:1rem; }
+  .score-display{ background:linear-gradient(135deg, #1e1e27, #252530); border-radius:12px; padding:20px; text-align:center; font-size:1.4rem; font-weight:800; margin-top:20px; border: 2px solid rgba(138,43,226,0.3); box-shadow: 0 4px 12px rgba(138,43,226,0.2); }
+  .score-number{ display:inline-block; transition: all 0.3s; color: var(--accent); font-size:1.6rem; }
+  textarea{ width:100%; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.08); background:#0a0a0f; color:var(--text); transition: all 0.3s ease; font-size:0.95rem; resize: vertical; min-height:100px; font-family:inherit; }
+  textarea:hover{ border-color: rgba(138,43,226,0.3); }
   textarea:focus{ outline:none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(138,43,226,0.1); }
   .hidden{ display:none; }
   
-  .score-grid{ display:grid; grid-template-columns: repeat(5, 1fr); gap:6px; margin-top:6px; font-size:0.85rem; }
-  .score-grid span{ background:rgba(138,43,226,0.15); padding:4px 6px; border-radius:6px; text-align:center; }
+  .score-grid{ display:grid; grid-template-columns: repeat(5, 1fr); gap:6px; margin-top:8px; font-size:0.85rem; }
+  .score-grid span{ background:rgba(138,43,226,0.15); padding:6px 8px; border-radius:6px; text-align:center; font-weight:600; }
+  
+  .admin-badge{ display:inline-block; background:linear-gradient(135deg, var(--accent), #9b4dff); color:#fff; padding:4px 10px; border-radius:6px; font-size:0.75rem; font-weight:700; margin-left:8px; }
+  
+  .scores-sort{ margin-bottom:16px; display:flex; gap:10px; align-items:center; }
+  .scores-sort-label{ font-size:0.9rem; color:var(--muted); font-weight:600; margin-right:4px; }
+  .sort-btn{ padding:8px 16px; background:#1a1a22; border:1px solid rgba(255,255,255,0.08); border-radius:8px; cursor:pointer; font-size:0.9rem; transition:all 0.3s ease; font-weight:600; color:var(--text); }
+  .sort-btn:hover{ background:#242430; border-color: rgba(138,43,226,0.3); transform: translateY(-1px); }
+  .sort-btn.active{ background:linear-gradient(135deg, var(--accent), #9b4dff); border-color:var(--accent); box-shadow: 0 2px 8px rgba(138,43,226,0.3); color:#fff; }
+  
+  .load-more{ width:100%; padding:12px; background:rgba(138,43,226,0.1); border:1px solid rgba(138,43,226,0.3); border-radius:8px; cursor:pointer; text-align:center; font-weight:600; transition:all 0.3s; margin-top:12px; }
+  .load-more:hover{ background:rgba(138,43,226,0.2); transform: translateY(-1px); }
+  
+  .autosave-indicator{ font-size:0.8rem; color:var(--muted); margin-top:6px; opacity:0; transition:opacity 0.3s; }
+  .autosave-indicator.show{ opacity:1; }
+  
+  .eval-section{ margin-top:24px; border-top:2px solid rgba(255,255,255,0.05); padding-top:20px; }
+  .eval-section h3{ margin:0 0 20px 0; font-size:1.2rem; color:var(--accent); font-weight:800; }
+  
+  .submit-section{ display:flex; gap:12px; margin-top:16px; align-items:center; flex-wrap:wrap; }
   
   @media (max-width:1024px){ .wrap{ grid-template-columns: 1fr; } }
 </style>
@@ -45,8 +71,8 @@
     <div>
       <div class="viewer" id="viewerWrap"></div>
       <div style="margin-top:12px; display:flex; gap:10px;">
-        <button id="backBtn" class="btn btn-secondary">← Вернуться</button>
-        <button id="signBtn" class="btn" style="margin-left:auto">Войти</button>
+        <button id="backBtn" class="btn btn-secondary" aria-label="Вернуться на главную">← Вернуться</button>
+        <button id="signBtn" class="btn" style="margin-left:auto" aria-label="Войти в аккаунт">Войти</button>
       </div>
     </div>
 
@@ -56,50 +82,59 @@
         <div class="small" id="skinAuthor" style="margin-bottom:8px;">Автор: —</div>
         <div class="small" id="skinStats">Средний балл: — / 90 • Оценок: 0</div>
         
-        <div id="evalWrap" class="hidden" style="margin-top:24px; border-top:2px dashed rgba(255,255,255,0.05); padding-top:16px;">
-          <h3 style="margin:0 0 14px 0; font-size:1.15rem;">Оценить скин</h3>
+        <div id="evalWrap" class="hidden eval-section">
+          <h3>Оценить скин</h3>
 
           <div class="criterion">
-            <label for="line">Лайн / Образ <span id="line-value">5</span></label>
-            <input type="range" id="line" min="1" max="10" value="5">
+            <label><span>Лайн / Образ</span> <span class="value-display" id="line-value">5</span></label>
+            <input type="range" id="line" min="1" max="10" value="5" aria-label="Оценка лайна от 1 до 10">
           </div>
 
           <div class="criterion">
-            <label for="palette">Палитра <span id="palette-value">5</span></label>
-            <input type="range" id="palette" min="1" max="10" value="5">
+            <label><span>Палитра</span> <span class="value-display" id="palette-value">5</span></label>
+            <input type="range" id="palette" min="1" max="10" value="5" aria-label="Оценка палитры от 1 до 10">
           </div>
 
           <div class="criterion">
-            <label for="shade">Реализация / Шейд <span id="shade-value">5</span></label>
-            <input type="range" id="shade" min="1" max="10" value="5">
+            <label><span>Реализация / Шейд</span> <span class="value-display" id="shade-value">5</span></label>
+            <input type="range" id="shade" min="1" max="10" value="5" aria-label="Оценка реализации от 1 до 10">
           </div>
 
           <div class="criterion">
-            <label for="style">Айдентика / Стилистика <span id="style-value">5</span></label>
-            <input type="range" id="style" min="1" max="10" value="5">
+            <label><span>Айдентика / Стилистика</span> <span class="value-display" id="style-value">5</span></label>
+            <input type="range" id="style" min="1" max="10" value="5" aria-label="Оценка стилистики от 1 до 10">
           </div>
 
           <div class="criterion">
-            <label for="vibe">Общее впечатление / Вайб <span id="vibe-value">5</span></label>
-            <input type="range" id="vibe" min="1" max="10" value="5">
+            <label><span>Общее впечатление / Вайб</span> <span class="value-display" id="vibe-value">5</span></label>
+            <input type="range" id="vibe" min="1" max="10" value="5" aria-label="Оценка вайба от 1 до 10">
           </div>
 
-          <textarea id="reviewText" placeholder="Напишите развёрнутую рецензию (необязательно)..."></textarea>
+          <textarea id="reviewText" placeholder="Напишите развёрнутую рецензию (необязательно)..." aria-label="Текст рецензии"></textarea>
+          <div class="autosave-indicator" id="autosaveIndicator">Сохранено локально</div>
 
-          <div style="display:flex; gap:10px; margin-top:10px; align-items:center; flex-wrap:wrap;">
+          <div class="submit-section">
             <button id="submitEval" class="btn">Отправить оценку</button>
             <div id="evalMsg" class="small"></div>
           </div>
 
-          <div class="score-display" id="totalDisplay">Итоговый балл: 0 / 90</div>
+          <div class="score-display" id="totalDisplay">Итоговый балл: <span class="score-number" id="scoreNumber">0</span> / 90</div>
         </div>
       </div>
 
       <div class="info" style="margin-top:16px;">
-        <strong style="font-size:1.1rem;">Все оценки</strong>
-        <div id="scoresList" class="list" style="margin-top:10px;">
-          <div class="small">Загрузка оценок...</div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <strong style="font-size:1.15rem;">Все оценки</strong>
+          <div class="scores-sort">
+            <span class="scores-sort-label">Сортировка:</span>
+            <button class="sort-btn active" data-sort="rating">По баллу</button>
+            <button class="sort-btn" data-sort="date">По дате</button>
+          </div>
         </div>
+        <div id="scoresList" class="list">
+          <div class="small" style="text-align:center;padding:20px;opacity:0.6;">Загрузка оценок...</div>
+        </div>
+        <div id="loadMore" class="load-more hidden">Загрузить ещё</div>
       </div>
     </div>
   </div>
@@ -127,6 +162,10 @@
     const skinId = urlParams.get('id');
     if (!skinId) { alert('ID скина не указан'); location.href = 'index.html'; }
 
+    const ADMIN_EMAIL = "nmprokhorov@gmail.com";
+    const AUTOSAVE_KEY = `review_draft_${skinId}`;
+    const PAGE_SIZE = 10;
+    
     const viewerWrap = document.getElementById('viewerWrap');
     const skinTitle = document.getElementById('skinTitle');
     const skinAuthor = document.getElementById('skinAuthor');
@@ -142,14 +181,27 @@
     const submitEval = document.getElementById('submitEval');
     const evalMsg = document.getElementById('evalMsg');
     const totalDisplay = document.getElementById('totalDisplay');
+    const scoreNumber = document.getElementById('scoreNumber');
     const signBtn = document.getElementById('signBtn');
     const backBtn = document.getElementById('backBtn');
+    const autosaveIndicator = document.getElementById('autosaveIndicator');
+    const loadMore = document.getElementById('loadMore');
 
     backBtn.addEventListener('click', () => location.href = 'index.html');
 
     const provider = new GoogleAuthProvider();
     let currentUser = null;
     let currentUserDisplayName = null;
+    let scoreDocs = [];
+    let usersCache = {};
+    let displayedCount = PAGE_SIZE;
+    let currentSort = 'rating';
+    
+    function getSkinUrl(skin) {
+      if (skin.skinUrl) return skin.skinUrl;
+      if (skin.skinData) return skin.skinData;
+      return '/assets/placeholder.png';
+    }
     
     signBtn.addEventListener('click', async () => {
       if (!currentUser) {
@@ -162,7 +214,8 @@
 
     onAuthStateChanged(auth, async user => {
       currentUser = user;
-      signBtn.textContent = user ? 'Выйти (' + (user.email || user.displayName || '') + ')' : 'Войти';
+      const isAdmin = user && user.email === ADMIN_EMAIL;
+      signBtn.textContent = user ? `Выйти${isAdmin ? ' (Админ)' : ''}` : 'Войти';
       
       if (user) {
         try {
@@ -176,6 +229,7 @@
           currentUserDisplayName = user.email ? user.email.split('@')[0] : user.displayName || 'Пользователь';
         }
         evalWrap.classList.remove('hidden');
+        loadAutosave();
         await prefillUserEvaluation();
       } else {
         currentUserDisplayName = null;
@@ -184,8 +238,6 @@
     });
 
     let skinDoc = null;
-    let scoreDocs = [];
-    let usersCache = {};
 
     async function loadSkin() {
       const docRef = doc(db, 'skins', skinId);
@@ -198,11 +250,11 @@
       skinDoc = { id: snap.id, ...snap.data() };
       skinTitle.textContent = 'Название: ' + (skinDoc.name || '—');
       skinAuthor.textContent = 'Автор: ' + (skinDoc.author || '—');
-      initViewer(skinDoc.skinData);
+      initViewer(getSkinUrl(skinDoc));
     }
 
     let viewerInstance = null;
-    function initViewer(skinDataUrl) {
+    function initViewer(skinUrl) {
       viewerWrap.innerHTML = '';
       const canvas = document.createElement('canvas');
       canvas.style.width = '100%';
@@ -213,12 +265,12 @@
           canvas: canvas,
           width: canvas.clientWidth,
           height: canvas.clientHeight,
-          skin: skinDataUrl || ''
+          skin: skinUrl || ''
         });
         viewerInstance.autoRotate = true;
         viewerInstance.autoRotateSpeed = 0.5;
       } catch(e) {
-        viewerWrap.innerHTML = `<img src="${skinDataUrl || ''}" style="width:100%;height:100%;object-fit:contain" />`;
+        viewerWrap.innerHTML = `<img src="${skinUrl || ''}" style="width:100%;height:100%;object-fit:contain" alt="Скин">`;
       }
     }
 
@@ -244,27 +296,56 @@
       renderScores();
     });
 
+    // Сортировка
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentSort = btn.dataset.sort;
+        displayedCount = PAGE_SIZE;
+        renderScores();
+      });
+    });
+    
+    loadMore.addEventListener('click', () => {
+      displayedCount += PAGE_SIZE;
+      renderScores();
+    });
+
     function renderScores() {
       if (!scoreDocs.length) {
         scoresList.innerHTML = '<div class="small" style="text-align:center;padding:20px;opacity:0.6;">Оценок ещё нет.</div>';
         skinStats.textContent = 'Средний балл: — / 90 • Оценок: 0';
+        loadMore.classList.add('hidden');
       } else {
         const sum = scoreDocs.reduce((a, b) => a + (b.total || 0), 0);
         const avg = Math.ceil(sum / scoreDocs.length);
         skinStats.textContent = `Средний балл: ${avg} / 90 • Оценок: ${scoreDocs.length}`;
         
-        scoresList.innerHTML = '';
-        scoreDocs.sort((a, b) => (b.total || 0) - (a.total || 0));
+        let sorted = [...scoreDocs];
+        if (currentSort === 'rating') {
+          sorted.sort((a, b) => (b.total || 0) - (a.total || 0));
+        } else {
+          sorted.sort((a, b) => {
+            const timeA = a.createdAt?.seconds || 0;
+            const timeB = b.createdAt?.seconds || 0;
+            return timeB - timeA;
+          });
+        }
         
-        scoreDocs.forEach(s => {
+        scoresList.innerHTML = '';
+        const toDisplay = sorted.slice(0, displayedCount);
+        
+        toDisplay.forEach(s => {
           const userNick = usersCache[s.userId];
           const displayName = userNick || s.userName || 'Пользователь';
+          const isAdmin = s.userId && auth.currentUser && s.userId === auth.currentUser.uid && auth.currentUser.email === ADMIN_EMAIL;
           
           const div = document.createElement('div');
           div.className = 'score-item';
           div.innerHTML = `
             <div style="flex:1;">
-              <b>${escapeHtml(displayName)}</b>
+              <b>${escapeHtml(displayName)}${isAdmin ? '<span class="admin-badge">АДМИН</span>' : ''}</b>
               <div class="small" style="margin-top:6px;">Итоговый балл: <strong style="color:var(--accent);font-size:1.05rem;">${s.total || '-'} / 90</strong></div>
               <div class="score-grid">
                 <span>L: ${s.line || '-'}</span>
@@ -281,6 +362,13 @@
           `;
           scoresList.appendChild(div);
         });
+        
+        if (displayedCount < sorted.length) {
+          loadMore.classList.remove('hidden');
+          loadMore.textContent = `Загрузить ещё (${sorted.length - displayedCount} осталось)`;
+        } else {
+          loadMore.classList.add('hidden');
+        }
       }
     }
 
@@ -298,6 +386,7 @@
         reviewText.value = d.reviewText || '';
         updateSliderLabels();
         calculateAndShowTotal();
+        localStorage.removeItem(AUTOSAVE_KEY);
       } else {
         lineIn.value = 5; paletteIn.value = 5; shadeIn.value = 5; styleIn.value = 5; vibeIn.value = 5;
         reviewText.value = '';
@@ -324,9 +413,29 @@
       return Math.min(total, 90);
     }
 
+    function animateNumber(from, to) {
+      const duration = 500;
+      const start = performance.now();
+      
+      function update(currentTime) {
+        const elapsed = currentTime - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const current = Math.round(from + (to - from) * progress);
+        scoreNumber.textContent = current;
+        
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+      
+      requestAnimationFrame(update);
+    }
+
+    let lastTotal = 0;
     function calculateAndShowTotal() {
       const total = calculateTotalFromSliders();
-      totalDisplay.textContent = `Итоговый балл: ${total} / 90`;
+      animateNumber(lastTotal, total);
+      lastTotal = total;
       return total;
     }
 
@@ -350,8 +459,52 @@
       inp.addEventListener('input', debounce(() => {
         updateSliderLabels();
         calculateAndShowTotal();
+        saveAutosave();
       }, 60));
     });
+    
+    // Автосохранение
+    let autosaveTimeout;
+    reviewText.addEventListener('input', () => {
+      clearTimeout(autosaveTimeout);
+      autosaveTimeout = setTimeout(() => {
+        saveAutosave();
+      }, 5000);
+    });
+    
+    function saveAutosave() {
+      if (!currentUser) return;
+      const data = {
+        line: lineIn.value,
+        palette: paletteIn.value,
+        shade: shadeIn.value,
+        style: styleIn.value,
+        vibe: vibeIn.value,
+        reviewText: reviewText.value
+      };
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
+      autosaveIndicator.classList.add('show');
+      setTimeout(() => autosaveIndicator.classList.remove('show'), 2000);
+    }
+    
+    function loadAutosave() {
+      try {
+        const data = localStorage.getItem(AUTOSAVE_KEY);
+        if (data) {
+          const parsed = JSON.parse(data);
+          lineIn.value = parsed.line || 5;
+          paletteIn.value = parsed.palette || 5;
+          shadeIn.value = parsed.shade || 5;
+          styleIn.value = parsed.style || 5;
+          vibeIn.value = parsed.vibe || 5;
+          reviewText.value = parsed.reviewText || '';
+          updateSliderLabels();
+          calculateAndShowTotal();
+        }
+      } catch(e) {
+        console.log('Ошибка загрузки автосохранения:', e);
+      }
+    }
 
     submitEval.addEventListener('click', async () => {
       if (!currentUser) {
@@ -401,6 +554,8 @@
             createdAt: serverTimestamp()
           });
         }
+        
+        localStorage.removeItem(AUTOSAVE_KEY);
         
         evalMsg.textContent = '✅ Оценка сохранена';
         evalMsg.style.color = '#4ade80';
