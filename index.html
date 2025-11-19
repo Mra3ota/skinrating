@@ -355,4 +355,320 @@
         
         // Создаем документ сначала
         const docRef = doc(collection(db, 'skins'));
-        const docId = docRef
+        const docId = docRef.id;
+        
+        // Загружаем в Storage
+        const storageRef = ref(storage, `gallery-skins/${docId}.png`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+        
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            progressFill.style.width = progress + '%';
+            progressText.textContent = `Загрузка: ${Math.round(progress)}%`;
+          },
+          (error) => {
+            console.error(error);
+            adminMsg.textContent = 'Ошибка загрузки: ' + error.message;
+            adminMsg.style.color = '#f87171';
+            uploadProgress.style.display = 'none';
+            addBtn.disabled = false;
+          },
+          async () => {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            
+            await setDoc(docRef, {
+              name: name,
+              author: author,
+              skinUrl: downloadURL,
+              createdAt: serverTimestamp()
+            });
+            
+            adminMsg.textContent = 'Добавлено успешно';
+            adminMsg.style.color = '#4ade80';
+            skinName.value = '';
+            skinAuthor.value = '';
+            fileInput.value = '';
+            previewMini.style.display = 'none';
+            uploadProgress.style.display = 'none';
+            progressFill.style.width = '0%';
+            addBtn.disabled = false;
+            
+            localStorage.removeItem(CACHE_KEY_TIMESTAMP);
+            
+            setTimeout(() => { adminMsg.textContent = ''; adminMsg.style.color = ''; }, 2000);
+          }
+        );
+      } catch(e) {
+        console.error(e);
+        adminMsg.textContent = 'Ошибка: ' + (e.message || e);
+        adminMsg.style.color = '#f87171';
+        addBtn.disabled = false;
+        uploadProgress.style.display = 'none';
+      }
+    });
+
+    // Поиск
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchTerm = e.target.value.trim().toLowerCase();
+        renderGallery();
+      }, 300);
+    });
+
+    // Загрузка данных
+    async function loadData() {
+      if (isCacheValid()) {
+        const cachedSkins = loadFromCache(CACHE_KEY_SKINS);
+        const cachedScores = loadFromCache(CACHE_KEY_SCORES);
+        
+        if (cachedSkins && cachedScores) {
+          console.log('Загружено из кэша');
+          skins = cachedSkins;
+          scores = cachedScores;
+          updateCacheIndicator();
+          renderGallery();
+          return;
+        }
+      }
+      
+      showSkeletons();
+      setupRealtimeListeners();
+    }
+    
+    function showSkeletons() {
+      gallery.innerHTML = '';
+      for (let i = 0; i < 10; i++) {
+        const skeleton = document.createElement('div');
+        skeleton.className = 'skeleton-card';
+        skeleton.innerHTML = `
+          <div class="skeleton skeleton-preview"></div>
+          <div class="skeleton skeleton-text"></div>
+          <div class="skeleton skeleton-text short"></div>
+          <div class="skeleton skeleton-text short"></div>
+        `;
+        gallery.appendChild(skeleton);
+      }
+    }
+    
+    function setupRealtimeListeners() {
+      const skinsQ = query(collection(db, 'skins'), orderBy('createdAt', 'desc'));
+      onSnapshot(skinsQ, snap => {
+        snap.docChanges().forEach(ch => {
+          const id = ch.doc.id;
+          if (ch.type === 'removed') {
+            delete skins[id];
+          } else {
+            skins[id] = { id, ...ch.doc.data() };
+          }
+        });
+        saveToCache(CACHE_KEY_SKINS, skins);
+        localStorage.setItem(CACHE_KEY_TIMESTAMP, Date.now().toString());
+        updateCacheIndicator();
+        renderGallery();
+      });
+
+      const scoresQ = query(collection(db, 'skin_scores'), orderBy('createdAt', 'asc'));
+      onSnapshot(scoresQ, snap => {
+        snap.docChanges().forEach(ch => {
+          const data = ch.doc.data();
+          const skinId = data.skinId;
+          
+          if (ch.type === 'removed') {
+            if (scores[skinId]) {
+              scores[skinId] = scores[skinId].filter(s => s.id !== ch.doc.id);
+              if (scores[skinId].length === 0) delete scores[skinId];
+            }
+          } else {
+            if (!scores[skinId]) scores[skinId] = [];
+            const existingIndex = scores[skinId].findIndex(s => s.id === ch.doc.id);
+            if (existingIndex >= 0) {
+              scores[skinId][existingIndex] = { id: ch.doc.id, ...data };
+            } else {
+              scores[skinId].push({ id: ch.doc.id, ...data });
+            }
+          }
+        });
+        saveToCache(CACHE_KEY_SCORES, scores);
+        renderGallery();
+      });
+    }
+
+    sortSelect.addEventListener('change', renderGallery);
+    refreshBtn.addEventListener('click', () => {
+      localStorage.removeItem(CACHE_KEY_TIMESTAMP);
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = '⏳';
+      showSkeletons();
+      setupRealtimeListeners();
+      setTimeout(() => {
+        refreshBtn.disabled = false;
+        refreshBtn.textContent = '🔄';
+      }, 2000);
+    });
+
+    function renderGallery() {
+      let arr = Object.values(skins).map(skin => {
+        const skinScores = scores[skin.id] || [];
+        const count = skinScores.length;
+        const sum = skinScores.reduce((a, b) => a + (b.total || 0), 0);
+        const avg = count ? Math.ceil(sum / count) : 0;
+        return { ...skin, scoreCount: count, avgScore: avg };
+      });
+
+      // Поиск
+      if (searchTerm) {
+        arr = arr.filter(s => s.author && s.author.toLowerCase().includes(searchTerm));
+      }
+
+      if (!arr.length) {
+        gallery.innerHTML = '<div class="empty-msg">Ничего не найдено</div>';
+        return;
+      }
+
+      const sortBy = sortSelect.value;
+      if (sortBy === 'rating') {
+        arr.sort((a, b) => b.avgScore - a.avgScore);
+      } else {
+        arr.sort((a, b) => {
+          const timeA = a.createdAt?.seconds || 0;
+          const timeB = b.createdAt?.seconds || 0;
+          return timeB - timeA;
+        });
+      }
+
+      gallery.innerHTML = '';
+      
+      arr.forEach((skin, idx) => {
+        const card = document.createElement('div');
+        card.className = 'skin-card';
+        card.style.animationDelay = `${idx * 0.05}s`;
+        
+        const dateStr = skin.createdAt ? new Date(skin.createdAt.seconds * 1000).toLocaleDateString('ru-RU') : '';
+        
+        card.innerHTML = `
+          <div class="skin-preview" id="preview_${skin.id}">
+            <div class="loading-spinner"></div>
+          </div>
+          <div class="skin-info">
+            <div class="skin-name">${escapeHtml(skin.name || 'Без названия')}</div>
+            <div class="skin-author">Автор: ${escapeHtml(skin.author || '—')}</div>
+            <div class="skin-stats">
+              <span>Оценок: ${skin.scoreCount}</span>
+              ${dateStr ? `<span>${dateStr}</span>` : ''}
+            </div>
+            <div class="skin-score">Балл: ${skin.avgScore} / 90</div>
+          </div>
+        `;
+        
+        card.addEventListener('click', () => location.href = `skin-view.html?id=${skin.id}`);
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-label', `Открыть скин ${skin.name} автора ${skin.author}`);
+        card.addEventListener('keypress', (e) => {
+          if (e.key === 'Enter') location.href = `skin-view.html?id=${skin.id}`;
+        });
+        gallery.appendChild(card);
+        
+        if (skin.skinUrl || skin.skinData) {
+          setTimeout(() => init3DPreview(`preview_${skin.id}`, getSkinUrl(skin)), 50);
+        }
+      });
+    }
+
+    const previewCache = new Map();
+    let activeViewers = 0;
+    const MAX_VIEWERS = 10;
+    
+    async function init3DPreview(containerId, skinUrl) {
+      const container = document.getElementById(containerId);
+      if (!container || !skinUrl) return;
+      
+      if (previewCache.has(skinUrl)) {
+        const img = document.createElement('img');
+        img.src = previewCache.get(skinUrl);
+        img.alt = "Превью скина";
+        img.loading = "lazy";
+        container.innerHTML = '';
+        container.appendChild(img);
+        return;
+      }
+      
+      while (activeViewers >= MAX_VIEWERS) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      activeViewers++;
+      
+      try {
+        const img = document.createElement('img');
+        img.src = skinUrl;
+        img.alt = "Превью скина";
+        img.loading = "lazy";
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        container.innerHTML = '';
+        container.appendChild(img);
+        
+        const off = document.createElement('canvas');
+        const targetWidth = 320;
+        const targetHeight = Math.round(targetWidth * 1.35);
+        off.width = targetWidth;
+        off.height = targetHeight;
+        
+        const viewer = new skinview3d.SkinViewer({
+          canvas: off,
+          width: targetWidth,
+          height: targetHeight,
+          preserveDrawingBuffer: true
+        });
+        
+        try { viewer.renderer.setClearColor(0x15151c, 1); } catch(_) {}
+        await viewer.loadSkin(skinUrl);
+        viewer.zoom = 0.95;
+        viewer.autoRotate = false;
+        
+        try {
+          const walk = new skinview3d.WalkingAnimation(viewer);
+          walk.speed = 1.0;
+          walk.paused = true;
+          walk.progress = 0.30;
+          viewer.playerObject.rotation.y = -0.4;
+          viewer.camera.position.set(0, 24, 46);
+          viewer.camera.lookAt(0, 18, 0);
+        } catch(e) {
+          try { viewer.playerObject.rotation.y = -0.4; } catch(_) {}
+        }
+        
+        await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+        
+        const renderedDataUrl = off.toDataURL('image/png', 0.8);
+        if (previewCache.size >= 50) {
+          const firstKey = previewCache.keys().next().value;
+          previewCache.delete(firstKey);
+        }
+        previewCache.set(skinUrl, renderedDataUrl);
+        
+        img.src = renderedDataUrl;
+        
+        try { viewer.dispose(); } catch(e) {}
+      } catch(e) {
+        console.error('3D preview error:', e);
+      } finally {
+        activeViewers--;
+      }
+    }
+
+    function escapeHtml(s) {
+      if (!s && s !== 0) return '';
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+    
+    updateCacheIndicator();
+    loadData();
+  </script>
+</body>
+</html>
