@@ -1,0 +1,148 @@
+/* style.css - MMM x RZT Style */
+:root {
+    --bg: #0e0e12;       /* Глубокий черный фон */
+    --card: #181820;     /* Чуть светлее для карточек */
+    --accent: #8a2be2;   /* Ваш фиолетовый */
+    --text: #ffffff;
+    --text-sec: #9aa0b2; /* Серый текст */
+    --badge-bg: #3d5afe; /* Синий цвет оценок как на РЗТ (можно поменять на фиолетовый #6200ea) */
+    
+    --radius: 16px;      /* Закругление как на скриншотах */
+    --font: 'Inter', sans-serif;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    margin: 0;
+    padding: 20px;
+}
+
+/* Сетка как на РЗТ */
+.skin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); /* Адаптивная ширина */
+    gap: 16px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Карточка скина - вдохновлено РЗТ */
+.skin-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.2s;
+    text-decoration: none; /* Убираем подчеркивание ссылок */
+    display: block;
+}
+
+.skin-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* Контейнер картинки */
+.card-image {
+    width: 100%;
+    aspect-ratio: 1; /* Квадратная картинка */
+    background: #121214;
+    position: relative; /* Чтобы позиционировать бейджи поверх */
+}
+
+.card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Для пиксель-арта скинов */
+    image-rendering: pixelated; 
+}
+
+/* Статистика поверх картинки (как на скрине РЗТ "43 159") */
+.card-stats-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    display: flex;
+    gap: 8px;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+}
+
+/* Нижняя часть карточки */
+.card-info {
+    padding: 12px;
+}
+
+.card-title {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.card-author {
+    font-size: 13px;
+    color: var(--text-sec);
+    margin: 0 0 12px 0;
+}
+
+/* Круглые оценки внизу карточки */
+.card-scores {
+    display: flex;
+    gap: 6px;
+}
+
+.score-circle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--badge-bg); /* Синий круг */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+}
+
+/* Кнопка действия (как "Слушать" на РЗТ, у нас будет "Открыть") */
+.card-action {
+    margin-top: 12px;
+    width: 100%;
+    background: rgba(255,255,255,0.05);
+    border: none;
+    color: #fff;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.card-action:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* Заголовки секций */
+h2 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+}
