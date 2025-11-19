@@ -3,97 +3,94 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👾</text></svg>">
+<link rel="icon" href="data:,">
 <title>Оценка скинов</title>
 <style>
   :root{
-    --bg:#0e0e12; --card:#14141a; --accent:#8a2be2; --text:#eaeaf2; --muted:#9aa0b2; --radius:16px;
+    --bg:#0e0e12; --card:#14141a; --accent:#8a2be2; --text:#eaeaf2; --muted:#9aa0b2;
   }
   * { box-sizing: border-box; }
-  body{ margin:0; font-family:'Inter',Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:20px; }
+  body{ margin:0; font-family:Inter,Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:22px; }
   .wrap{ max-width:1400px; margin:0 auto; }
   
-  /* HEADER */
   header{ display:flex; align-items:center; gap:16px; margin-bottom:32px; flex-wrap:wrap; padding-bottom:20px; border-bottom:1px solid rgba(255,255,255,0.05); }
   header .logo-section{ display:flex; align-items:center; gap:12px; }
-  header .logo-section img{ height:40px; width:auto; }
-  header h1{ font-size:1.8rem; font-weight:800; margin:0; letter-spacing:-0.5px; background: linear-gradient(45deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  header .logo-section img{ height:50px; width:auto; }
+  header h1{ font-size:1.8rem; font-weight:800; margin:0; letter-spacing:-0.5px; }
   header .nav{ margin-left:auto; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
   
-  /* BUTTONS */
-  .btn{ background:var(--accent); color:#fff; padding:10px 18px; border-radius:8px; text-decoration:none; font-weight:700; cursor:pointer; border:none; transition: all 0.3s ease; font-size:0.95rem; display:inline-flex; align-items:center; justify-content:center; }
-  .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(138,43,226,0.4); background:#7b1fe0; }
-  .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .btn{ background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; font-weight:700; cursor:pointer; border:none; transition: all 0.3s ease; font-size:0.95rem; display:inline-flex; align-items:center; justify-content:center; min-width:44px; min-height:44px; }
+  .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(138,43,226,0.4); }
+  .btn:focus-visible{ outline: 2px solid var(--accent); outline-offset: 2px; }
   .btn-secondary{ background:#1f1f28; border: 1px solid rgba(255,255,255,0.08); }
-  .btn-secondary:hover{ background:#2a2a35; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+  .btn-secondary:hover{ background:#2a2a35; box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
   
-  /* ADMIN FORM */
-  .admin-form{ margin-bottom:32px; padding:24px; background:rgba(20, 20, 26, 0.6); border:1px solid rgba(138,43,226,0.2); border-radius:var(--radius); backdrop-filter: blur(10px); }
+  .controls{ display:flex; gap:12px; margin-bottom:24px; align-items:center; flex-wrap:wrap; position:relative; }
+  .controls select, .controls input[type="text"]{ background:#1a1a22; color:var(--text); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 14px; font-size:0.95rem; cursor:pointer; font-weight:600; min-height:44px; transition: all 0.3s ease; }
+  .controls select:hover, .controls input[type="text"]:hover{ border-color: rgba(138,43,226,0.3); background:#1f1f28; }
+  .controls select:focus, .controls input[type="text"]:focus{ outline:none; border-color:var(--accent); box-shadow: 0 0 0 3px rgba(138,43,226,0.1); }
+  .controls input[type="text"]{ width:280px; }
+  
+  .cache-section{ margin-left:auto; display:flex; align-items:center; gap:8px; }
+  .cache-info{ font-size:0.85rem; color:var(--muted); }
+  
+  .admin-form{ margin-bottom:24px; padding:24px; background:rgba(138,43,226,0.05); border:1px solid rgba(138,43,226,0.2); border-radius:12px; }
   .admin-form h3{ margin:0 0 16px 0; font-size:1.2rem; color:var(--accent); font-weight:800; }
   .admin-form .form-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; }
-  .admin-form input[type="text"]{ flex:1; min-width:200px; padding:12px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:#0e0e12; color:var(--text); font-size:0.95rem; transition: all 0.3s ease; }
+  .admin-form input[type="text"]{ flex:1; min-width:200px; padding:10px 14px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:#0e0e12; color:var(--text); font-size:0.95rem; min-height:44px; transition: all 0.3s ease; }
+  .admin-form input[type="text"]:hover{ border-color: rgba(138,43,226,0.3); }
   .admin-form input[type="text"]:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(138,43,226,0.1); }
+  .file-label{ display:inline-flex; align-items:center; padding:10px 14px; background:#1a1a22; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.08); transition: all 0.3s ease; font-size:0.95rem; font-weight:600; min-height:44px; }
+  .file-label:hover{ background:#2a2a35; border-color: rgba(138,43,226,0.4); transform: translateY(-1px); }
   
-  .file-label{ display:inline-flex; align-items:center; padding:10px 14px; background:#1a1a22; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.08); transition: all 0.3s ease; font-size:0.9rem; font-weight:600; }
-  .file-label:hover{ border-color: var(--accent); color: #fff; }
+  .dropzone{ border:2px dashed rgba(138,43,226,0.3); border-radius:12px; padding:40px; text-align:center; background:rgba(138,43,226,0.05); cursor:pointer; transition:all 0.3s; margin-top:16px; }
+  .dropzone:hover, .dropzone.dragover{ background:rgba(138,43,226,0.15); border-color:var(--accent); }
+  .dropzone-text{ color:var(--muted); font-size:0.95rem; }
   
-  .dropzone{ border:2px dashed rgba(138,43,226,0.3); border-radius:12px; padding:30px; text-align:center; background:rgba(138,43,226,0.03); cursor:pointer; transition:all 0.3s; margin-top:16px; }
-  .dropzone:hover, .dropzone.dragover{ background:rgba(138,43,226,0.1); border-color:var(--accent); }
-  .dropzone-text{ color:var(--muted); font-size:0.9rem; }
-
   .upload-progress{ margin-top:12px; display:none; }
-  .progress-bar{ width:100%; height:6px; background:rgba(255,255,255,0.1); border-radius:8px; overflow:hidden; }
-  .progress-fill{ height:100%; width:0%; background:var(--accent); transition:width 0.3s; border-radius:8px; }
-  .preview-mini{ margin-top:12px; width:60px; height:60px; background:#0a0a0f; border-radius:8px; display:none; overflow:hidden; border: 1px solid rgba(255,255,255,0.1); }
-  .preview-mini img{ width:100%; height:100%; object-fit:cover; }
+  .progress-bar{ width:100%; height:8px; background:rgba(255,255,255,0.1); border-radius:8px; overflow:hidden; }
+  .progress-fill{ height:100%; background:linear-gradient(90deg, var(--accent), #9b4dff); transition:width 0.3s; border-radius:8px; }
   
-  /* CONTROLS */
-  .controls{ display:flex; gap:12px; margin-bottom:24px; align-items:center; flex-wrap:wrap; }
-  .controls select, .controls input[type="text"]{ background:#1a1a22; color:var(--text); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:10px 14px; font-size:0.9rem; cursor:pointer; font-weight:500; transition: all 0.2s ease; }
-  .controls input[type="text"]{ width:240px; }
-  .controls input[type="text"]:focus{ border-color:var(--accent); outline:none; }
-  .cache-section{ margin-left:auto; display:flex; align-items:center; gap:10px; font-size:0.8rem; color:var(--muted); }
-
-  /* GALLERY GRID */
-  .gallery{ display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:20px; }
+  .preview-mini{ margin-top:12px; width:80px; height:120px; background:#0a0a0f; border-radius:8px; display:none; overflow:hidden; border: 1px solid rgba(255,255,255,0.08); }
+  .preview-mini img{ width:100%; height:100%; object-fit:contain; }
   
-  /* SKIN CARD (RZT Style) */
-  .skin-card{ background:var(--card); border-radius:var(--radius); overflow:hidden; border:1px solid rgba(255,255,255,0.04); cursor:pointer; transition: all 0.3s ease; display:flex; flex-direction:column; position:relative; text-decoration:none; color:inherit; }
-  .skin-card:hover{ transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.5); border-color: rgba(138,43,226,0.3); }
+  .gallery{ display:grid; grid-template-columns:repeat(5, 1fr); gap:16px; }
+  .skin-card{ background:var(--card); border-radius:12px; padding:12px; border:1px solid rgba(255,255,255,0.05); cursor:pointer; transition: all 0.3s ease; display:flex; flex-direction:column; opacity:0; animation:fadeInUp 0.5s forwards; }
+  .skin-card:hover{ transform: translateY(-4px); box-shadow: 0 8px 24px rgba(138,43,226,0.3); border-color: rgba(138,43,226,0.4); }
   
-  .skin-preview{ width:100%; aspect-ratio:1/1; background:#121215; position:relative; overflow:hidden; }
-  .skin-preview img{ width:100%; height:100%; object-fit:cover; image-rendering: pixelated; transition: transform 0.5s ease; }
-  .skin-card:hover .skin-preview img { transform: scale(1.05); }
+  @keyframes fadeInUp {
+    from{ opacity:0; transform:translateY(20px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
   
-  .skin-info{ padding:14px; display:flex; flex-direction:column; gap:4px; }
-  .skin-name{ font-weight:700; font-size:1rem; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin:0; }
-  .skin-author{ color:var(--muted); font-size:0.85rem; margin-bottom:10px; }
-  
-  /* BADGES */
-  .card-stats-overlay { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; color: #fff; display: flex; gap: 6px; pointer-events:none; }
-  
-  .card-footer { margin-top:auto; display:flex; justify-content:space-between; align-items:center; }
-  .score-badge { width: 32px; height: 32px; border-radius: 50%; background: #3d5afe; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; box-shadow: 0 2px 8px rgba(61, 90, 254, 0.4); }
-  
-  .play-btn { width: 32px; height: 32px; background: rgba(255,255,255,0.06); border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-  .skin-card:hover .play-btn { background: var(--accent); color: #fff; }
-
-  .empty-msg{ grid-column:1/-1; text-align:center; padding:60px; color:var(--muted); font-size:1.1rem; }
-  .hidden{ display:none !important; }
-  
-  /* SKELETON */
-  .skeleton{ background:linear-gradient(90deg, #1a1a22 25%, #242430 50%, #1a1a22 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; width:100%; height:100%; }
+  .skeleton{ background:linear-gradient(90deg, #1a1a22 25%, #242430 50%, #1a1a22 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
   @keyframes shimmer{ 0%{background-position:200% 0;} 100%{background-position:-200% 0;} }
   
-  /* MODAL */
-  #infoModal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(5px); }
-  .modal-content { background:var(--card); border-radius:16px; padding:30px; max-width:600px; width:90%; max-height:90vh; overflow-y:auto; border:1px solid rgba(255,255,255,0.1); position:relative; }
-  .close-modal { position:absolute; top:20px; right:20px; background:none; border:none; color:var(--text); font-size:24px; cursor:pointer; }
-
+  .skeleton-card{ background:var(--card); border-radius:12px; padding:12px; border:1px solid rgba(255,255,255,0.05); }
+  .skeleton-preview{ width:100%; aspect-ratio:3/4; border-radius:10px; }
+  .skeleton-text{ height:16px; margin:8px 0; border-radius:4px; }
+  .skeleton-text.short{ width:60%; }
+  
+  .skin-preview{ width:100%; aspect-ratio:3/4; border-radius:10px; overflow:hidden; background:#0a0a0f; margin-bottom:12px; position:relative; }
+  .skin-preview img{ width:100%; height:100%; object-fit:contain; }
+  .loading-spinner{ width:40px; height:40px; border:3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius:50%; animation: spin 0.8s linear infinite; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); }
+  @keyframes spin{ to{ transform: translate(-50%,-50%) rotate(360deg); } }
+  
+  .skin-info{ flex:1; }
+  .skin-name{ font-weight:700; font-size:1.05rem; margin-bottom:6px; line-height:1.3; }
+  .skin-author{ color:var(--muted); font-size:0.9rem; margin-bottom:8px; }
+  .skin-stats{ display:flex; gap:12px; font-size:0.85rem; color:var(--muted); margin-bottom:8px; flex-wrap:wrap; }
+  .skin-score{ background:linear-gradient(135deg, rgba(138,43,226,0.2), rgba(155,77,255,0.2)); padding:8px 12px; border-radius:8px; font-weight:700; text-align:center; border: 1px solid rgba(138,43,226,0.3); font-size:0.95rem; }
+  
+  .empty-msg{ text-align:center; padding:60px 20px; color:var(--muted); font-size:1.1rem; }
+  .hidden{ display:none !important; }
+  
+  @media (max-width:1200px){ .gallery{ grid-template-columns:repeat(4, 1fr); } }
+  @media (max-width:900px){ .gallery{ grid-template-columns:repeat(3, 1fr); } }
   @media (max-width:640px){ 
-    .gallery{ grid-template-columns:repeat(2, 1fr); gap:12px; }
-    .controls input[type="text"]{ width:100%; order:3; margin-top:10px; }
-    .cache-section{ width:100%; justify-content:space-between; order:4; margin-top:10px; }
+    .gallery{ grid-template-columns:repeat(2, 1fr); }
+    .controls input[type="text"]{ width:100%; }
+    .cache-section{ margin-left:0; width:100%; }
   }
 </style>
 </head>
@@ -101,93 +98,93 @@
   <div class="wrap">
     <header>
       <div class="logo-section">
-        <a href="https://t.me/MeatMakers" target="_blank" style="display:flex; align-items:center; text-decoration:none;">
-          <!-- Логотип, если есть -->
-           <span style="font-size:24px; margin-right:8px;">👾</span>
+        <a href="https://t.me/MeatMakers" target="_blank">
+          <img src="assets/МММ_ЛОГО_ОРИГИНАЛ.png" alt="Логотип МММ" onerror="this.style.display='none'">
         </a>
-        <h1>MMM Skins</h1>
+        <h1>Оценка скинов</h1>
       </div>
       <div class="nav">
-        <a href="results-1.html" class="btn btn-secondary">🏆 Итоги</a>
-        <button id="infoBtn" class="btn btn-secondary">ℹ️ Инфо</button>
-        <button id="signBtn" class="btn">Войти</button>
+        <a href="results.html" class="btn btn-secondary" aria-label="Перейти к итогам конкурса">Итоги конкурса</a>
+        <button id="infoBtn" class="btn btn-secondary" aria-label="Информация о системе оценивания">ℹ️ Оценивание</button>
+        <button id="signBtn" class="btn" aria-label="Войти в аккаунт">Войти</button>
       </div>
     </header>
 
-    <!-- Панель Администратора -->
     <div id="adminWrap" class="admin-form hidden">
-      <h3>Добавить новый скин</h3>
+      <h3>Добавить скин (админ)</h3>
       <div class="form-row">
-        <input id="skinName" type="text" placeholder="Название скина" maxlength="50">
-        <input id="skinAuthor" type="text" placeholder="Ник автора" maxlength="50">
-        <label class="file-label" tabindex="0">
-           📂 Выбрать файл <input id="fileInput" type="file" accept=".png,.jpg,.jpeg" style="display:none">
-        </label>
-        <button id="addBtn" class="btn">Загрузить</button>
-        <span id="adminMsg" style="margin-left:8px; font-size:0.9rem; color:var(--accent);"></span>
+        <input id="skinName" type="text" placeholder="Название скина" maxlength="100" aria-label="Название скина">
+        <input id="skinAuthor" type="text" placeholder="Автор" maxlength="100" aria-label="Имя автора">
+        <label class="file-label" tabindex="0">Выбрать файл <input id="fileInput" type="file" accept=".png,.jpg,.jpeg" style="display:none" aria-label="Выбрать файл скина"></label>
+        <button id="addBtn" class="btn">Добавить</button>
+        <span id="adminMsg" style="margin-left:8px; font-size:0.9rem;"></span>
       </div>
-      
       <div class="dropzone" id="dropzone">
-        <div class="dropzone-text">Перетащите файл скина сюда (PNG/JPG)</div>
+        <div class="dropzone-text">📁 Перетащите файл сюда или нажмите для выбора</div>
       </div>
-      
-      <div class="preview-mini" id="previewMini"><img id="previewImg" alt=""></div>
-      
+      <div class="preview-mini" id="previewMini"><img id="previewImg" alt="Предпросмотр скина"></div>
       <div class="upload-progress" id="uploadProgress">
         <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-        <div style="margin-top:4px; font-size:0.8rem; color:var(--muted);" id="progressText">Загрузка: 0%</div>
+        <div style="margin-top:4px; font-size:0.85rem; color:var(--muted);" id="progressText">Загрузка: 0%</div>
       </div>
     </div>
 
-    <!-- Фильтры и Поиск -->
     <div class="controls">
-      <select id="sortSelect">
-        <option value="date">📅 Новые сверху</option>
-        <option value="rating">⭐️ Лучшие сверху</option>
+      <label style="font-weight:600; margin-right:8px;">Сортировка:</label>
+      <select id="sortSelect" aria-label="Выбрать сортировку">
+        <option value="date">По дате добавления</option>
+        <option value="rating">По средней оценке</option>
       </select>
       
-      <input type="text" id="searchInput" placeholder="🔍 Найти по автору или названию...">
+      <input type="text" id="searchInput" placeholder="🔍 Поиск по автору..." aria-label="Поиск по автору">
       
       <div class="cache-section">
-        <span id="cacheIndicator">Актуально</span>
-        <button id="refreshBtn" class="btn btn-secondary" style="padding:6px 10px; font-size:12px;">Обновить</button>
+        <button id="refreshBtn" class="btn btn-secondary" style="padding:8px 12px; min-width:auto;" title="Обновить данные" aria-label="Обновить данные">🔄</button>
+        <div class="cache-info">
+          <div id="cacheIndicator" style="font-size:0.8rem;"></div>
+        </div>
       </div>
     </div>
 
-    <!-- Галерея -->
     <div id="gallery" class="gallery">
-      <!-- Скелетоны для загрузки -->
-      <div class="skin-card" style="height:320px; pointer-events:none;"><div class="skeleton"></div></div>
-      <div class="skin-card" style="height:320px; pointer-events:none;"><div class="skeleton"></div></div>
-      <div class="skin-card" style="height:320px; pointer-events:none;"><div class="skeleton"></div></div>
-      <div class="skin-card" style="height:320px; pointer-events:none;"><div class="skeleton"></div></div>
+      <!-- Skeleton loaders -->
     </div>
   </div>
 
-  <!-- Модальное окно Инфо -->
-  <div id="infoModal">
-    <div class="modal-content">
-      <button class="close-modal" id="closeModal">×</button>
-      <h2 style="color:var(--accent); margin-top:0;">Как мы оцениваем?</h2>
-      <p>Мы используем 90-балльную шкалу RZT, адаптированную под скины.</p>
-      <ul style="line-height:1.6; padding-left:20px; color:#ccc;">
-        <li><strong>Лайн / Образ (10)</strong>: Идея и детализация.</li>
-        <li><strong>Палитра (10)</strong>: Подбор и сочетание цветов.</li>
-        <li><strong>Техника (10)</strong>: Качество исполнения, шейдинг.</li>
-        <li><strong>Стиль (10)</strong>: Уникальность автора.</li>
-      </ul>
-      <p style="color:var(--muted); font-size:0.9rem;">Итоговый балл умножается на коэффициент "Вайба" (до 2.0x).</p>
+  <!-- Модальное окно -->
+  <div id="infoModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px);" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div style="background:var(--card); border-radius:16px; padding:24px; max-width:700px; width:100%; max-height:80vh; overflow-y:auto; border:1px solid rgba(138,43,226,0.2); box-shadow:0 8px 32px rgba(0,0,0,0.6); position:relative;">
+      <button id="closeModal" style="position:absolute; top:12px; right:12px; width:32px; height:32px; background:rgba(255,255,255,0.08); border:none; border-radius:8px; cursor:pointer; font-size:1.5rem; color:var(--text); transition:all 0.2s ease; display:flex; align-items:center; justify-content:center;" aria-label="Закрыть модальное окно">×</button>
+      <h2 id="modalTitle" style="margin:0 0 16px 0; font-size:1.5rem; color:var(--accent); font-weight:800; letter-spacing:-0.5px;">Система оценивания</h2>
+      <p style="line-height:1.7; color:var(--muted); margin:0 0 12px 0;">При оценивании используется система на основе 90 балльной шкалы. Система состоит из 4 числовых критериев и 1 множитель.</p>
+      
+      <h3 style="margin:16px 0 8px 0; font-size:1.1rem; color:var(--text); font-weight:700; letter-spacing:-0.2px;">Лайн / Образ (1-10)</h3>
+      <p style="line-height:1.7; color:var(--muted); margin:0 0 12px 0;">Оценивается общая идея лайна, его реализация, оригинальность и интересность деталей.</p>
+      
+      <h3 style="margin:16px 0 8px 0; font-size:1.1rem; color:var(--text); font-weight:700; letter-spacing:-0.2px;">Палитра (1-10)</h3>
+      <p style="line-height:1.7; color:var(--muted); margin:0 0 12px 0;">Оценивается подбор цветов, их сочетание и общая приятность для глаза.</p>
+      
+      <h3 style="margin:16px 0 8px 0; font-size:1.1rem; color:var(--text); font-weight:700; letter-spacing:-0.2px;">Реализация / Шейд (1-10)</h3>
+      <p style="line-height:1.7; color:var(--muted); margin:0 0 12px 0;">Оценивается качество реализации идеи и уместность шейдинга.</p>
+      
+      <h3 style="margin:16px 0 8px 0; font-size:1.1rem; color:var(--text); font-weight:700; letter-spacing:-0.2px;">Айдентика / Стилистика (1-10)</h3>
+      <p style="line-height:1.7; color:var(--muted); margin:0 0 12px 0;">Оценивается уникальность и узнаваемость стиля.</p>
+      
+      <h3 style="margin:16px 0 8px 0; font-size:1.1rem; color:var(--text); font-weight:700; letter-spacing:-0.2px;">Общее впечатление / Вайб (множитель 1-10)</h3>
+      <p style="line-height:1.7; color:var(--muted); margin:0 0 12px 0;">Субъективный множитель общего впечатления от скина.</p>
+      
+      <p style="margin-top:20px;padding:12px;background:rgba(138,43,226,0.12);border-radius:8px;border-left:3px solid var(--accent); line-height:1.7; color:var(--muted);"><strong>Итоговая формула:</strong><br>Балл = (Лайн + Палитра + Реализация + Стилистика) × 1.4 × Множитель_вайба<br><strong>Максимум: 90 баллов</strong></p>
     </div>
   </div>
+
+  <script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
 
   <script type="module">
-    // 1. FIREBASE IMPORTS
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, where, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
-    // 2. CONFIGURATION (ВСТАВЬТЕ СВОИ ДАННЫЕ ЕСЛИ ОНИ ОТЛИЧАЮТСЯ)
     const firebaseConfig = {
       apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
       authDomain: "skinsrzt.firebaseapp.com",
@@ -197,15 +194,17 @@
       appId: "1:1084042281569:web:25872944cf7dac7fd66020"
     };
 
-    // 3. INIT
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
     const storage = getStorage(app);
 
-    const ADMIN_EMAIL = "nmprokhorov@gmail.com"; // Email админа
+    const ADMIN_EMAIL = "nmprokhorov@gmail.com";
+    const CACHE_DURATION = 2 * 60 * 60 * 1000; // 2 часа
+    const CACHE_KEY_SKINS = 'skins_cache';
+    const CACHE_KEY_SCORES = 'skin_scores_cache';
+    const CACHE_KEY_TIMESTAMP = 'cache_timestamp';
     
-    // 4. DOM ELEMENTS
     const adminWrap = document.getElementById('adminWrap');
     const skinName = document.getElementById('skinName');
     const skinAuthor = document.getElementById('skinAuthor');
@@ -215,19 +214,77 @@
     const gallery = document.getElementById('gallery');
     const sortSelect = document.getElementById('sortSelect');
     const signBtn = document.getElementById('signBtn');
+    const infoBtn = document.getElementById('infoBtn');
+    const infoModal = document.getElementById('infoModal');
+    const closeModal = document.getElementById('closeModal');
     const refreshBtn = document.getElementById('refreshBtn');
+    const cacheIndicator = document.getElementById('cacheIndicator');
     const searchInput = document.getElementById('searchInput');
     const dropzone = document.getElementById('dropzone');
-    
-    let currentUser = null;
-    let allSkinsData = []; // Локальное хранение для поиска
+    const previewMini = document.getElementById('previewMini');
+    const previewImg = document.getElementById('previewImg');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
 
-    // 5. AUTH LOGIC
-    const provider = new GoogleAuthProvider();
+    let currentUser = null;
+    let skins = {};
+    let scores = {};
+    let searchTerm = '';
     
+    // Кэширование
+    function saveToCache(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch(e) {
+        console.log('Cache save error:', e);
+      }
+    }
+    
+    function loadFromCache(key) {
+      try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : null;
+      } catch(e) {
+        console.log('Cache load error:', e);
+        return null;
+      }
+    }
+    
+    function isCacheValid() {
+      const timestamp = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+      if (!timestamp) return false;
+      return (Date.now() - parseInt(timestamp)) < CACHE_DURATION;
+    }
+    
+    function updateCacheIndicator() {
+      const timestamp = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+      if (timestamp && isCacheValid()) {
+        const date = new Date(parseInt(timestamp));
+        cacheIndicator.textContent = `Данные от ${date.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'})}`;
+      } else {
+        cacheIndicator.textContent = 'Актуальные данные';
+      }
+    }
+    
+    // Получение URL скина
+    function getSkinUrl(skin) {
+      if (skin.skinUrl) return skin.skinUrl;
+      if (skin.skinData) return skin.skinData;
+      return '/assets/placeholder.png';
+    }
+
+    // Модальное окно
+    infoBtn.addEventListener('click', () => { infoModal.style.display = 'flex'; });
+    closeModal.addEventListener('click', () => { infoModal.style.display = 'none'; });
+    infoModal.addEventListener('click', (e) => { if (e.target === infoModal) infoModal.style.display = 'none'; });
+
+    // Авторизация
+    const provider = new GoogleAuthProvider();
     signBtn.addEventListener('click', async () => {
       if (!currentUser) {
-        try { await signInWithPopup(auth, provider); } catch(e){ alert(e.message); }
+        try { await signInWithPopup(auth, provider); } 
+        catch(e){ alert('Ошибка входа: ' + e.message); }
       } else {
         await signOut(auth);
       }
@@ -235,172 +292,67 @@
 
     onAuthStateChanged(auth, user => {
       currentUser = user;
-      signBtn.textContent = user ? 'Выйти' : 'Войти';
-      // Показываем админку только если email совпадает
-      if (user && user.email === ADMIN_EMAIL) {
-        adminWrap.classList.remove('hidden');
-      } else {
-        adminWrap.classList.add('hidden');
-      }
+      signBtn.textContent = user ? 'Выйти (' + (user.email || user.displayName || '') + ')' : 'Войти';
+      adminWrap.classList.toggle('hidden', !(user && user.email === ADMIN_EMAIL));
     });
 
-    // 6. UPLOAD LOGIC
-    fileInput.addEventListener('change', handleFileSelect);
+    // Drag and drop
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleFileSelect(file);
+    });
     
-    function handleFileSelect(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                document.getElementById('previewImg').src = ev.target.result;
-                document.getElementById('previewMini').style.display = 'block';
-            }
-            reader.readAsDataURL(file);
-        }
-    }
-
-    addBtn.addEventListener('click', async () => {
-      if (!currentUser) return;
-      const file = fileInput.files[0];
-      const nameVal = skinName.value.trim();
-      const authorVal = skinAuthor.value.trim();
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) handleFileSelect(file);
+    });
+    
+    function handleFileSelect(file) {
+      if (!file.type.includes('png') && !file.type.includes('jpeg')) {
+        alert('Только PNG и JPEG файлы');
+        return;
+      }
+      if (file.size > 1024 * 1024) {
+        alert('Максимальный размер файла: 1MB');
+        return;
+      }
       
-      if (!file || !nameVal || !authorVal) {
-          adminMsg.textContent = "❌ Заполните все поля!";
-          return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        previewMini.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Добавление скина (загрузка в Storage)
+    addBtn.addEventListener('click', async () => {
+      adminMsg.textContent = '';
+      if (!currentUser || currentUser.email !== ADMIN_EMAIL) { 
+        adminMsg.textContent = 'Требуется вход админа'; 
+        return; 
       }
-
-      addBtn.disabled = true;
-      adminMsg.textContent = "⏳ Загрузка...";
-      document.getElementById('uploadProgress').style.display = 'block';
-
+      
+      const name = (skinName.value || '').trim();
+      const author = (skinAuthor.value || '').trim();
+      const file = fileInput.files[0];
+      
+      if (!name) { adminMsg.textContent = 'Введите название скина'; return; }
+      if (!author) { adminMsg.textContent = 'Введите автора'; return; }
+      if (!file) { adminMsg.textContent = 'Выберите файл'; return; }
+      
       try {
-          // Загрузка файла
-          const storageRef = ref(storage, `skins/${Date.now()}_${file.name}`);
-          const uploadTask = uploadBytesResumable(storageRef, file);
-
-          uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                document.getElementById('progressFill').style.width = progress + '%';
-                document.getElementById('progressText').textContent = `Загрузка: ${Math.round(progress)}%`;
-            }, 
-            (error) => { throw error; }, 
-            async () => {
-                // Файл загружен, получаем URL и пишем в БД
-                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                
-                await addDoc(collection(db, "skins"), {
-                    skinName: nameVal,
-                    authorName: authorVal,
-                    skinUrl: downloadURL,
-                    createdAt: serverTimestamp(),
-                    views: 0,
-                    totalScore: 0
-                });
-
-                // Сброс формы
-                skinName.value = '';
-                skinAuthor.value = '';
-                fileInput.value = '';
-                document.getElementById('previewMini').style.display = 'none';
-                document.getElementById('uploadProgress').style.display = 'none';
-                adminMsg.textContent = "✅ Скин добавлен!";
-                addBtn.disabled = false;
-                setTimeout(() => adminMsg.textContent = '', 3000);
-            }
-          );
-      } catch (e) {
-          console.error(e);
-          adminMsg.textContent = "❌ Ошибка: " + e.message;
-          addBtn.disabled = false;
-      }
-    });
-
-    // 7. GALLERY LOGIC (REALTIME)
-    function renderGallery(data) {
-        gallery.innerHTML = '';
+        uploadProgress.style.display = 'block';
+        addBtn.disabled = true;
         
-        if (data.length === 0) {
-            gallery.innerHTML = '<div class="empty-msg">Ничего не найдено</div>';
-            return;
-        }
-
-        data.forEach(skin => {
-             const card = document.createElement('a');
-             card.href = `skin-view.html?id=${skin.id}`;
-             card.className = 'skin-card';
-             
-             const score = skin.totalScore ? Math.round(skin.totalScore) : '?';
-             
-             card.innerHTML = `
-                <div class="skin-preview">
-                    <img src="${skin.skinUrl}" loading="lazy" alt="${skin.skinName}">
-                    <div class="card-stats-overlay">
-                        <span>👁️ ${skin.views || 0}</span>
-                    </div>
-                </div>
-                <div class="skin-info">
-                    <h3 class="skin-name">${skin.skinName}</h3>
-                    <div class="skin-author">${skin.authorName}</div>
-                    
-                    <div class="card-footer">
-                         <div class="score-badge">${score}</div>
-                         <div class="play-btn">➜</div>
-                    </div>
-                </div>
-             `;
-             gallery.appendChild(card);
-        });
-    }
-
-    // Подписка на обновления
-    const q = query(collection(db, "skins"), orderBy("createdAt", "desc"));
-    onSnapshot(q, (snapshot) => {
-        allSkinsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        applyFilters(); // Применяем текущие фильтры при обновлении данных
-    });
-
-    // Поиск и Сортировка
-    function applyFilters() {
-        let result = [...allSkinsData];
-        const term = searchInput.value.toLowerCase();
-        const sortType = sortSelect.value;
-
-        // Поиск
-        if (term) {
-            result = result.filter(s => 
-                (s.skinName && s.skinName.toLowerCase().includes(term)) || 
-                (s.authorName && s.authorName.toLowerCase().includes(term))
-            );
-        }
-
-        // Сортировка
-        if (sortType === 'rating') {
-            result.sort((a, b) => (b.totalScore || 0) - (a.totalScore || 0));
-        } else {
-            // По дате (уже отсортировано по умолчанию Firebase, но на всякий случай)
-            // (для простоты оставляем порядок как пришел, так как запрос уже с orderBy)
-        }
-        
-        renderGallery(result);
-    }
-
-    searchInput.addEventListener('input', applyFilters);
-    sortSelect.addEventListener('change', applyFilters);
-    refreshBtn.addEventListener('click', () => location.reload());
-
-    // Modal Logic
-    const infoBtn = document.getElementById('infoBtn');
-    const infoModal = document.getElementById('infoModal');
-    const closeModalBtn = document.getElementById('closeModal');
-
-    infoBtn.addEventListener('click', () => infoModal.style.display = 'flex');
-    closeModalBtn.addEventListener('click', () => infoModal.style.display = 'none');
-    infoModal.addEventListener('click', (e) => {
-        if (e.target === infoModal) infoModal.style.display = 'none';
-    });
-
-  </script>
-</body>
-</html>
+        // Создаем документ сначала
+        const docRef = doc(collection(db, 'skins'));
+        const docId = docRef
