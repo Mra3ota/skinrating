@@ -408,7 +408,8 @@
       const rest = arr.slice(3);
 
       podiumWrap.innerHTML = '';
-      podiumSection.style.display = top3.length ? 'flex' : 'none';
+      // Fix: use block instead of flex so the title stays above
+      podiumSection.style.display = top3.length ? 'block' : 'none';
       
       top3.forEach((it, idx) => {
         const place = idx + 1;
