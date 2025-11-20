@@ -151,7 +151,8 @@
       apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
       authDomain: "skinsrzt.firebaseapp.com",
       projectId: "skinsrzt",
-      storageBucket: "skinsrzt.appspot.com",
+      // UPDATE: Новый бакет Storage
+      storageBucket: "skinsrzt.firebasestorage.app",
       messagingSenderId: "1084042281569",
       appId: "1:1084042281569:web:25872944cf7dac7fd66020"
     };
@@ -162,7 +163,7 @@
 
     const urlParams = new URLSearchParams(location.search);
     const skinId = urlParams.get('id');
-    if (!skinId) { alert('id скина не указан'); throw new Error('no id'); }
+    if (!skinId) { window.location.href = 'results.html'; }
 
     const MEDALS = ['🥇', '🥈', '🥉'];
 
@@ -205,43 +206,63 @@
     });
 
     let skinDoc = null;
+    
     async function loadSkin(){
-      const docRef = doc(db, 'contest_entries', skinId);
-      const snap = await getDoc(docRef);
-      if (!snap.exists()) { alert('Скин не найден'); return; }
-      skinDoc = { id: snap.id, ...snap.data() };
-      authorTitle.textContent = 'Автор: ' + (skinDoc.authorName || '—');
-      initViewer(skinDoc.skinData);
-      await loadScoresOnce();
-      addRefreshButton();
+      try {
+        const docRef = doc(db, 'contest_entries', skinId);
+        const snap = await getDoc(docRef);
+        if (!snap.exists()) { alert('Скин не найден'); return; }
+        skinDoc = { id: snap.id, ...snap.data() };
+        
+        authorTitle.textContent = 'Автор: ' + (skinDoc.authorName || '—');
+        
+        // UPDATE: Поддержка и URL, и Base64
+        const skinSrc = skinDoc.skinUrl || skinDoc.skinData;
+        initViewer(skinSrc);
+        
+        await loadScoresOnce();
+        addRefreshButton();
+      } catch(e) {
+        console.error(e);
+        alert('Ошибка загрузки: ' + e.message);
+      }
     }
 
     let viewerInstance = null;
-    function initViewer(skinDataUrl){
+    
+    function initViewer(skinSrc){
       viewerWrap.innerHTML = '<div id="medalBig" class="medal-big"></div>';
       const canvas = document.createElement('canvas');
       canvas.style.width = '100%';
       canvas.style.height = '100%';
       viewerWrap.appendChild(canvas);
+      
       try {
         viewerInstance = new skinview3d.SkinViewer({
           canvas: canvas,
-          width: canvas.clientWidth,
-          height: canvas.clientHeight,
-          skin: skinDataUrl || ''
+          width: viewerWrap.clientWidth,
+          height: viewerWrap.clientHeight,
+          skin: skinSrc
         });
+        
         viewerInstance.autoRotate = true;
         viewerInstance.autoRotateSpeed = 0.5;
+        viewerInstance.camera.position.set(0, 20, 50);
+        
       } catch(e) {
-        viewerWrap.innerHTML = `<div id="medalBig" class="medal-big"></div><img src="${skinDataUrl||''}" style="width:100%;height:100%;object-fit:contain" />`;
+        console.error(e);
+        // Fallback с CORS
+        const img = document.createElement('img');
+        img.crossOrigin = "anonymous"; 
+        img.src = skinSrc;
+        img.style.cssText = "width:100%;height:100%;object-fit:contain";
+        viewerWrap.appendChild(img);
       }
     }
 
-    // слушаем contest_scores для этого скина - ОПТИМИЗИРОВАНО
     let scoreDocs = [];
-    let judgesCache = {}; // Кеш для имен судей
-    let usersCache = {}; // Кеш для ников из users
-    let scoresUnsubscribe = null;
+    let judgesCache = {};
+    let usersCache = {};
     
     async function loadScoresOnce(){
       try {
@@ -250,31 +271,23 @@
         scoreDocs = [];
         snap.forEach(d => scoreDocs.push({ id: d.id, ...d.data() }));
         
-        // Загружаем имена судей из коллекции judges И ники из users
         for (const score of scoreDocs) {
           if (score.judgeId) {
-            // Загружаем из judges
             if (!judgesCache[score.judgeId]) {
               try {
                 const judgeDoc = await getDoc(doc(db, 'judges', score.judgeId));
                 if (judgeDoc.exists()) {
                   judgesCache[score.judgeId] = judgeDoc.data().name || null;
                 }
-              } catch(e) {
-                console.log('Не удалось загрузить имя судьи из judges:', e);
-              }
+              } catch(e) { console.log('Err loading judge:', e); }
             }
-            
-            // Загружаем ник из users
             if (!usersCache[score.judgeId]) {
               try {
                 const userDoc = await getDoc(doc(db, 'users', score.judgeId));
                 if (userDoc.exists()) {
                   usersCache[score.judgeId] = userDoc.data().displayName || null;
                 }
-              } catch(e) {
-                console.log('Не удалось загрузить ник из users:', e);
-              }
+              } catch(e) { console.log('Err loading user:', e); }
             }
           }
         }
@@ -286,7 +299,6 @@
       }
     }
     
-    // Кнопка обновления оценок
     function addRefreshButton() {
       const refreshBtn = document.createElement('button');
       refreshBtn.className = 'btn';
@@ -316,11 +328,9 @@
         scoresList.innerHTML = '';
         scoreDocs.sort((a,b)=> (b.total||0)-(a.total||0));
         scoreDocs.forEach(s => {
-          // Приоритет: ник из users > имя из judges > judgeName > 'Судья'
           const userNick = usersCache[s.judgeId];
           const judgeName = judgesCache[s.judgeId];
           const fallbackName = s.judgeName || 'Судья';
-          
           const displayName = userNick || judgeName || fallbackName;
           
           const div = document.createElement('div');
@@ -368,7 +378,6 @@
       const cur = all.find(x=>x.id===skinId) || { avgCeil:0, avgRaw:0, sum:0 };
       placeLine.textContent = `📍 Место: ${place} • ⭐ Средний балл: ${cur.avgCeil} / 90 • 👥 Оценок: ${scoreDocs.length}`;
       
-      // Показываем медаль и бейдж для топ-3
       if (place >= 1 && place <= 3) {
         medalBig.textContent = MEDALS[place-1];
         placeBadge.textContent = `${place} место`;
@@ -390,16 +399,13 @@
       try {
         const judgeDoc = await getDoc(doc(db, 'judges', currentUser.uid));
         if (judgeDoc.exists()) {
-          // Загружаем ник из users
           let displayName = judgeDoc.data().name || currentUser.displayName || '';
           try {
             const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
             if (userDoc.exists() && userDoc.data().displayName) {
               displayName = userDoc.data().displayName;
             }
-          } catch(e) {
-            console.log('Не удалось загрузить ник из users:', e);
-          }
+          } catch(e) { console.log(e); }
           
           judgeControls.innerHTML = `<div style="padding:10px;background:rgba(138,43,226,0.1);border-radius:8px;border:1px solid rgba(138,43,226,0.3);"><div class="small">✅ Вы — судья (${escapeHtml(displayName)})</div><button id="toggleEval" class="btn" style="margin-top:10px;width:100%;">📝 Оценить скин</button></div>`;
           document.getElementById('toggleEval').addEventListener('click', ()=>{
@@ -438,10 +444,7 @@
       }
     }
 
-    const vibeMultiplier = {
-      1: 1, 2: 1.0675, 3: 1.1349, 4: 1.2024, 5: 1.2699,
-      6: 1.3373, 7: 1.4048, 8: 1.4723, 9: 1.5397, 10: 1.6072
-    };
+    const vibeMultiplier = { 1: 1, 2: 1.0675, 3: 1.1349, 4: 1.2024, 5: 1.2699, 6: 1.3373, 7: 1.4048, 8: 1.4723, 9: 1.5397, 10: 1.6072 };
 
     function calculateTotalFromSliders() {
       const line = Number(lineIn.value || 0);
@@ -500,9 +503,7 @@
         const q = query(collection(db, 'contest_scores'), where('skinId','==', skinId), where('judgeId','==', currentUser.uid));
         const snaps = await getDocs(q);
         
-        // Получаем имя судьи: приоритет - ник из users > имя из judges > displayName > email
         let judgeName = currentUser.displayName || currentUser.email || 'Судья';
-        
         try {
           const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
           if (userDoc.exists() && userDoc.data().displayName) {
@@ -513,9 +514,7 @@
               judgeName = judgeDoc.data().name;
             }
           }
-        } catch(e) {
-          console.log('Не удалось загрузить имя судьи:', e);
-        }
+        } catch(e) { console.log(e); }
         
         if (!snaps.empty) {
           const docRef = snaps.docs[0].ref;
