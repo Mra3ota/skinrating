@@ -14,7 +14,7 @@
   body{ margin:0; font-family:Inter,Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:22px; }
   .wrap{ max-width:1200px; margin:0 auto; }
   
-  /* SVG Icons base style */
+  /* SVG Icons */
   .icon { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
   .icon-sm { width: 14px; height: 14px; }
   
@@ -25,6 +25,7 @@
 
   .btn{ background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; font-weight:700; cursor:pointer; border: none; transition: all 0.3s ease; font-size:0.9rem; display:inline-flex; align-items:center; gap: 8px; }
   .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(138,43,226,0.4); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
   .btn-secondary{ background:#1f1f28; border: 1px solid rgba(255,255,255,0.08); }
   .btn-secondary:hover{ background:#2a2a35; box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
   .btn-danger{ background:rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
@@ -45,8 +46,10 @@
   }
   .contest-card:hover { transform: translateY(-6px); border-color: rgba(138,43,226,0.4); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
   
-  .card-cover { height: 150px; background: #1a1a22; position: relative; overflow: hidden; }
-  .card-cover-gradient { width: 100%; height: 100%; background: linear-gradient(135deg, #2a2a35 0%, #1a1a22 100%); }
+  .card-cover { height: 160px; background: #1a1a22; position: relative; overflow: hidden; }
+  .card-cover img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+  .contest-card:hover .card-cover img { transform: scale(1.05); }
+  .card-cover-gradient { width: 100%; height: 100%; background: linear-gradient(135deg, #2a2a35 0%, #1a1a22 100%); position: absolute; top: 0; left: 0; }
   
   .card-status {
     position: absolute; top: 12px; left: 12px; padding: 6px 10px; border-radius: 6px;
@@ -78,7 +81,7 @@
   /* Modal */
   .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
   .modal.active { display:flex; }
-  .modal-content { background:var(--card); border-radius:16px; padding:28px; max-width:500px; width:100%; border:1px solid rgba(138,43,226,0.2); box-shadow:0 8px 32px rgba(0,0,0,0.6); animation: modalPop 0.3s ease; }
+  .modal-content { background:var(--card); border-radius:16px; padding:28px; max-width:500px; width:100%; border:1px solid rgba(138,43,226,0.2); box-shadow:0 8px 32px rgba(0,0,0,0.6); animation: modalPop 0.3s ease; max-height: 90vh; overflow-y: auto; }
   @keyframes modalPop { from{transform:scale(0.95);opacity:0;} to{transform:scale(1);opacity:1;} }
   
   .modal h2 { margin:0 0 20px 0; font-size:1.4rem; color:var(--accent); }
@@ -94,6 +97,19 @@
   .form-textarea { resize: vertical; min-height: 80px; }
   .form-row { display: flex; gap: 12px; }
   .form-row > div { flex: 1; }
+
+  /* File Input Styling */
+  .file-upload-box {
+    border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 12px;
+    text-align: center; background: rgba(255,255,255,0.02); transition: all 0.3s;
+  }
+  .file-upload-box:hover { border-color: var(--accent); background: rgba(138,43,226,0.05); }
+  .preview-img { width: 100%; height: 140px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; display: none; border: 1px solid rgba(255,255,255,0.1); }
+  .preview-img.visible { display: block; }
+  .upload-label { cursor: pointer; display: inline-block; font-size: 0.9rem; color: var(--accent); font-weight: 600; }
+  
+  .progress-bar-wrap { height: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 8px; overflow: hidden; display: none; }
+  .progress-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
 
   .fade-in { animation: fadeInUp 0.5s forwards; opacity: 0; }
   @keyframes fadeInUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
@@ -146,6 +162,22 @@
   <div id="modal" class="modal">
     <div class="modal-content">
       <h2 id="modalTitle">Конкурс</h2>
+      
+      <!-- ВОТ ЭТОТ БЛОК ТЫ ДОЛЖЕН ВИДЕТЬ В МОДАЛКЕ -->
+      <div class="form-group">
+        <label>Обложка</label>
+        <div class="file-upload-box">
+          <img id="imgPreview" class="preview-img">
+          <label for="inpFile" class="upload-label">
+            <svg class="icon" style="vertical-align:middle;margin-right:4px" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Нажмите для выбора файла
+          </label>
+          <input type="file" id="inpFile" accept="image/*" style="display:none">
+          <div id="progressWrap" class="progress-bar-wrap"><div id="progressFill" class="progress-bar-fill"></div></div>
+        </div>
+      </div>
+      <!-- КОНЕЦ БЛОКА ОБЛОЖКИ -->
+
       <div class="form-group">
         <label>Название</label>
         <input type="text" id="inpTitle" class="form-input" placeholder="Например: Halloween 2025">
@@ -182,6 +214,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
@@ -195,6 +228,7 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
+    const storage = getStorage(app);
     const ADMIN_EMAIL = "nmprokhorov@gmail.com";
 
     const activeGrid = document.getElementById('activeGrid');
@@ -210,11 +244,17 @@
     const inpStatus = document.getElementById('inpStatus');
     const inpDate = document.getElementById('inpDate');
     const inpLink = document.getElementById('inpLink');
+    const inpFile = document.getElementById('inpFile');
+    const imgPreview = document.getElementById('imgPreview');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressFill = document.getElementById('progressFill');
+    
     const saveBtn = document.getElementById('saveBtn');
     const closeModal = document.getElementById('closeModal');
 
     let currentUser = null;
     let currentEditId = null;
+    let currentImageUrl = null; // Хранит URL текущей картинки при редактировании
 
     // Auth
     const provider = new GoogleAuthProvider();
@@ -234,7 +274,6 @@
         signBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg> Войти`;
       }
       
-      // Show admin controls
       const isAdmin = user && user.email === ADMIN_EMAIL;
       createBtn.classList.toggle('hidden', !isAdmin);
       document.querySelectorAll('.admin-controls').forEach(el => {
@@ -253,9 +292,6 @@
     function render(list) {
       activeGrid.innerHTML = '';
       pastGrid.innerHTML = '';
-      
-      // Сортировка: Активные сначала по дате создания, Прошедшие тоже
-      // Можно добавить логику сортировки, если нужно
       
       let activeCount = 0;
       let pastCount = 0;
@@ -285,10 +321,16 @@
         
         const btnText = isActive ? 'Участвовать' : 'Смотреть итоги';
         
+        // Logic for cover image vs gradient
+        let coverContent = '<div class="card-cover-gradient"></div>';
+        if (c.imageUrl) {
+            coverContent = `<img src="${c.imageUrl}" alt="Обложка" onerror="this.style.display='none'">`;
+        }
+
         card.innerHTML = `
           ${adminHtml}
           <div class="card-cover">
-            <div class="card-cover-gradient"></div>
+            ${coverContent}
             ${statusBadge}
           </div>
           <div class="card-body">
@@ -306,28 +348,20 @@
           </div>
         `;
 
-        // Edit click
         card.querySelector('.btn-edit').addEventListener('click', (e) => {
           e.stopPropagation();
           openModal(c);
         });
-        // Delete click
         card.querySelector('.btn-del').addEventListener('click', async (e) => {
           e.stopPropagation();
           if(confirm('Удалить конкурс безвозвратно?')) {
             await deleteDoc(doc(db, 'contests', c.id));
           }
         });
-        // Card click
         card.addEventListener('click', (e) => {
-          // Don't trigger if clicking admin controls
           if (e.target.closest('.admin-controls')) return;
-          
-          if (c.link && c.link !== '#') {
-             window.location.href = c.link;
-          } else {
-             alert('Ссылка еще не настроена');
-          }
+          if (c.link && c.link !== '#') window.location.href = c.link;
+          else alert('Ссылка еще не настроена');
         });
 
         target.appendChild(card);
@@ -338,27 +372,54 @@
       if(pastCount === 0) pastGrid.innerHTML = '<div class="empty-msg">Архив пуст.</div>';
     }
 
-    // Modal Logic
+    // Modal & File Handling
+    inpFile.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if(file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                imgPreview.src = ev.target.result;
+                imgPreview.classList.add('visible');
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
     createBtn.addEventListener('click', () => openModal());
     closeModal.addEventListener('click', () => modal.classList.remove('active'));
     
     function openModal(data = null) {
+      // Reset fields
+      progressWrap.style.display = 'none';
+      progressFill.style.width = '0%';
+      inpFile.value = '';
+
       if (data) {
         currentEditId = data.id;
+        currentImageUrl = data.imageUrl || null;
         modalTitle.textContent = 'Редактировать';
         inpTitle.value = data.title;
         inpDesc.value = data.description;
         inpStatus.value = data.status;
         inpDate.value = data.dateLabel;
         inpLink.value = data.link;
+        
+        if (currentImageUrl) {
+            imgPreview.src = currentImageUrl;
+            imgPreview.classList.add('visible');
+        } else {
+            imgPreview.classList.remove('visible');
+        }
       } else {
         currentEditId = null;
+        currentImageUrl = null;
         modalTitle.textContent = 'Новый конкурс';
         inpTitle.value = '';
         inpDesc.value = '';
         inpStatus.value = 'active';
         inpDate.value = '';
         inpLink.value = '';
+        imgPreview.classList.remove('visible');
       }
       modal.classList.add('active');
     }
@@ -367,28 +428,61 @@
       const title = inpTitle.value.trim();
       if (!title) return alert('Введите название');
       
-      const payload = {
-        title,
-        description: inpDesc.value.trim(),
-        status: inpStatus.value,
-        dateLabel: inpDate.value.trim(),
-        link: inpLink.value.trim(),
-        updatedAt: serverTimestamp()
-      };
-
       saveBtn.disabled = true;
+      saveBtn.textContent = 'Загрузка...';
+
       try {
+        let finalImageUrl = currentImageUrl;
+
+        // 1. Upload Image if selected
+        const file = inpFile.files[0];
+        if (file) {
+            progressWrap.style.display = 'block';
+            const storageRef = ref(storage, `contest-covers/${Date.now()}_${file.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, file);
+            
+            await new Promise((resolve, reject) => {
+                uploadTask.on('state_changed', 
+                    (snap) => {
+                        const progress = (snap.bytesTransferred / snap.totalBytes) * 100;
+                        progressFill.style.width = progress + '%';
+                    },
+                    (error) => reject(error),
+                    async () => {
+                        finalImageUrl = await getDownloadURL(uploadTask.snapshot.ref);
+                        resolve();
+                    }
+                );
+            });
+        }
+
+        // 2. Prepare Payload
+        const payload = {
+          title,
+          description: inpDesc.value.trim(),
+          status: inpStatus.value,
+          dateLabel: inpDate.value.trim(),
+          link: inpLink.value.trim(),
+          imageUrl: finalImageUrl,
+          updatedAt: serverTimestamp()
+        };
+
+        // 3. Save to Firestore
         if (currentEditId) {
           await updateDoc(doc(db, 'contests', currentEditId), payload);
         } else {
           payload.createdAt = serverTimestamp();
           await addDoc(collection(db, 'contests'), payload);
         }
+        
         modal.classList.remove('active');
       } catch(e) {
+        console.error(e);
         alert('Ошибка: ' + e.message);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = 'Сохранить';
       }
-      saveBtn.disabled = false;
     });
 
     function escapeHtml(s) { return s ? String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
