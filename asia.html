@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="icon" href="data:,">
+<title>Asia Festival — Contest</title>
+<style>
+  :root {
+    --bg: #050505;
+    --glass: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --text: #eaeaf2;
+    --muted: #888899;
+    /* Азиатская палитра: Неоновая сакура */
+    --sakura: #ffb7c5;
+    --neon-pink: #ff0055;
+    --accent: #8a2be2;
+  }
+
+  * { box-sizing: border-box; }
+  
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 20px;
+    min-height: 100vh;
+    /* Абстрактный фон для эффекта стекла */
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.15), transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(255, 0, 85, 0.1), transparent 25%);
+    background-attachment: fixed;
+  }
+
+  .wrap { max-width: 1400px; margin: 0 auto; position: relative; z-index: 2; }
+
+  /* --- HEADER --- */
+  header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 40px; padding: 20px;
+    background: rgba(20, 20, 25, 0.4);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+  }
+
+  h1 {
+    margin: 0; font-size: 1.8rem; font-weight: 900; letter-spacing: -1px;
+    background: linear-gradient(90deg, #fff, var(--sakura));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .btn {
+    background: linear-gradient(135deg, var(--accent), #b042ff);
+    color: #fff; padding: 10px 20px; border-radius: 12px;
+    text-decoration: none; font-weight: 700; cursor: pointer; border: none;
+    transition: all 0.3s ease; font-size: 0.95rem;
+    box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(138, 43, 226, 0.5); }
+  .btn-ghost { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); box-shadow: none; }
+  .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+
+  /* --- ADMIN PANEL --- */
+  .admin-panel {
+    background: rgba(255, 0, 85, 0.05); border: 1px dashed var(--neon-pink);
+    border-radius: 20px; padding: 20px; margin-bottom: 30px;
+    display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
+  }
+  .admin-panel input {
+    background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+    padding: 10px 15px; border-radius: 10px; color: #fff;
+  }
+  .hidden { display: none !important; }
+
+  /* --- GRID --- */
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
+  }
+
+  .card {
+    background: var(--glass);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  
+  .card:hover {
+    transform: translateY(-10px) scale(1.02);
+    border-color: var(--sakura);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.4), 0 0 20px rgba(255, 183, 197, 0.1);
+  }
+
+  /* Эффект блика на стекле */
+  .card::after {
+    content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transform: skewX(-25deg); transition: 0.5s; pointer-events: none;
+  }
+  .card:hover::after { left: 150%; transition: 0.7s; }
+
+  .preview-box {
+    width: 100%; aspect-ratio: 3/4;
+    background: rgba(0,0,0,0.2);
+    border-radius: 16px; overflow: hidden;
+    position: relative; margin-bottom: 15px;
+  }
+  .preview-box img { width: 100%; height: 100%; object-fit: contain; transition: 0.5s; }
+  .card:hover .preview-box img { transform: scale(1.1); }
+
+  .card-info h3 { margin: 0 0 5px 0; font-size: 1.1rem; }
+  .card-info p { margin: 0; font-size: 0.85rem; color: var(--muted); }
+  
+  .score-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
+    padding: 5px 10px; border-radius: 20px;
+    font-weight: 800; color: var(--sakura);
+    border: 1px solid rgba(255, 183, 197, 0.3);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  /* --- MODAL (SPA VIEW) --- */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);
+    z-index: 100; display: none;
+    align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s;
+  }
+  .modal-overlay.active { display: flex; opacity: 1; }
+
+  .modal-glass {
+    width: 90%; max-width: 1100px; height: 85vh;
+    background: rgba(20, 20, 25, 0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 30px;
+    display: grid; grid-template-columns: 1fr 350px;
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.8);
+    position: relative;
+    animation: modalUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes modalUp { from { transform: translateY(50px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+
+  .viewer-section { position: relative; background: #08080a; }
+  .details-section {
+    padding: 30px; border-left: 1px solid rgba(255,255,255,0.05);
+    display: flex; flex-direction: column;
+    background: rgba(255,255,255,0.01);
+  }
+
+  .close-btn {
+    position: absolute; top: 20px; right: 20px;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); border: none; color: #fff;
+    font-size: 1.5rem; cursor: pointer; z-index: 10;
+    display: flex; align-items: center; justify-content: center;
+    transition: 0.3s;
+  }
+  .close-btn:hover { background: var(--neon-pink); transform: rotate(90deg); }
+
+  /* Rating Controls */
+  .rating-wrap { margin-top: auto; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 16px; }
+  
+  input[type=range] {
+    width: 100%; -webkit-appearance: none; background: transparent; margin: 15px 0;
+  }
+  input[type=range]::-webkit-slider-runnable-track {
+    width: 100%; height: 6px; background: linear-gradient(90deg, #444, var(--sakura)); border-radius: 4px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
+    background: #fff; border: 4px solid var(--neon-pink); margin-top: -9px;
+    cursor: pointer; box-shadow: 0 0 15px var(--neon-pink); transition: 0.2s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+  .big-score {
+    font-size: 3rem; font-weight: 900; text-align: center;
+    background: linear-gradient(135deg, #fff, var(--sakura));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin: 10px 0;
+  }
+
+  @media (max-width: 900px) {
+    .modal-glass { grid-template-columns: 1fr; grid-template-rows: 1fr auto; height: 90vh; }
+    .details-section { padding: 20px; overflow-y: auto; }
+    .viewer-section { height: 300px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sakura-bg"></div>
+
+<div class="wrap">
+  <header>
+    <h1>
+      <span style="font-size:1.5em;">🌸</span> ASIA FESTIVAL
+    </h1>
+    <div style="display:flex; gap:10px;">
+      <a href="contests.html" class="btn btn-ghost">← Назад</a>
+      <button id="authBtn" class="btn">Войти</button>
+    </div>
+  </header>
+
+  <!-- Admin Panel -->
+  <div id="adminPanel" class="admin-panel hidden">
+    <strong style="width:100%;color:var(--neon-pink)">ПАНЕЛЬ ОРГАНИЗАТОРА</strong>
+    <input type="text" id="newAuthor" placeholder="Ник автора" style="flex:1">
+    <input type="file" id="newFile" accept="image/png" style="display:none">
+    <button onclick="document.getElementById('newFile').click()" class="btn btn-ghost">Выбрать файл</button>
+    <button id="addEntryBtn" class="btn">Добавить участника</button>
+    <span id="adminStatus" style="font-size:0.9rem; margin-left:10px;"></span>
+  </div>
+
+  <!-- Grid -->
+  <div id="grid" class="grid">
+    <!-- Cards will be here -->
+  </div>
+  <div id="loading" style="text-align:center; padding: 40px; color:var(--muted)">Загрузка фестиваля...</div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal-overlay">
+  <button class="close-btn" id="closeModal">×</button>
+  <div class="modal-glass">
+    <div class="viewer-section" id="viewerContainer"></div>
+    
+    <div class="details-section">
+      <h2 id="mAuthor" style="margin:0; font-size:2rem;">Author</h2>
+      <p style="color:var(--muted); margin-top:5px;">ASIA FESTIVAL ENTRY</p>
+      
+      <div style="margin-top:20px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+          <span>Судейская сумма:</span>
+          <strong id="mTotal" style="color:var(--sakura)">0</strong>
+        </div>
+        <div id="judgesList" style="font-size:0.85rem; color:var(--muted); max-height:150px; overflow-y:auto;">
+          <!-- Judges list -->
+        </div>
+      </div>
+
+      <div id="judgeControls" class="rating-wrap hidden">
+        <div style="text-align:center; font-weight:bold; margin-bottom:10px; color:var(--sakura)">ВАША ОЦЕНКА</div>
+        <div class="big-score" id="scoreDisplay">5</div>
+        <input type="range" id="scoreInput" min="1" max="10" value="5" step="1">
+        <button id="submitScore" class="btn" style="width:100%; margin-top:15px;">Подтвердить</button>
+      </div>
+      
+      <div id="judgeError" style="margin-top:auto; text-align:center; color:var(--muted); font-style:italic; padding:20px;" class="hidden">
+        Оценивание доступно только судьям.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, setDoc, updateDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+
+  const firebaseConfig = {
+      apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
+      authDomain: "skinsrzt.firebaseapp.com",
+      projectId: "skinsrzt",
+      storageBucket: "skinsrzt.firebasestorage.app",
+      messagingSenderId: "1084042281569",
+      appId: "1:1084042281569:web:25872944cf7dac7fd66020"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const storage = getStorage(app);
+  const ADMIN_EMAIL = "nmprokhorov@gmail.com";
+
+  let currentUser = null;
+  let isJudge = false;
+  let currentSkinId = null;
+  let viewer = null;
+
+  // DOM Elements
+  const grid = document.getElementById('grid');
+  const modal = document.getElementById('modal');
+  const viewerContainer = document.getElementById('viewerContainer');
+  const adminPanel = document.getElementById('adminPanel');
+  const authBtn = document.getElementById('authBtn');
+  
+  // --- AUTH ---
+  const provider = new GoogleAuthProvider();
+  authBtn.addEventListener('click', async () => {
+    if(!currentUser) await signInWithPopup(auth, provider);
+    else await signOut(auth);
+  });
+
+  onAuthStateChanged(auth, async user => {
+    currentUser = user;
+    authBtn.textContent = user ? 'Выйти' : 'Войти';
+    
+    if(user && user.email === ADMIN_EMAIL) adminPanel.classList.remove('hidden');
+    else adminPanel.classList.add('hidden');
+
+    if(user) {
+      // Check Judge
+      const snap = await getDoc(doc(db, 'judges', user.uid));
+      isJudge = snap.exists();
+    } else {
+      isJudge = false;
+    }
+    
+    if(currentSkinId) updateModalUI(); // Refresh modal if open
+  });
+
+  // --- DATA LOADING ---
+  let entries = [];
+  let scores = {};
+
+  // 1. Listen for Entries
+  onSnapshot(query(collection(db, 'asia_entries'), orderBy('createdAt', 'desc')), snap => {
+    entries = [];
+    snap.forEach(d => entries.push({id: d.id, ...d.data()}));
+    renderGrid();
+  });
+
+  // 2. Listen for Scores
+  onSnapshot(collection(db, 'asia_scores'), snap => {
+    scores = {};
+    snap.forEach(d => {
+      const s = d.data();
+      if(!scores[s.entryId]) scores[s.entryId] = [];
+      scores[s.entryId].push(s);
+    });
+    renderGrid(); // Re-render to update badges
+    if(currentSkinId) updateModalStats(currentSkinId); // Update modal live
+  });
+
+  function renderGrid() {
+    document.getElementById('loading').style.display = 'none';
+    grid.innerHTML = '';
+    
+    // Sort by Total Score
+    const sorted = [...entries].map(e => {
+        const entryScores = scores[e.id] || [];
+        const total = entryScores.reduce((acc, cur) => acc + cur.score, 0);
+        return { ...e, total };
+    }).sort((a,b) => b.total - a.total);
+
+    sorted.forEach(e => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="score-badge">${e.total}</div>
+        <div class="preview-box">
+          <img src="${e.skinUrl}" crossOrigin="anonymous" loading="lazy">
+        </div>
+        <div class="card-info">
+          <h3>${escapeHtml(e.authorName)}</h3>
+          <p>Asia Festival</p>
+        </div>
+      `;
+      card.addEventListener('click', () => openModal(e));
+      grid.appendChild(card);
+    });
+  }
+
+  // --- MODAL LOGIC ---
+  function openModal(entry) {
+    currentSkinId = entry.id;
+    modal.classList.add('active');
+    document.getElementById('mAuthor').textContent = entry.authorName;
+    
+    // Init 3D
+    if(viewer) viewer.dispose();
+    viewerContainer.innerHTML = '';
+    const canvas = document.createElement('canvas');
+    canvas.style.width = '100%'; canvas.style.height = '100%';
+    viewerContainer.appendChild(canvas);
+    
+    viewer = new skinview3d.SkinViewer({
+      canvas: canvas,
+      width: viewerContainer.clientWidth,
+      height: viewerContainer.clientHeight,
+      skin: entry.skinUrl
+    });
+    viewer.width = viewerContainer.clientWidth;
+    viewer.height = viewerContainer.clientHeight;
+    viewer.autoRotate = true;
+    viewer.autoRotateSpeed = 0.5;
+    viewer.camera.position.set(0, 20, 50);
+
+    updateModalUI();
+    updateModalStats(entry.id);
+  }
+
+  function updateModalUI() {
+    const controls = document.getElementById('judgeControls');
+    const error = document.getElementById('judgeError');
+    const input = document.getElementById('scoreInput');
+    const disp = document.getElementById('scoreDisplay');
+
+    if(isJudge && currentUser) {
+      controls.classList.remove('hidden');
+      error.classList.add('hidden');
+      
+      // Check if already voted
+      const entryScores = scores[currentSkinId] || [];
+      const myScore = entryScores.find(s => s.judgeId === currentUser.uid);
+      if(myScore) {
+        input.value = myScore.score;
+        disp.textContent = myScore.score;
+        document.getElementById('submitScore').textContent = "Обновить оценку";
+      } else {
+        input.value = 5;
+        disp.textContent = 5;
+        document.getElementById('submitScore').textContent = "Подтвердить";
+      }
+    } else {
+      controls.classList.add('hidden');
+      error.classList.remove('hidden');
+    }
+  }
+
+  function updateModalStats(id) {
+    const entryScores = scores[id] || [];
+    const total = entryScores.reduce((acc, cur) => acc + cur.score, 0);
+    document.getElementById('mTotal').textContent = total;
+    
+    const list = document.getElementById('judgesList');
+    list.innerHTML = entryScores.map(s => 
+      `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+         <span>${escapeHtml(s.judgeName || 'Судья')}</span>
+         <b style="color:#fff">${s.score}</b>
+       </div>`
+    ).join('');
+  }
+
+  document.getElementById('closeModal').addEventListener('click', () => {
+    modal.classList.remove('active');
+    if(viewer) { viewer.dispose(); viewer = null; }
+    currentSkinId = null;
+  });
+
+  // Rating Slider
+  const scoreInput = document.getElementById('scoreInput');
+  const scoreDisplay = document.getElementById('scoreDisplay');
+  scoreInput.addEventListener('input', (e) => {
+    scoreDisplay.textContent = e.target.value;
+  });
+
+  document.getElementById('submitScore').addEventListener('click', async () => {
+    if(!currentUser || !isJudge) return;
+    const score = parseInt(scoreInput.value);
+    const btn = document.getElementById('submitScore');
+    
+    btn.disabled = true; btn.textContent = '...';
+    
+    try {
+      // Get user name
+      let judgeName = currentUser.displayName || 'Судья';
+      // Try fetch proper judge name
+      const uDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if(uDoc.exists() && uDoc.data().displayName) judgeName = uDoc.data().displayName;
+      
+      // Save
+      // We need to query if doc exists to update or create (manual ID check would be better but we use auto IDs usually)
+      // Simplified: Query collection for my score on this skin
+      const q = query(collection(db, 'asia_scores'), where('judgeId', '==', currentUser.uid), where('entryId', '==', currentSkinId));
+      const snap = await getDocs(q);
+      
+      if(!snap.empty) {
+        await updateDoc(snap.docs[0].ref, { score, judgeName });
+      } else {
+        await addDoc(collection(db, 'asia_scores'), {
+          judgeId: currentUser.uid,
+          judgeName,
+          entryId: currentSkinId,
+          score,
+          createdAt: serverTimestamp()
+        });
+      }
+      btn.textContent = 'Готово!';
+    } catch(e) {
+      console.error(e);
+      alert(e.message);
+    }
+    btn.disabled = false;
+  });
+
+  // --- ADMIN UPLOAD ---
+  document.getElementById('addEntryBtn').addEventListener('click', async () => {
+    const author = document.getElementById('newAuthor').value;
+    const file = document.getElementById('newFile').files[0];
+    const status = document.getElementById('adminStatus');
+    
+    if(!author || !file) return;
+    status.textContent = 'Загрузка...';
+    
+    try {
+      const storageRef = ref(storage, `asia-skins/${Date.now()}_${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+      
+      uploadTask.on('state_changed', null, null, async () => {
+        const url = await getDownloadURL(uploadTask.snapshot.ref);
+        await addDoc(collection(db, 'asia_entries'), {
+          authorName: author,
+          skinUrl: url,
+          createdAt: serverTimestamp()
+        });
+        status.textContent = 'OK!';
+        document.getElementById('newAuthor').value = '';
+      });
+    } catch(e) {
+      status.textContent = 'Error';
+      console.error(e);
+    }
+  });
+
+  function escapeHtml(text) {
+    if (!text) return text;
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  }
+  
+  // Resize handler for 3D
+  window.addEventListener('resize', () => {
+    if(viewer && modal.classList.contains('active')) {
+       viewer.width = viewerContainer.clientWidth;
+       viewer.height = viewerContainer.clientHeight;
+    }
+  });
+
+</script>
+</body>
+</html>
