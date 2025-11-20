@@ -122,6 +122,54 @@
     .nav-group { margin-left: 0; width: 100%; justify-content: space-between; margin-top: 12px; }
     .admin-controls { opacity: 1; }
   }
+  /* === Эффект Сакуры === */
+  .sakura-wrap {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 5;
+    border-radius: 16px;
+  }
+  
+  .petal {
+    position: absolute;
+    background-color: #ffc0cb; /* Розовый цвет сакуры */
+    border-radius: 150% 0 150% 0;
+    animation: animate-petal 10s linear infinite;
+    opacity: 0; /* По умолчанию невидимы или очень бледные */
+    transition: opacity 0.3s;
+    box-shadow: 0 0 5px rgba(255, 192, 203, 0.5);
+  }
+
+  /* Показываем лепестки только при наведении на карточку */
+  .contest-card:hover .petal {
+    opacity: 0.8;
+  }
+
+  .petal:nth-child(1) { left: 10%; width: 10px; height: 10px; animation-duration: 8s; animation-delay: 0s; }
+  .petal:nth-child(2) { left: 20%; width: 12px; height: 12px; animation-duration: 12s; animation-delay: 1s; }
+  .petal:nth-child(3) { left: 70%; width: 8px;  height: 8px;  animation-duration: 6s;  animation-delay: 2s; }
+  .petal:nth-child(4) { left: 40%; width: 11px; height: 11px; animation-duration: 10s; animation-delay: 0s; }
+  .petal:nth-child(5) { left: 85%; width: 9px;  height: 9px;  animation-duration: 7s;  animation-delay: 3s; }
+  .petal:nth-child(6) { left: 50%; width: 10px; height: 10px; animation-duration: 9s;  animation-delay: 1.5s; }
+
+  @keyframes animate-petal {
+    0% {
+      transform: translateY(-20px) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    90% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(300px) rotate(360deg);
+      opacity: 0;
+    }
+  }
 </style>
 </head>
 <body>
@@ -303,6 +351,20 @@
         const card = document.createElement('div');
         card.className = 'contest-card fade-in';
         
+        // --- ЛОГИКА СПЕЦЭФФЕКТОВ ---
+        let specialEffect = '';
+        // Проверяем, содержит ли название "ASIA" (регистронезависимо)
+        if (c.title && c.title.toUpperCase().includes('ASIA')) {
+            specialEffect = `
+              <div class="sakura-wrap">
+                <div class="petal"></div><div class="petal"></div>
+                <div class="petal"></div><div class="petal"></div>
+                <div class="petal"></div><div class="petal"></div>
+              </div>
+            `;
+        }
+        // ----------------------------
+        
         // Admin buttons
         const adminHtml = `
           <div class="admin-controls" style="display:${(currentUser && currentUser.email === ADMIN_EMAIL) ? 'flex' : 'none'}">
@@ -321,13 +383,14 @@
         
         const btnText = isActive ? 'Участвовать' : 'Смотреть итоги';
         
-        // Logic for cover image vs gradient
         let coverContent = '<div class="card-cover-gradient"></div>';
         if (c.imageUrl) {
             coverContent = `<img src="${c.imageUrl}" alt="Обложка" onerror="this.style.display='none'">`;
         }
 
+        // Вставляем ${specialEffect} внутрь карточки
         card.innerHTML = `
+          ${specialEffect}
           ${adminHtml}
           <div class="card-cover">
             ${coverContent}
@@ -347,7 +410,8 @@
             </div>
           </div>
         `;
-
+        
+        // ... (далее обработчики событий без изменений)
         card.querySelector('.btn-edit').addEventListener('click', (e) => {
           e.stopPropagation();
           openModal(c);
