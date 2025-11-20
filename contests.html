@@ -112,4 +112,286 @@
   <div class="wrap">
     <header>
       <h1>
-        <svg class="icon" style="width:32px;height:32px;color:var(-
+        <svg class="icon" style="width:32px;height:32px;color:var(--accent)" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+        Конкурсы
+      </h1>
+      <div class="nav-group">
+        <button id="createBtn" class="btn hidden" style="background:#1e1e24;border:1px dashed rgba(138,43,226,0.5)">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          Добавить
+        </button>
+        <a href="index.html" class="btn btn-secondary">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          В галерею
+        </a>
+        <button id="signBtn" class="btn">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
+          Войти
+        </button>
+      </div>
+    </header>
+
+    <div id="activeSection">
+      <div class="section-title"><span class="status-dot dot-active"></span> Актуальные</div>
+      <div id="activeGrid" class="grid"></div>
+    </div>
+
+    <div id="pastSection">
+      <div class="section-title"><span class="status-dot dot-past"></span> Прошедшие</div>
+      <div id="pastGrid" class="grid"></div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Конкурс</h2>
+      <div class="form-group">
+        <label>Название</label>
+        <input type="text" id="inpTitle" class="form-input" placeholder="Например: Halloween 2025">
+      </div>
+      <div class="form-group">
+        <label>Описание</label>
+        <textarea id="inpDesc" class="form-textarea" placeholder="Краткое описание сути конкурса..."></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Статус</label>
+          <select id="inpStatus" class="form-select">
+            <option value="active">Активный</option>
+            <option value="finished">Завершен</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Даты</label>
+          <input type="text" id="inpDate" class="form-input" placeholder="окт - ноя 2025">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Ссылка на итоги/форму (URL)</label>
+        <input type="text" id="inpLink" class="form-input" placeholder="results.html или внешняя ссылка">
+      </div>
+      <div style="display:flex; gap:10px; margin-top:24px;">
+        <button id="saveBtn" class="btn" style="flex:1">Сохранить</button>
+        <button id="closeModal" class="btn btn-secondary">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
+      authDomain: "skinsrzt.firebaseapp.com",
+      projectId: "skinsrzt",
+      storageBucket: "skinsrzt.appspot.com",
+      messagingSenderId: "1084042281569",
+      appId: "1:1084042281569:web:25872944cf7dac7fd66020"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const ADMIN_EMAIL = "nmprokhorov@gmail.com";
+
+    const activeGrid = document.getElementById('activeGrid');
+    const pastGrid = document.getElementById('pastGrid');
+    const signBtn = document.getElementById('signBtn');
+    const createBtn = document.getElementById('createBtn');
+    
+    // Modal elements
+    const modal = document.getElementById('modal');
+    const modalTitle = document.getElementById('modalTitle');
+    const inpTitle = document.getElementById('inpTitle');
+    const inpDesc = document.getElementById('inpDesc');
+    const inpStatus = document.getElementById('inpStatus');
+    const inpDate = document.getElementById('inpDate');
+    const inpLink = document.getElementById('inpLink');
+    const saveBtn = document.getElementById('saveBtn');
+    const closeModal = document.getElementById('closeModal');
+
+    let currentUser = null;
+    let currentEditId = null;
+
+    // Auth
+    const provider = new GoogleAuthProvider();
+    signBtn.addEventListener('click', async () => {
+      if (!currentUser) {
+        try { await signInWithPopup(auth, provider); } catch(e){ alert(e.message); }
+      } else {
+        await signOut(auth);
+      }
+    });
+
+    onAuthStateChanged(auth, user => {
+      currentUser = user;
+      if (user) {
+        signBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Выйти`;
+      } else {
+        signBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg> Войти`;
+      }
+      
+      // Show admin controls
+      const isAdmin = user && user.email === ADMIN_EMAIL;
+      createBtn.classList.toggle('hidden', !isAdmin);
+      document.querySelectorAll('.admin-controls').forEach(el => {
+        el.style.display = isAdmin ? 'flex' : 'none';
+      });
+    });
+
+    // Load Contests
+    const q = query(collection(db, 'contests'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, snap => {
+      const contests = [];
+      snap.forEach(doc => contests.push({id: doc.id, ...doc.data()}));
+      render(contests);
+    });
+
+    function render(list) {
+      activeGrid.innerHTML = '';
+      pastGrid.innerHTML = '';
+      
+      // Сортировка: Активные сначала по дате создания, Прошедшие тоже
+      // Можно добавить логику сортировки, если нужно
+      
+      let activeCount = 0;
+      let pastCount = 0;
+
+      list.forEach(c => {
+        const isActive = c.status === 'active';
+        const target = isActive ? activeGrid : pastGrid;
+        
+        const card = document.createElement('div');
+        card.className = 'contest-card fade-in';
+        
+        // Admin buttons
+        const adminHtml = `
+          <div class="admin-controls" style="display:${(currentUser && currentUser.email === ADMIN_EMAIL) ? 'flex' : 'none'}">
+             <button class="admin-btn btn-edit" data-id="${c.id}">
+               <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+             </button>
+             <button class="admin-btn btn-del" data-id="${c.id}">
+               <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+             </button>
+          </div>
+        `;
+
+        const statusBadge = isActive 
+          ? `<div class="card-status status-active"><span class="status-dot dot-active" style="width:6px;height:6px"></span> Идет прием</div>`
+          : `<div class="card-status status-finished"><span class="status-dot dot-past" style="width:6px;height:6px"></span> Завершен</div>`;
+        
+        const btnText = isActive ? 'Участвовать' : 'Смотреть итоги';
+        
+        card.innerHTML = `
+          ${adminHtml}
+          <div class="card-cover">
+            <div class="card-cover-gradient"></div>
+            ${statusBadge}
+          </div>
+          <div class="card-body">
+            <div class="card-title">${escapeHtml(c.title)}</div>
+            <div class="card-desc">${escapeHtml(c.description)}</div>
+            <div class="card-meta">
+              <div class="card-date">
+                <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                ${escapeHtml(c.dateLabel)}
+              </div>
+              <div style="color:var(--accent);font-weight:700;font-size:0.9rem;display:flex;align-items:center;gap:4px;">
+                ${btnText} <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+              </div>
+            </div>
+          </div>
+        `;
+
+        // Edit click
+        card.querySelector('.btn-edit').addEventListener('click', (e) => {
+          e.stopPropagation();
+          openModal(c);
+        });
+        // Delete click
+        card.querySelector('.btn-del').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if(confirm('Удалить конкурс безвозвратно?')) {
+            await deleteDoc(doc(db, 'contests', c.id));
+          }
+        });
+        // Card click
+        card.addEventListener('click', (e) => {
+          // Don't trigger if clicking admin controls
+          if (e.target.closest('.admin-controls')) return;
+          
+          if (c.link && c.link !== '#') {
+             window.location.href = c.link;
+          } else {
+             alert('Ссылка еще не настроена');
+          }
+        });
+
+        target.appendChild(card);
+        if(isActive) activeCount++; else pastCount++;
+      });
+
+      if(activeCount === 0) activeGrid.innerHTML = '<div class="empty-msg">Сейчас нет активных конкурсов.</div>';
+      if(pastCount === 0) pastGrid.innerHTML = '<div class="empty-msg">Архив пуст.</div>';
+    }
+
+    // Modal Logic
+    createBtn.addEventListener('click', () => openModal());
+    closeModal.addEventListener('click', () => modal.classList.remove('active'));
+    
+    function openModal(data = null) {
+      if (data) {
+        currentEditId = data.id;
+        modalTitle.textContent = 'Редактировать';
+        inpTitle.value = data.title;
+        inpDesc.value = data.description;
+        inpStatus.value = data.status;
+        inpDate.value = data.dateLabel;
+        inpLink.value = data.link;
+      } else {
+        currentEditId = null;
+        modalTitle.textContent = 'Новый конкурс';
+        inpTitle.value = '';
+        inpDesc.value = '';
+        inpStatus.value = 'active';
+        inpDate.value = '';
+        inpLink.value = '';
+      }
+      modal.classList.add('active');
+    }
+
+    saveBtn.addEventListener('click', async () => {
+      const title = inpTitle.value.trim();
+      if (!title) return alert('Введите название');
+      
+      const payload = {
+        title,
+        description: inpDesc.value.trim(),
+        status: inpStatus.value,
+        dateLabel: inpDate.value.trim(),
+        link: inpLink.value.trim(),
+        updatedAt: serverTimestamp()
+      };
+
+      saveBtn.disabled = true;
+      try {
+        if (currentEditId) {
+          await updateDoc(doc(db, 'contests', currentEditId), payload);
+        } else {
+          payload.createdAt = serverTimestamp();
+          await addDoc(collection(db, 'contests'), payload);
+        }
+        modal.classList.remove('active');
+      } catch(e) {
+        alert('Ошибка: ' + e.message);
+      }
+      saveBtn.disabled = false;
+    });
+
+    function escapeHtml(s) { return s ? String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
+  </script>
+</body>
+</html>
