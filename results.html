@@ -4,215 +4,192 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <link rel="icon" href="data:,">
-<title>Конкурсы</title>
+<title>Итоги конкурса — Results</title>
 <style>
   :root{
     --bg:#0e0e12; --card:#14141a; --accent:#8a2be2; --text:#eaeaf2; --muted:#9aa0b2;
-    --active: #4ade80; --finished: #9aa0b2; --danger: #ef4444;
+    --gold: #ffd700; --silver: #c0c0c0; --bronze: #cd7f32;
   }
   * { box-sizing: border-box; }
   body{ margin:0; font-family:Inter,Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:22px; }
   .wrap{ max-width:1200px; margin:0 auto; }
-  
-  /* SVG Icons */
-  .icon { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
-  .icon-sm { width: 14px; height: 14px; }
-  
-  header{ display:flex; align-items:center; justify-content: space-between; margin-bottom:40px; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05); flex-wrap: wrap; gap: 16px; }
-  header h1{ font-size:1.8rem; font-weight:800; margin:0; letter-spacing:-0.5px; display:flex; align-items:center; gap:12px; }
-  
-  .nav-group { display:flex; gap:10px; align-items:center; }
-
-  .btn{ background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; font-weight:700; cursor:pointer; border: none; transition: all 0.3s ease; font-size:0.9rem; display:inline-flex; align-items:center; gap: 8px; }
+  header{ display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .btn{ background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; font-weight:700; cursor:pointer; border: none; transition: all 0.3s ease; font-size:0.95rem; }
   .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(138,43,226,0.4); }
-  .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-  .btn-secondary{ background:#1f1f28; border: 1px solid rgba(255,255,255,0.08); }
-  .btn-secondary:hover{ background:#2a2a35; box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
-  .btn-danger{ background:rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
-  .btn-danger:hover{ background:rgba(239, 68, 68, 0.25); transform: translateY(-2px); }
-
-  .section-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; color: var(--text); text-transform: uppercase; letter-spacing: 0.5px; }
-  .section-title::after { content: ''; height: 1px; background: rgba(255,255,255,0.1); flex: 1; }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; transform:none; }
   
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-  .dot-active { background: var(--active); box-shadow: 0 0 8px rgba(74, 222, 128, 0.4); }
-  .dot-past { background: var(--muted); }
-
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; margin-bottom: 60px; }
+  .info-btn{ background:rgba(138,43,226,0.15); color:var(--text); padding:8px 14px; border-radius:8px; border:1px solid rgba(138,43,226,0.3); cursor:pointer; font-weight:600; transition: all 0.3s ease; font-size:0.9rem; }
+  .info-btn:hover{ background:rgba(138,43,226,0.25); border-color:rgba(138,43,226,0.5); }
+  .info-btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .info-btn svg{ transition: transform 0.6s ease; }
+  .info-btn:hover svg{ transform: rotate(180deg); }
   
-  .contest-card {
-    background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
-    transition: all 0.3s ease; cursor: pointer; display: flex; flex-direction: column; position: relative;
-  }
-  .contest-card:hover { transform: translateY(-6px); border-color: rgba(138,43,226,0.4); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
+  .podium-title{ text-align:center; font-size:2.4rem; font-weight:900; margin-bottom:48px; background: linear-gradient(90deg, var(--gold), var(--silver), var(--bronze)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -1.5px; text-transform: uppercase; }
   
-  .card-cover { height: 160px; background: #1a1a22; position: relative; overflow: hidden; }
-  .card-cover img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
-  .contest-card:hover .card-cover img { transform: scale(1.05); }
-  .card-cover-gradient { width: 100%; height: 100%; background: linear-gradient(135deg, #2a2a35 0%, #1a1a22 100%); position: absolute; top: 0; left: 0; }
+  .podium-wrapper{ display:flex; align-items:flex-end; justify-content:center; gap:20px; margin-bottom:40px; padding:0 20px; }
   
-  .card-status {
-    position: absolute; top: 12px; left: 12px; padding: 6px 10px; border-radius: 6px;
-    font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-    backdrop-filter: blur(8px); z-index: 2; display: flex; align-items: center; gap: 6px;
-  }
-  .status-active { background: rgba(74, 222, 128, 0.15); color: var(--active); border: 1px solid rgba(74, 222, 128, 0.2); }
-  .status-finished { background: rgba(154, 160, 178, 0.15); color: var(--finished); border: 1px solid rgba(154, 160, 178, 0.2); }
+  .podium-column{ display:flex; flex-direction:column; align-items:center; }
   
-  .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
-  .card-title { font-size: 1.2rem; font-weight: 800; margin: 0 0 8px 0; line-height: 1.3; }
-  .card-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .podium-medal-single{ text-align:center; margin-bottom:16px; }
+  .podium-number{ font-size:6rem; font-weight:900; line-height:1; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; letter-spacing:-0.05em; margin-bottom:8px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5)); }
+  .podium-number-1{ color: #FFD700; background: linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .podium-number-2{ color: #C0C0C0; background: linear-gradient(135deg, #E8E8E8 0%, #A8A8A8 50%, #E8E8E8 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .podium-number-3{ color: #CD7F32; background: linear-gradient(135deg, #CD7F32 0%, #8B4513 50%, #CD7F32 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .podium-medal-label{ font-size:0.95rem; font-weight:700; }
   
-  .card-meta { display: flex; justify-content: space-between; align-items: center; margin-top: auto; pt: 16px; border-top: 1px solid rgba(255,255,255,0.05); }
-  .card-date { font-size: 0.85rem; color: var(--muted); font-weight: 500; display:flex; align-items:center; gap:6px; }
+  .place{ background:linear-gradient(135deg, rgba(138,43,226,0.08), rgba(20,16,30,0.5)); border-radius:12px; padding:16px; border:2px solid rgba(138,43,226,0.15); cursor:pointer; position:relative; overflow:hidden; transition: all 0.3s ease; display:flex; flex-direction:column; align-items:center; width:100%; }
+  .place:hover{ transform: translateY(-8px); box-shadow: 0 12px 32px rgba(138,43,226,0.4); border-color: rgba(138,43,226,0.5); }
+  .place::before{ content:''; position:absolute; top:0; left:0; right:0; height:3px; }
   
-  .admin-controls {
-    position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; z-index: 10;
-  }
-  .contest-card:hover .admin-controls { opacity: 1; }
-  .admin-btn { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: #fff; transition: all 0.2s; backdrop-filter: blur(4px); }
-  .btn-edit { background: rgba(138,43,226,0.8); }
-  .btn-edit:hover { background: var(--accent); }
-  .btn-del { background: rgba(239, 68, 68, 0.8); }
-  .btn-del:hover { background: var(--danger); }
-
-  .empty-msg { color: var(--muted); font-size: 0.95rem; padding: 40px; background: rgba(255,255,255,0.015); border-radius: 12px; text-align: center; border: 1px dashed rgba(255,255,255,0.1); }
-
-  /* Modal */
-  .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
-  .modal.active { display:flex; }
-  .modal-content { background:var(--card); border-radius:16px; padding:28px; max-width:500px; width:100%; border:1px solid rgba(138,43,226,0.2); box-shadow:0 8px 32px rgba(0,0,0,0.6); animation: modalPop 0.3s ease; max-height: 90vh; overflow-y: auto; }
-  @keyframes modalPop { from{transform:scale(0.95);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .podium-column-1{ order:2; }
+  .podium-column-1 .place{ width:280px; min-height:360px; border-color: rgba(255,215,0,0.4); }
+  .podium-column-1 .place::before{ background: linear-gradient(90deg, var(--gold), #ffed4e); }
   
-  .modal h2 { margin:0 0 20px 0; font-size:1.4rem; color:var(--accent); }
+  .podium-column-2{ order:1; }
+  .podium-column-2 .place{ width:260px; min-height:320px; border-color: rgba(192,192,192,0.4); }
+  .podium-column-2 .place::before{ background: linear-gradient(90deg, var(--silver), #e8e8e8); }
   
-  .form-group { margin-bottom: 16px; }
-  .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: 600; color: var(--muted); }
-  .form-input, .form-select, .form-textarea { 
-    width: 100%; background: #0b0b0e; border: 1px solid rgba(255,255,255,0.1); 
-    color: var(--text); padding: 10px 12px; border-radius: 8px; font-family: inherit; font-size: 0.95rem;
-    transition: border-color 0.3s;
-  }
-  .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
-  .form-textarea { resize: vertical; min-height: 80px; }
-  .form-row { display: flex; gap: 12px; }
-  .form-row > div { flex: 1; }
-
-  /* File Input Styling */
-  .file-upload-box {
-    border: 1px dashed rgba(255,255,255,0.2); border-radius: 8px; padding: 12px;
-    text-align: center; background: rgba(255,255,255,0.02); transition: all 0.3s;
-  }
-  .file-upload-box:hover { border-color: var(--accent); background: rgba(138,43,226,0.05); }
-  .preview-img { width: 100%; height: 140px; object-fit: cover; border-radius: 6px; margin-bottom: 10px; display: none; border: 1px solid rgba(255,255,255,0.1); }
-  .preview-img.visible { display: block; }
-  .upload-label { cursor: pointer; display: inline-block; font-size: 0.9rem; color: var(--accent); font-weight: 600; }
+  .podium-column-3{ order:3; }
+  .podium-column-3 .place{ width:260px; min-height:280px; border-color: rgba(205,127,50,0.4); }
+  .podium-column-3 .place::before{ background: linear-gradient(90deg, var(--bronze), #e89b5f); }
   
-  .progress-bar-wrap { height: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 8px; overflow: hidden; display: none; }
-  .progress-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s; }
-
-  .fade-in { animation: fadeInUp 0.5s forwards; opacity: 0; }
-  @keyframes fadeInUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
-
-  .hidden { display: none !important; }
-
-  @media (max-width: 640px) {
-    .grid { grid-template-columns: 1fr; }
-    header { flex-direction: column; align-items: flex-start; }
-    .nav-group { margin-left: 0; width: 100%; justify-content: space-between; margin-top: 12px; }
-    .admin-controls { opacity: 1; }
+  .place-content{ display:flex; flex-direction:column; align-items:center; text-align:center; width:100%; gap:12px; }
+  .place-preview{ width:150px; height:190px; border-radius:10px; overflow:hidden; background:#0a0a0f; box-shadow: 0 4px 16px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.03); flex-shrink:0; }
+  .place-preview img{ width:100%; height:100%; object-fit:contain; transition: transform 0.4s ease; }
+  .place:hover .place-preview img{ transform: scale(1.05); }
+  
+  .place-author{ font-weight:800; font-size:1.3rem; margin-bottom:8px; letter-spacing:-0.3px; line-height:1.2; }
+  .place-number{ font-size:1.1rem; font-weight:700; margin-bottom:12px; opacity:0.9; }
+  .place-1 .place-number{ color: var(--gold); }
+  .place-2 .place-number{ color: var(--silver); }
+  .place-3 .place-number{ color: var(--bronze); }
+  
+  .place-score{ background:rgba(138,43,226,0.25); padding:12px 20px; border-radius:10px; font-size:1.2rem; font-weight:800; border: 1px solid rgba(138,43,226,0.3); margin-top:auto; letter-spacing:0.5px; }
+  
+  .grid{ display:grid; grid-template-columns:1fr; gap:14px; }
+  .card{ display:flex; gap:14px; align-items:center; padding:14px; background:var(--card); border-radius:12px; border:1px solid rgba(255,255,255,0.05); cursor:pointer; transition: all 0.3s ease; position:relative; }
+  .card:hover{ transform: translateX(6px); border-color: rgba(138,43,226,0.3); box-shadow: -6px 0 16px rgba(138,43,226,0.2); background: rgba(20,20,26,0.9); }
+  
+  .thumb{ width:140px; height:180px; min-width:140px; border-radius:10px; overflow:hidden; background:#0a0a0f; display:flex; align-items:center; justify-content:center; position:relative; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.03); }
+  .thumb img{ width:100%; height:100%; object-fit:contain; transition: transform 0.3s ease; }
+  .card:hover .thumb img{ transform: scale(1.08); }
+  
+  .meta{ flex:1; min-width:0; }
+  .meta h2{ margin:0 0 8px 0; font-size:1.15rem; font-weight:700; letter-spacing:-0.2px; }
+  .small{ color:var(--muted); font-size:0.9rem; line-height:1.5; letter-spacing:0.2px; }
+  .score-badge{ background:rgba(138,43,226,0.2); padding:8px 14px; border-radius:8px; display:inline-block; font-weight:700; font-size:1rem; border: 1px solid rgba(138,43,226,0.3); margin-top:10px; letter-spacing:0.3px; }
+  
+  .modal{ display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
+  .modal.active{ display:flex; }
+  .modal-content{ background:var(--card); border-radius:16px; padding:24px; max-width:700px; width:100%; max-height:80vh; overflow-y:auto; border:1px solid rgba(138,43,226,0.2); box-shadow:0 8px 32px rgba(0,0,0,0.6); }
+  .modal-content h2{ margin:0 0 16px 0; font-size:1.5rem; color:var(--accent); font-weight:800; letter-spacing:-0.5px; }
+  .modal-content h3{ margin:16px 0 8px 0; font-size:1.1rem; color:var(--text); font-weight:700; letter-spacing:-0.2px; }
+  .modal-content p{ line-height:1.7; color:var(--muted); margin:0 0 12px 0; }
+  .close-modal{ position:absolute; top:12px; right:12px; width:32px; height:32px; background:rgba(255,255,255,0.08); border:none; border-radius:8px; cursor:pointer; font-size:1.5rem; color:var(--text); transition:all 0.2s ease; display:flex; align-items:center; justify-content:center; }
+  .close-modal:hover{ background:rgba(255,255,255,0.15); transform:scale(1.1); }
+  
+  .admin-form{ margin:16px 0; padding:16px; background:rgba(255,255,255,0.015); border-radius:12px; border: 1px solid rgba(255,255,255,0.04); }
+  .hidden{ display:none; }
+  input, button, textarea, select { font-family:inherit; }
+  input[type="text"]{ padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.08); background:#0e0e12; color:var(--text); font-size:0.95rem; transition:all 0.2s ease; }
+  input[type="text"]:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(138,43,226,0.1); }
+  .file-label{ display:inline-block; padding:10px 14px; background:#1a1a22; border-radius:8px; cursor:pointer; border:1px solid rgba(255,255,255,0.08); transition: all 0.2s ease; font-size:0.95rem; font-weight:600; }
+  .file-label:hover{ background:#242430; border-color: rgba(138,43,226,0.4); }
+  .admin-small{ color:var(--muted); font-size:0.85rem; margin-top:8px; line-height:1.4; }
+  code{ background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; font-family:'Courier New', monospace; font-size:0.9em; }
+  
+  .loading-spinner{ width:40px; height:40px; border:3px solid rgba(255,255,255,0.1); border-top-color: var(--accent); border-radius:50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+  
+  @media (max-width:900px){
+    .thumb{ width:100px; height:130px; min-width:100px; }
+    .podium-wrapper{ flex-direction:column; align-items:center; gap:20px; padding:0; }
+    .podium-column{ width:100% !important; max-width:340px; order:initial !important; }
+    .podium-column .place{ width:100% !important; min-height:300px !important; }
+    .podium-number{ font-size:4.5rem; }
+    .place-author{ font-size:1.05rem; }
+    .podium-title{ font-size:1.8rem; }
+    .place-preview{ width:130px; height:170px; }
+    .place-score{ font-size:0.95rem; padding:6px 12px; }
+    header{ flex-direction:column; align-items:flex-start; }
+    header > div:last-child{ width:100%; justify-content:flex-start; }
   }
 </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>
-        <svg class="icon" style="width:32px;height:32px;color:var(--accent)" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-        Конкурсы
-      </h1>
-      <div class="nav-group">
-        <button id="createBtn" class="btn hidden" style="background:#1e1e24;border:1px dashed rgba(138,43,226,0.5)">
-          <svg class="icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          Добавить
-        </button>
-        <a href="index.html" class="btn btn-secondary">
-          <svg class="icon" viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-          В галерею
-        </a>
-        <button id="signBtn" class="btn">
-          <svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg>
-          Войти
-        </button>
+      <h1 style="font-size:1.8rem; font-weight:800; margin:0; letter-spacing:-0.5px;">Итоги конкурса</h1>
+      <div style="margin-left:auto; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+          <button id="refreshBtn" class="info-btn" title="Обновить данные" style="padding:8px 12px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>
+          </button>
+          <span id="cacheIndicator" style="font-size:0.7rem; color:var(--muted); white-space:nowrap;"></span>
+        </div>
+        <button id="infoBtn" class="info-btn">ℹ️ Оценивание</button>
+        <a href="index.html" class="btn" style="background:#333">Вернуться</a>
+        <button id="signBtn" class="btn">Войти</button>
       </div>
     </header>
 
-    <div id="activeSection">
-      <div class="section-title"><span class="status-dot dot-active"></span> Актуальные</div>
-      <div id="activeGrid" class="grid"></div>
+    <!-- admin form -->
+    <div id="adminWrap" class="admin-form hidden">
+      <strong style="font-size:1.05rem;">Добавить скин в конкурс (админ)</strong>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <input id="authorInput" type="text" placeholder="Ник автора" style="width:240px;">
+        <label class="file-label">Выбрать файл <input id="fileInput" type="file" accept=".png,.jpg,.jpeg" style="display:none"></label>
+        <button id="addBtn" class="btn">Добавить</button>
+        <span id="adminMsg" class="small" style="margin-left:8px;"></span>
+      </div>
+      <div class="admin-small">Файл сохраняется как dataURL в документе <code>contest_entries</code>.</div>
     </div>
 
-    <div id="pastSection">
-      <div class="section-title"><span class="status-dot dot-past"></span> Прошедшие</div>
-      <div id="pastGrid" class="grid"></div>
+    <div id="podiumSection" style="display:none;">
+      <div class="podium-title">ПРИЗЁРЫ КОНКУРСА</div>
+      <div id="podiumWrap" class="podium-wrapper"></div>
     </div>
+    
+    <div id="listWrap" class="grid"></div>
+    <div id="emptyMsg" class="small" style="text-align:center;margin-top:32px;display:none;font-size:1.05rem;">Пока нет конкурсных скинов.</div>
   </div>
 
-  <!-- Modal -->
-  <div id="modal" class="modal">
-    <div class="modal-content">
-      <h2 id="modalTitle">Конкурс</h2>
+  <!-- Модальное окно с информацией -->
+  <div id="infoModal" class="modal">
+    <div class="modal-content" style="position:relative;">
+      <button class="close-modal" id="closeModal">×</button>
+      <h2>Система оценивания</h2>
+      <p>При оценивании конкурса используется уникальная система оценки скинов, разработанная администрацией МММ на основе 90 бальной шкалы РЗТ (Риса за творчество). Система максимально возможно стремится к объективности и состоит из 4 числовых критериев и 1 множителя.</p>
       
-      <div class="form-group">
-        <label>Обложка</label>
-        <div class="file-upload-box">
-          <img id="imgPreview" class="preview-img">
-          <label for="inpFile" class="upload-label">
-            <svg class="icon" style="vertical-align:middle;margin-right:4px" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Нажмите для выбора файла
-          </label>
-          <input type="file" id="inpFile" accept="image/*" style="display:none">
-          <div id="progressWrap" class="progress-bar-wrap"><div id="progressFill" class="progress-bar-fill"></div></div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label>Название</label>
-        <input type="text" id="inpTitle" class="form-input" placeholder="Например: Halloween 2025">
-      </div>
-      <div class="form-group">
-        <label>Описание</label>
-        <textarea id="inpDesc" class="form-textarea" placeholder="Краткое описание сути конкурса..."></textarea>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Статус</label>
-          <select id="inpStatus" class="form-select">
-            <option value="active">Активный</option>
-            <option value="finished">Завершен</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Даты</label>
-          <input type="text" id="inpDate" class="form-input" placeholder="окт - ноя 2025">
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Ссылка на итоги/форму (URL)</label>
-        <input type="text" id="inpLink" class="form-input" placeholder="results.html или внешняя ссылка">
-      </div>
-      <div style="display:flex; gap:10px; margin-top:24px;">
-        <button id="saveBtn" class="btn" style="flex:1">Сохранить</button>
-        <button id="closeModal" class="btn btn-secondary">Отмена</button>
-      </div>
+      <h3>Лайн / Образ (1-10)</h3>
+      <p>Оценивается общая идея лайна, то как грамотно и лаконично эта идея реализована, не перегружен ли он, насколько он интересно и необычно выглядит, какие-то необычные детали, идеи добавляют баллов. В рамках конкурса также оценивается соответствие скина идее Хэллоуина.</p>
+      
+      <h3>Палитра (1-10)</h3>
+      <p>Оценивается то, насколько хорошо подобраны цвета, насколько хорошо они соприкасаются и дополняют идею, оценивается подбор палитры как шейда, так и лайна и, конечно, насколько цвета в целом приятны глазу, не сливаются ли какие-либо части на скине друг с другом.</p>
+      
+      <h3>Реализация / Шейд (1-10)</h3>
+      <p>Оценивается то, насколько хорошо реализован лайн (зачастую идея может быть хорошей, к примеру, но реализация этой идеи оставляет желать лучшего), насколько уместен шейдинг, как он дополняет идею скина.</p>
+      
+      <h3>Айдентика / Стилистика (1-10)</h3>
+      <p>Оценивется насколько стиль уникален и узнаваем среди других, пожалуй самый спорный, но несомненно важный критерий, ведь уникальность в большом потоке работ играет решающую роль.</p>
+      
+      <h3>Общее впечатление / Вайб (множитель 1-10)</h3>
+      <p>Субъективный множитель, то, насколько оценивающему понравился скин, можно сравнить с обычной шкалой от 1 до 10, которая обычно используется при оценке.</p>
+      
+      <p style="margin-top:20px;padding:12px;background:rgba(138,43,226,0.12);border-radius:8px;border-left:3px solid var(--accent);"><strong>Итоговая формула:</strong><br>Балл = (Лайн + Палитра + Реализация + Стилистика) × 1.4 × Множитель_вайба<br><strong>Максимум: 90 баллов</strong></p>
     </div>
   </div>
 
+  <!-- SkinView3D -->
+  <script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
+
+  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
@@ -226,39 +203,115 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-    const storage = getStorage(app);
-    const ADMIN_EMAIL = "nmprokhorov@gmail.com";
+    
+    // Включаем оффлайн кэширование Firebase (снижает reads при повторных загрузках)
+    enableIndexedDbPersistence(db).catch(err => {
+      if (err.code === 'failed-precondition') {
+        console.log('Persistence: несколько вкладок открыто');
+      } else if (err.code === 'unimplemented') {
+        console.log('Persistence: браузер не поддерживает');
+      }
+    });
 
-    const activeGrid = document.getElementById('activeGrid');
-    const pastGrid = document.getElementById('pastGrid');
+    const adminWrap = document.getElementById('adminWrap');
+    const authorInput = document.getElementById('authorInput');
+    const fileInput = document.getElementById('fileInput');
+    const addBtn = document.getElementById('addBtn');
+    const adminMsg = document.getElementById('adminMsg');
+    const listWrap = document.getElementById('listWrap');
+    const podiumWrap = document.getElementById('podiumWrap');
+    const podiumSection = document.getElementById('podiumSection');
+    const emptyMsg = document.getElementById('emptyMsg');
     const signBtn = document.getElementById('signBtn');
-    const createBtn = document.getElementById('createBtn');
-    
-    // Modal elements
-    const modal = document.getElementById('modal');
-    const modalTitle = document.getElementById('modalTitle');
-    const inpTitle = document.getElementById('inpTitle');
-    const inpDesc = document.getElementById('inpDesc');
-    const inpStatus = document.getElementById('inpStatus');
-    const inpDate = document.getElementById('inpDate');
-    const inpLink = document.getElementById('inpLink');
-    const inpFile = document.getElementById('inpFile');
-    const imgPreview = document.getElementById('imgPreview');
-    const progressWrap = document.getElementById('progressWrap');
-    const progressFill = document.getElementById('progressFill');
-    
-    const saveBtn = document.getElementById('saveBtn');
+    const infoBtn = document.getElementById('infoBtn');
+    const infoModal = document.getElementById('infoModal');
     const closeModal = document.getElementById('closeModal');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const cacheIndicator = document.getElementById('cacheIndicator');
+
+    const ADMIN_EMAIL = "nmprokhorov@gmail.com";
+    const MEDALS = ['🥇', '🥈', '🥉'];
+    const MEDAL_LABELS = ['1 место', '2 место', '3 место'];
+    const MEDAL_COLORS = ['var(--gold)', 'var(--silver)', 'var(--bronze)'];
+    
+    const CACHE_KEY_ENTRIES = 'contest_entries_cache';
+    const CACHE_KEY_SCORES = 'contest_scores_cache';
+    const CACHE_KEY_TIMESTAMP = 'contest_cache_timestamp';
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 минут
 
     let currentUser = null;
-    let currentEditId = null;
-    let currentImageUrl = null; // Хранит URL текущей картинки при редактировании
+    let entries = {};
+    let scores = {};
+    let rebuildTimeout = null;
+    let unsubscribeEntries = null;
+    let unsubscribeScores = null;
+    
+    // Функции кэширования
+    function saveToCache(key, data) {
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch(e) {
+        console.log('Cache save error:', e);
+      }
+    }
+    
+    function loadFromCache(key) {
+      try {
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : null;
+      } catch(e) {
+        console.log('Cache load error:', e);
+        return null;
+      }
+    }
+    
+    function isCacheValid() {
+      const timestamp = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+      if (!timestamp) return false;
+      return (Date.now() - parseInt(timestamp)) < CACHE_DURATION;
+    }
+    
+    // Дебаунсинг rebuild для уменьшения перерисовок
+    function scheduleRebuild() {
+      if (rebuildTimeout) clearTimeout(rebuildTimeout);
+      rebuildTimeout = setTimeout(() => {
+        rebuild();
+        // Сохраняем в кэш после rebuild
+        saveToCache(CACHE_KEY_ENTRIES, entries);
+        saveToCache(CACHE_KEY_SCORES, scores);
+        saveToCache(CACHE_KEY_TIMESTAMP, Date.now().toString());
+      }, 300); // 300ms задержка
+    }
 
-    // Auth
+    // Модальное окно
+    infoBtn.addEventListener('click', () => infoModal.classList.add('active'));
+    closeModal.addEventListener('click', () => infoModal.classList.remove('active'));
+    infoModal.addEventListener('click', (e) => {
+      if (e.target === infoModal) infoModal.classList.remove('active');
+    });
+    
+    // Принудительное обновление
+    refreshBtn.addEventListener('click', () => {
+      refreshBtn.disabled = true;
+      refreshBtn.innerHTML = '<div class="loading-spinner" style="width:16px;height:16px;border-width:2px;margin:0;"></div>';
+      localStorage.removeItem(CACHE_KEY_TIMESTAMP); // Инвалидируем кэш
+      setupRealtimeListeners();
+      setTimeout(() => {
+        refreshBtn.disabled = false;
+        refreshBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+            </svg>`;
+        if (unsubscribeEntries) unsubscribeEntries();
+        if (unsubscribeScores) unsubscribeScores();
+      }, 5000); // 5 секунд на обновление
+    });
+
     const provider = new GoogleAuthProvider();
     signBtn.addEventListener('click', async () => {
       if (!currentUser) {
-        try { await signInWithPopup(auth, provider); } catch(e){ alert(e.message); }
+        try {
+          await signInWithPopup(auth, provider);
+        } catch(e){ alert('Ошибка входа: ' + e.message); }
       } else {
         await signOut(auth);
       }
@@ -266,224 +319,371 @@
 
     onAuthStateChanged(auth, user => {
       currentUser = user;
-      if (user) {
-        signBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Выйти`;
-      } else {
-        signBtn.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></svg> Войти`;
+      signBtn.textContent = user ? 'Выйти (' + (user.email || user.displayName || '') + ')' : 'Войти';
+      adminWrap.classList.toggle('hidden', !(user && user.email === ADMIN_EMAIL));
+      
+      // Админ всегда получает свежие данные
+      if (user && user.email === ADMIN_EMAIL) {
+        setupRealtimeListeners();
+      }
+    });
+
+    addBtn.addEventListener('click', async () => {
+      adminMsg.textContent = '';
+      if (!currentUser || currentUser.email !== ADMIN_EMAIL) { adminMsg.textContent = 'Требуется вход админа'; return; }
+      const author = (authorInput.value || '').trim();
+      const f = fileInput.files[0];
+      if (!author) { adminMsg.textContent = 'Введите ник автора'; return; }
+      if (!f) { adminMsg.textContent = 'Выберите файл'; return; }
+      adminMsg.textContent = 'Загрузка...';
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const dataUrl = ev.target.result;
+          await addDoc(collection(db, 'contest_entries'), {
+            authorName: author,
+            skinData: dataUrl,
+            createdAt: serverTimestamp()
+          });
+          adminMsg.textContent = 'Добавлено успешно';
+          authorInput.value = ''; fileInput.value = '';
+          // Инвалидируем кэш после добавления
+          localStorage.removeItem(CACHE_KEY_TIMESTAMP);
+          setTimeout(()=> adminMsg.textContent = '',2000);
+        } catch(e) {
+          console.error(e);
+          adminMsg.textContent = 'Ошибка: ' + (e.message||e);
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+
+    // Загрузка данных с использованием кэша
+    async function loadData() {
+      // Проверяем кэш
+      if (isCacheValid()) {
+        const cachedEntries = loadFromCache(CACHE_KEY_ENTRIES);
+        const cachedScores = loadFromCache(CACHE_KEY_SCORES);
+        
+        if (cachedEntries && cachedScores) {
+          console.log('Загружено из кэша');
+          entries = cachedEntries;
+          scores = cachedScores;
+          rebuild();
+        }
       }
       
-      const isAdmin = user && user.email === ADMIN_EMAIL;
-      createBtn.classList.toggle('hidden', !isAdmin);
-      document.querySelectorAll('.admin-controls').forEach(el => {
-        el.style.display = isAdmin ? 'flex' : 'none';
-      });
-    });
-
-    // Load Contests
-    const q = query(collection(db, 'contests'), orderBy('createdAt', 'desc'));
-    onSnapshot(q, snap => {
-      const contests = [];
-      snap.forEach(doc => contests.push({id: doc.id, ...doc.data()}));
-      render(contests);
-    });
-
-    function render(list) {
-      activeGrid.innerHTML = '';
-      pastGrid.innerHTML = '';
+      // Подписываемся на изменения (только если пользователь админ или кэш устарел)
+      if (!isCacheValid() || (currentUser && currentUser.email === ADMIN_EMAIL)) {
+        setupRealtimeListeners();
+      }
+    }
+    
+    function setupRealtimeListeners() {
+      // Отписываемся от предыдущих подписок
+      if (unsubscribeEntries) unsubscribeEntries();
+      if (unsubscribeScores) unsubscribeScores();
       
-      let activeCount = 0;
-      let pastCount = 0;
+      console.log('Подписка на обновления Firebase');
+      
+      const entriesQ = query(collection(db, 'contest_entries'), orderBy('createdAt','desc'));
+      unsubscribeEntries = onSnapshot(entriesQ, snap => {
+        snap.docChanges().forEach(ch => {
+          const id = ch.doc.id;
+          if (ch.type === 'removed') {
+            delete entries[id];
+          } else {
+            entries[id] = { id, ...ch.doc.data() };
+          }
+        });
+        scheduleRebuild();
+      });
 
-      list.forEach(c => {
-        const isActive = c.status === 'active';
-        const target = isActive ? activeGrid : pastGrid;
-        
-        const card = document.createElement('div');
-        card.className = 'contest-card fade-in';
-        
-        // Admin buttons
-        const adminHtml = `
-          <div class="admin-controls" style="display:${(currentUser && currentUser.email === ADMIN_EMAIL) ? 'flex' : 'none'}">
-             <button class="admin-btn btn-edit" data-id="${c.id}">
-               <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-             </button>
-             <button class="admin-btn btn-del" data-id="${c.id}">
-               <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-             </button>
-          </div>
-        `;
+      const scoresQ = query(collection(db, 'contest_scores'), orderBy('createdAt','asc'));
+      unsubscribeScores = onSnapshot(scoresQ, snap => {
+        // Инкрементальное обновление вместо полной перезаписи
+        snap.docChanges().forEach(ch => {
+          const o = ch.doc.data();
+          const sid = o.skinId;
+          
+          if (ch.type === 'removed') {
+            if (scores[sid]) {
+              scores[sid] = scores[sid].filter(s => s.id !== ch.doc.id);
+              if (scores[sid].length === 0) delete scores[sid];
+            }
+          } else {
+            if (!scores[sid]) scores[sid] = [];
+            const existingIndex = scores[sid].findIndex(s => s.id === ch.doc.id);
+            if (existingIndex >= 0) {
+              scores[sid][existingIndex] = { id: ch.doc.id, ...o };
+            } else {
+              scores[sid].push({ id: ch.doc.id, ...o });
+            }
+          }
+        });
+        scheduleRebuild();
+      });
+    }
+    
+    // Периодическое обновление (раз в 10 минут)
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && !isCacheValid()) {
+        console.log('Периодическое обновление');
+        setupRealtimeListeners();
+        // Отписываемся через 10 секунд после обновления
+        setTimeout(() => {
+          if (unsubscribeEntries) {
+            unsubscribeEntries();
+            unsubscribeEntries = null;
+          }
+          if (unsubscribeScores) {
+            unsubscribeScores();
+            unsubscribeScores = null;
+          }
+        }, 10000);
+      }
+    }, 10 * 60 * 1000);
+    
+    // Обновление при возврате на вкладку
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && !isCacheValid()) {
+        loadData();
+      }
+    });
 
-        const statusBadge = isActive 
-          ? `<div class="card-status status-active"><span class="status-dot dot-active" style="width:6px;height:6px"></span> Идет прием</div>`
-          : `<div class="card-status status-finished"><span class="status-dot dot-past" style="width:6px;height:6px"></span> Завершен</div>`;
-        
-        const btnText = isActive ? 'Участвовать' : 'Смотреть итоги';
-        
-        // Logic for cover image vs gradient
-        let coverContent = '<div class="card-cover-gradient"></div>';
-        if (c.imageUrl) {
-            coverContent = `<img src="${c.imageUrl}" alt="Обложка" onerror="this.style.display='none'">`;
+    function rebuild(){
+      // Очищаем предыдущие наблюдения
+      previewObserver.disconnect();
+      
+      // Обновляем индикатор кэша
+      if (cacheIndicator) {
+        const timestamp = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+        if (timestamp && isCacheValid()) {
+          const minutes = Math.floor((Date.now() - parseInt(timestamp)) / 60000);
+          cacheIndicator.textContent = `Кэш: ${minutes} мин назад`;
+        } else {
+          cacheIndicator.textContent = 'Актуальные данные';
         }
+      }
+      
+      const arr = Object.values(entries).map(e => {
+        const s = scores[e.id] || [];
+        const judgeCount = s.length;
+        const sum = s.reduce((a,b)=>a+(b.total||0),0);
+        const avgRaw = judgeCount? sum/judgeCount : 0;
+        const avgCeil = judgeCount? Math.ceil(avgRaw) : 0;
+        return { ...e, judgeCount, judges: s, sum, avgRaw, avgCeil };
+      });
 
-        card.innerHTML = `
-          ${adminHtml}
-          <div class="card-cover">
-            ${coverContent}
-            ${statusBadge}
+      if (!arr.length) {
+        listWrap.innerHTML = '';
+        podiumSection.style.display = 'none';
+        emptyMsg.style.display = 'block';
+        return;
+      }
+      emptyMsg.style.display = 'none';
+      
+      arr.sort((a,b) => {
+        if (b.avgCeil !== a.avgCeil) return b.avgCeil - a.avgCeil;
+        return (b.avgRaw || 0) - (a.avgRaw || 0);
+      });
+
+      const top3 = arr.slice(0,3);
+      const rest = arr.slice(3);
+
+      podiumWrap.innerHTML = '';
+      podiumSection.style.display = top3.length ? 'block' : 'none';
+      
+      top3.forEach((it, idx) => {
+        const place = idx + 1;
+        const column = document.createElement('div');
+        column.className = `podium-column podium-column-${place}`;
+        
+        column.innerHTML = `
+          <div class="podium-medal-single">
+            <div class="podium-number podium-number-${place}">${place}</div>
+            <div class="podium-medal-label" style="color:${MEDAL_COLORS[idx]};">место</div>
           </div>
-          <div class="card-body">
-            <div class="card-title">${escapeHtml(c.title)}</div>
-            <div class="card-desc">${escapeHtml(c.description)}</div>
-            <div class="card-meta">
-              <div class="card-date">
-                <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                ${escapeHtml(c.dateLabel)}
+          <div class="place">
+            <div class="place-content">
+              <div class="place-preview" id="pv_${it.id}" data-skin-id="${it.id}" data-skin-data="${it.skinData}" data-priority="high">
+                <div class="loading-spinner"></div>
               </div>
-              <div style="color:var(--accent);font-weight:700;font-size:0.9rem;display:flex;align-items:center;gap:4px;">
-                ${btnText} <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-              </div>
+              <div class="place-author">${escapeHtml(it.authorName || '—')}</div>
+              <div class="place-score">${it.avgCeil} / 90</div>
             </div>
           </div>
         `;
-
-        card.querySelector('.btn-edit').addEventListener('click', (e) => {
-          e.stopPropagation();
-          openModal(c);
-        });
-        card.querySelector('.btn-del').addEventListener('click', async (e) => {
-          e.stopPropagation();
-          if(confirm('Удалить конкурс безвозвратно?')) {
-            await deleteDoc(doc(db, 'contests', c.id));
-          }
-        });
-        card.addEventListener('click', (e) => {
-          if (e.target.closest('.admin-controls')) return;
-          if (c.link && c.link !== '#') window.location.href = c.link;
-          else alert('Ссылка еще не настроена');
-        });
-
-        target.appendChild(card);
-        if(isActive) activeCount++; else pastCount++;
+        
+        column.querySelector('.place').addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
+        podiumWrap.appendChild(column);
+        
+        // Подключаем observer для ленивой загрузки
+        const previewEl = document.getElementById(`pv_${it.id}`);
+        if (previewEl) previewObserver.observe(previewEl);
       });
 
-      if(activeCount === 0) activeGrid.innerHTML = '<div class="empty-msg">Сейчас нет активных конкурсов.</div>';
-      if(pastCount === 0) pastGrid.innerHTML = '<div class="empty-msg">Архив пуст.</div>';
+      listWrap.innerHTML = '';
+      rest.forEach((it, idx) => {
+        const place = idx + 4;
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        let placeDisplay = `<strong style="font-size:1.3rem;">#${place}</strong>`;
+        
+        card.innerHTML = `
+          <div class="thumb" id="thumb_${it.id}" data-skin-id="${it.id}" data-skin-data="${it.skinData}">
+            <div class="loading-spinner"></div>
+          </div>
+          <div class="meta">
+            <h2>${escapeHtml(it.authorName || '—')}</h2>
+            <div class="small">Место: ${placeDisplay} • Оценок: ${it.judgeCount}</div>
+            <div class="score-badge">Средний балл: ${it.avgCeil} / 90</div>
+          </div>
+        `;
+        card.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
+        listWrap.appendChild(card);
+        
+        // Подключаем observer для ленивой загрузки
+        const thumbEl = document.getElementById(`thumb_${it.id}`);
+        if (thumbEl) previewObserver.observe(thumbEl);
+      });
     }
 
-    // Modal & File Handling
-    inpFile.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if(file) {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                imgPreview.src = ev.target.result;
-                imgPreview.classList.add('visible');
-            }
-            reader.readAsDataURL(file);
-        }
-    });
-
-    createBtn.addEventListener('click', () => openModal());
-    closeModal.addEventListener('click', () => modal.classList.remove('active'));
+    // Кэш для сгенерированных превью
+    const previewCache = new Map();
     
-    function openModal(data = null) {
-      // Reset fields
-      progressWrap.style.display = 'none';
-      progressFill.style.width = '0%';
-      inpFile.value = '';
-
-      if (data) {
-        currentEditId = data.id;
-        currentImageUrl = data.imageUrl || null;
-        modalTitle.textContent = 'Редактировать';
-        inpTitle.value = data.title;
-        inpDesc.value = data.description;
-        inpStatus.value = data.status;
-        inpDate.value = data.dateLabel;
-        inpLink.value = data.link;
-        
-        if (currentImageUrl) {
-            imgPreview.src = currentImageUrl;
-            imgPreview.classList.add('visible');
-        } else {
-            imgPreview.classList.remove('visible');
+    // Семафор для ограничения параллельных рендеров
+    let activeRenders = 0;
+    const MAX_PARALLEL_RENDERS = 3;
+    
+    // Intersection Observer для ленивой загрузки
+    const previewObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const container = entry.target;
+          const skinId = container.dataset.skinId;
+          const skinData = container.dataset.skinData;
+          const priority = container.dataset.priority === 'high';
+          
+          if (skinId && skinData && !container.dataset.loaded) {
+            container.dataset.loaded = 'true';
+            
+            // Приоритетные превью загружаем сразу
+            if (priority) {
+              init3DPreview(container.id, skinData);
+            } else {
+              // Остальные с небольшой задержкой
+              setTimeout(() => init3DPreview(container.id, skinData), 50);
+            }
+          }
         }
-      } else {
-        currentEditId = null;
-        currentImageUrl = null;
-        modalTitle.textContent = 'Новый конкурс';
-        inpTitle.value = '';
-        inpDesc.value = '';
-        inpStatus.value = 'active';
-        inpDate.value = '';
-        inpLink.value = '';
-        imgPreview.classList.remove('visible');
+      });
+    }, {
+      rootMargin: '200px', // Начинаем загрузку за 200px до появления
+      threshold: 0.01
+    });
+    
+    async function init3DPreview(containerId, skinDataUrl){
+      const container = document.getElementById(containerId);
+      if (!container || !skinDataUrl) return;
+      
+      const isPriority = container.dataset.priority === 'high';
+      
+      // Проверяем кэш
+      if (previewCache.has(skinDataUrl)) {
+        const cachedImg = document.createElement('img');
+        cachedImg.src = previewCache.get(skinDataUrl);
+        cachedImg.style.width = '100%';
+        cachedImg.style.height = '100%';
+        cachedImg.style.objectFit = 'cover';
+        container.innerHTML = '';
+        container.appendChild(cachedImg);
+        return;
       }
-      modal.classList.add('active');
+      
+      // Ждём свободный слот для рендера
+      while (activeRenders >= MAX_PARALLEL_RENDERS) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      activeRenders++;
+      
+      try {
+        // Показываем оригинальный скин сразу
+        const img = document.createElement('img');
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        img.style.opacity = '0.95';
+        img.src = skinDataUrl;
+        container.innerHTML = '';
+        container.appendChild(img);
+        
+        // Генерируем 3D превью
+        const off = document.createElement('canvas');
+        const isMobile = window.innerWidth <= 640;
+        // Топ-3 получают лучшее качество, остальные - стандартное
+        const targetWidth = isPriority ? (isMobile ? 340 : 400) : (isMobile ? 280 : 320);
+        const targetHeight = Math.round(targetWidth * 1.35);
+        off.width = targetWidth;
+        off.height = targetHeight;
+        
+        const viewer = new skinview3d.SkinViewer({
+          canvas: off,
+          width: targetWidth,
+          height: targetHeight,
+          preserveDrawingBuffer: true
+        });
+        
+        try { viewer.renderer.setClearColor(0x15151c, 1); } catch(_) {}
+        
+        await viewer.loadSkin(skinDataUrl);
+        viewer.zoom = 0.95;
+        viewer.autoRotate = false;
+        
+        try {
+          const walk = new skinview3d.WalkingAnimation(viewer);
+          walk.speed = 1.0;
+          walk.paused = true;
+          walk.progress = 0.30;
+          viewer.playerObject.rotation.y = -0.4;
+          viewer.camera.position.set(0, 24, 46);
+          viewer.camera.lookAt(0, 18, 0);
+        } catch(e) {
+          try { viewer.playerObject.rotation.y = -0.4; } catch(_) {}
+        }
+        
+        await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+        
+        // Топ-3 сохраняем с лучшим качеством
+        const quality = isPriority ? 0.92 : 0.8;
+        const renderedDataUrl = off.toDataURL('image/png', quality);
+        previewCache.set(skinDataUrl, renderedDataUrl);
+        
+        img.src = renderedDataUrl;
+        
+        try { viewer.dispose(); } catch(e) {}
+      } catch(e) {
+        console.error('3D preview error:', e);
+        const img = document.createElement('img');
+        img.src = skinDataUrl;
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.objectFit = 'cover';
+        container.innerHTML = '';
+        container.appendChild(img);
+      } finally {
+        activeRenders--;
+      }
     }
 
-    saveBtn.addEventListener('click', async () => {
-      const title = inpTitle.value.trim();
-      if (!title) return alert('Введите название');
-      
-      saveBtn.disabled = true;
-      saveBtn.textContent = 'Загрузка...';
-
-      try {
-        let finalImageUrl = currentImageUrl;
-
-        // 1. Upload Image if selected
-        const file = inpFile.files[0];
-        if (file) {
-            progressWrap.style.display = 'block';
-            const storageRef = ref(storage, `contest-covers/${Date.now()}_${file.name}`);
-            const uploadTask = uploadBytesResumable(storageRef, file);
-            
-            await new Promise((resolve, reject) => {
-                uploadTask.on('state_changed', 
-                    (snap) => {
-                        const progress = (snap.bytesTransferred / snap.totalBytes) * 100;
-                        progressFill.style.width = progress + '%';
-                    },
-                    (error) => reject(error),
-                    async () => {
-                        finalImageUrl = await getDownloadURL(uploadTask.snapshot.ref);
-                        resolve();
-                    }
-                );
-            });
-        }
-
-        // 2. Prepare Payload
-        const payload = {
-          title,
-          description: inpDesc.value.trim(),
-          status: inpStatus.value,
-          dateLabel: inpDate.value.trim(),
-          link: inpLink.value.trim(),
-          imageUrl: finalImageUrl,
-          updatedAt: serverTimestamp()
-        };
-
-        // 3. Save to Firestore
-        if (currentEditId) {
-          await updateDoc(doc(db, 'contests', currentEditId), payload);
-        } else {
-          payload.createdAt = serverTimestamp();
-          await addDoc(collection(db, 'contests'), payload);
-        }
-        
-        modal.classList.remove('active');
-      } catch(e) {
-        console.error(e);
-        alert('Ошибка: ' + e.message);
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Сохранить';
-      }
-    });
-
-    function escapeHtml(s) { return s ? String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : ''; }
+    function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+    
+    // Загружаем данные при старте
+    console.log('Система оптимизации Firebase reads активна');
+    console.log('Кэш действителен:', isCacheValid());
+    loadData();
   </script>
 </body>
 </html>
