@@ -1,31 +1,43 @@
-<!-- SAVE AS: contests.html -->
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <link rel="icon" href="data:,">
-<title>Конкурсы — Contests</title>
+<title>Конкурсы</title>
 <style>
   :root{
     --bg:#0e0e12; --card:#14141a; --accent:#8a2be2; --text:#eaeaf2; --muted:#9aa0b2;
-    --active: #4ade80; --finished: #9aa0b2;
+    --active: #4ade80; --finished: #9aa0b2; --danger: #ef4444;
   }
   * { box-sizing: border-box; }
   body{ margin:0; font-family:Inter,Arial,Helvetica,sans-serif; background:var(--bg); color:var(--text); padding:22px; }
   .wrap{ max-width:1200px; margin:0 auto; }
   
-  header{ display:flex; align-items:center; gap:12px; margin-bottom:40px; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05); }
-  header h1{ font-size:1.8rem; font-weight:800; margin:0; letter-spacing:-0.5px; }
-  .btn{ background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; font-weight:700; cursor:pointer; border: none; transition: all 0.3s ease; font-size:0.95rem; display:inline-flex; align-items:center; }
+  /* SVG Icons base style */
+  .icon { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+  .icon-sm { width: 14px; height: 14px; }
+  
+  header{ display:flex; align-items:center; justify-content: space-between; margin-bottom:40px; padding-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.05); flex-wrap: wrap; gap: 16px; }
+  header h1{ font-size:1.8rem; font-weight:800; margin:0; letter-spacing:-0.5px; display:flex; align-items:center; gap:12px; }
+  
+  .nav-group { display:flex; gap:10px; align-items:center; }
+
+  .btn{ background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; text-decoration:none; font-weight:700; cursor:pointer; border: none; transition: all 0.3s ease; font-size:0.9rem; display:inline-flex; align-items:center; gap: 8px; }
   .btn:hover{ transform: translateY(-2px); box-shadow: 0 4px 12px rgba(138,43,226,0.4); }
   .btn-secondary{ background:#1f1f28; border: 1px solid rgba(255,255,255,0.08); }
   .btn-secondary:hover{ background:#2a2a35; box-shadow: 0 4px 12px rgba(255,255,255,0.1); }
+  .btn-danger{ background:rgba(239, 68, 68, 0.15); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+  .btn-danger:hover{ background:rgba(239, 68, 68, 0.25); transform: translateY(-2px); }
 
-  .section-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .section-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; color: var(--text); text-transform: uppercase; letter-spacing: 0.5px; }
   .section-title::after { content: ''; height: 1px; background: rgba(255,255,255,0.1); flex: 1; }
   
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; margin-bottom: 48px; }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot-active { background: var(--active); box-shadow: 0 0 8px rgba(74, 222, 128, 0.4); }
+  .dot-past { background: var(--muted); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; margin-bottom: 60px; }
   
   .contest-card {
     background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
@@ -33,167 +45,71 @@
   }
   .contest-card:hover { transform: translateY(-6px); border-color: rgba(138,43,226,0.4); box-shadow: 0 12px 32px rgba(0,0,0,0.4); }
   
-  .card-cover { height: 160px; background: #1a1a22; position: relative; overflow: hidden; }
-  .card-cover img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; opacity: 0.8; }
-  .contest-card:hover .card-cover img { transform: scale(1.05); opacity: 1; }
+  .card-cover { height: 150px; background: #1a1a22; position: relative; overflow: hidden; }
+  .card-cover-gradient { width: 100%; height: 100%; background: linear-gradient(135deg, #2a2a35 0%, #1a1a22 100%); }
   
   .card-status {
-    position: absolute; top: 12px; left: 12px; padding: 6px 12px; border-radius: 20px;
-    font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
-    backdrop-filter: blur(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 2;
+    position: absolute; top: 12px; left: 12px; padding: 6px 10px; border-radius: 6px;
+    font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    backdrop-filter: blur(8px); z-index: 2; display: flex; align-items: center; gap: 6px;
   }
-  .status-active { background: rgba(74, 222, 128, 0.2); color: var(--active); border: 1px solid rgba(74, 222, 128, 0.3); }
-  .status-finished { background: rgba(154, 160, 178, 0.2); color: var(--finished); border: 1px solid rgba(154, 160, 178, 0.3); }
+  .status-active { background: rgba(74, 222, 128, 0.15); color: var(--active); border: 1px solid rgba(74, 222, 128, 0.2); }
+  .status-finished { background: rgba(154, 160, 178, 0.15); color: var(--finished); border: 1px solid rgba(154, 160, 178, 0.2); }
   
   .card-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
-  .card-title { font-size: 1.25rem; font-weight: 800; margin: 0 0 8px 0; line-height: 1.3; }
-  .card-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 16px; flex: 1; }
+  .card-title { font-size: 1.2rem; font-weight: 800; margin: 0 0 8px 0; line-height: 1.3; }
+  .card-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.6; margin-bottom: 20px; flex: 1; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   
   .card-meta { display: flex; justify-content: space-between; align-items: center; margin-top: auto; pt: 16px; border-top: 1px solid rgba(255,255,255,0.05); }
-  .card-date { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+  .card-date { font-size: 0.85rem; color: var(--muted); font-weight: 500; display:flex; align-items:center; gap:6px; }
   
-  .empty-msg { color: var(--muted); font-style: italic; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px; text-align: center; }
+  .admin-controls {
+    position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; opacity: 0; transition: opacity 0.2s; z-index: 10;
+  }
+  .contest-card:hover .admin-controls { opacity: 1; }
+  .admin-btn { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; color: #fff; transition: all 0.2s; backdrop-filter: blur(4px); }
+  .btn-edit { background: rgba(138,43,226,0.8); }
+  .btn-edit:hover { background: var(--accent); }
+  .btn-del { background: rgba(239, 68, 68, 0.8); }
+  .btn-del:hover { background: var(--danger); }
 
-  /* Анимация появления */
+  .empty-msg { color: var(--muted); font-size: 0.95rem; padding: 40px; background: rgba(255,255,255,0.015); border-radius: 12px; text-align: center; border: 1px dashed rgba(255,255,255,0.1); }
+
+  /* Modal */
+  .modal { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
+  .modal.active { display:flex; }
+  .modal-content { background:var(--card); border-radius:16px; padding:28px; max-width:500px; width:100%; border:1px solid rgba(138,43,226,0.2); box-shadow:0 8px 32px rgba(0,0,0,0.6); animation: modalPop 0.3s ease; }
+  @keyframes modalPop { from{transform:scale(0.95);opacity:0;} to{transform:scale(1);opacity:1;} }
+  
+  .modal h2 { margin:0 0 20px 0; font-size:1.4rem; color:var(--accent); }
+  
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; margin-bottom: 8px; font-size: 0.9rem; font-weight: 600; color: var(--muted); }
+  .form-input, .form-select, .form-textarea { 
+    width: 100%; background: #0b0b0e; border: 1px solid rgba(255,255,255,0.1); 
+    color: var(--text); padding: 10px 12px; border-radius: 8px; font-family: inherit; font-size: 0.95rem;
+    transition: border-color 0.3s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row > div { flex: 1; }
+
   .fade-in { animation: fadeInUp 0.5s forwards; opacity: 0; }
   @keyframes fadeInUp { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
 
-  @media (max-width: 600px) {
+  .hidden { display: none !important; }
+
+  @media (max-width: 640px) {
     .grid { grid-template-columns: 1fr; }
     header { flex-direction: column; align-items: flex-start; }
+    .nav-group { margin-left: 0; width: 100%; justify-content: space-between; margin-top: 12px; }
+    .admin-controls { opacity: 1; }
   }
 </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Конкурсы</h1>
-      <div style="margin-left:auto; display:flex; gap:10px;">
-        <a href="index.html" class="btn btn-secondary">← В галерею</a>
-        <button id="signBtn" class="btn">Войти</button>
-      </div>
-    </header>
-
-    <div id="activeSection">
-      <div class="section-title"><span style="color:var(--active)">●</span> Актуальные</div>
-      <div id="activeGrid" class="grid"></div>
-    </div>
-
-    <div id="pastSection" style="margin-top:20px;">
-      <div class="section-title"><span style="color:var(--muted)">●</span> Прошедшие</div>
-      <div id="pastGrid" class="grid"></div>
-    </div>
-  </div>
-
-  <!-- Firebase (для сохранения состояния входа) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
-      authDomain: "skinsrzt.firebaseapp.com",
-      projectId: "skinsrzt",
-      storageBucket: "skinsrzt.appspot.com",
-      messagingSenderId: "1084042281569",
-      appId: "1:1084042281569:web:25872944cf7dac7fd66020"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const signBtn = document.getElementById('signBtn');
-
-    // Авторизация
-    const provider = new GoogleAuthProvider();
-    let currentUser = null;
-    signBtn.addEventListener('click', async () => {
-      if (!currentUser) {
-        try { await signInWithPopup(auth, provider); } catch(e){ alert(e.message); }
-      } else {
-        await signOut(auth);
-      }
-    });
-    onAuthStateChanged(auth, user => {
-      currentUser = user;
-      signBtn.textContent = user ? 'Выйти' : 'Войти';
-    });
-
-    // --- КОНФИГУРАЦИЯ КОНКУРСОВ ---
-    // В будущем это можно тянуть из Firebase.
-    // link: куда ведет карточка.
-    // cover: градиент или картинка.
-    const contests = [
-      {
-        id: 'halloween2024',
-        title: 'Halloween 2024',
-        desc: 'Ужасающе креативный конкурс скинов. Лучшие работы в тематике Хэллоуина.',
-        date: 'Октябрь 2024',
-        status: 'finished', // 'active' или 'finished'
-        link: 'results.html', // Ссылка на твой файл с результатами
-        cover: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%)', // Можно заменить на URL картинки
-        image: 'assets/halloween_cover.jpg' // Опционально, если есть картинка
-      },
-      {
-        id: 'winter2025',
-        title: 'Winter Tales 2025',
-        desc: 'Зимняя сказка уже здесь! Прием работ открыт. Покажите своё новогоднее настроение.',
-        date: 'Декабрь 2024 - Январь 2025',
-        status: 'active',
-        link: '#', // Пока заглушка или ссылка на форму подачи
-        cover: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)'
-      }
-    ];
-
-    const activeGrid = document.getElementById('activeGrid');
-    const pastGrid = document.getElementById('pastGrid');
-
-    function renderContests() {
-      let activeCount = 0;
-      let pastCount = 0;
-
-      contests.forEach((c, idx) => {
-        const isFinished = c.status === 'finished';
-        const badgeText = isFinished ? 'Завершен' : 'Идет прием';
-        const badgeClass = isFinished ? 'status-finished' : 'status-active';
-        const targetGrid = isFinished ? pastGrid : activeGrid;
-        
-        // Если есть картинка - используем, иначе градиент
-        const bgStyle = c.image 
-          ? `<img src="${c.image}" onerror="this.style.display='none';this.parentNode.style.background='${c.cover}'">` 
-          : '';
-        
-        const card = document.createElement('div');
-        card.className = 'contest-card fade-in';
-        card.style.animationDelay = idx * 0.1 + 's';
-        card.innerHTML = `
-          <div class="card-cover" style="background:${c.cover}">
-            ${bgStyle}
-            <div class="card-status ${badgeClass}">${badgeText}</div>
-          </div>
-          <div class="card-body">
-            <div class="card-title">${c.title}</div>
-            <div class="card-desc">${c.desc}</div>
-            <div class="card-meta">
-              <div class="card-date">📅 ${c.date}</div>
-              <div style="color:var(--accent);font-weight:700;font-size:0.9rem;">${isFinished ? 'Смотреть итоги →' : 'Участвовать →'}</div>
-            </div>
-          </div>
-        `;
-        
-        card.addEventListener('click', () => {
-            if(c.link && c.link !== '#') window.location.href = c.link;
-            else alert('Прием работ скоро откроется!');
-        });
-
-        targetGrid.appendChild(card);
-        if(isFinished) pastCount++; else activeCount++;
-      });
-
-      if(activeCount === 0) activeGrid.innerHTML = '<div class="empty-msg">Сейчас нет активных конкурсов. Следите за новостями!</div>';
-      if(pastCount === 0) pastGrid.innerHTML = '<div class="empty-msg">История конкурсов пока пуста.</div>';
-    }
-
-    renderContests();
-  </script>
-</body>
-</html>
+      <h1>
+        <svg class="icon" style="width:32px;height:32px;color:var(-
