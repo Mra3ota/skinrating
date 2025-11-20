@@ -130,7 +130,7 @@
           <span id="cacheIndicator" style="font-size:0.7rem; color:var(--muted); white-space:nowrap;"></span>
         </div>
         <button id="infoBtn" class="info-btn">ℹ️ Оценивание</button>
-        <a href="index.html" class="btn" style="background:#333">Вернуться</a>
+        <a href="contests.html" class="btn" style="background:#333">← Все конкурсы</a>
         <button id="signBtn" class="btn">Войти</button>
       </div>
     </header>
@@ -144,7 +144,7 @@
         <button id="addBtn" class="btn">Добавить</button>
         <span id="adminMsg" class="small" style="margin-left:8px;"></span>
       </div>
-      <div class="admin-small">Файл сохраняется как dataURL в документе <code>contest_entries</code>.</div>
+      <div class="admin-small">Файл загружается в Storage, ссылка сохраняется в <code>contest_entries</code>.</div>
     </div>
 
     <div id="podiumSection" style="display:none;">
@@ -190,12 +190,13 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
       authDomain: "skinsrzt.firebaseapp.com",
       projectId: "skinsrzt",
-      storageBucket: "skinsrzt.appspot.com",
+      storageBucket: "skinsrzt.firebasestorage.app",
       messagingSenderId: "1084042281569",
       appId: "1:1084042281569:web:25872944cf7dac7fd66020"
     };
@@ -203,14 +204,10 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
+    const storage = getStorage(app);
     
-    // Включаем оффлайн кэширование Firebase (снижает reads при повторных загрузках)
     enableIndexedDbPersistence(db).catch(err => {
-      if (err.code === 'failed-precondition') {
-        console.log('Persistence: несколько вкладок открыто');
-      } else if (err.code === 'unimplemented') {
-        console.log('Persistence: браузер не поддерживает');
-      }
+      console.log('Persistence error:', err.code);
     });
 
     const adminWrap = document.getElementById('adminWrap');
@@ -230,8 +227,6 @@
     const cacheIndicator = document.getElementById('cacheIndicator');
 
     const ADMIN_EMAIL = "nmprokhorov@gmail.com";
-    const MEDALS = ['🥇', '🥈', '🥉'];
-    const MEDAL_LABELS = ['1 место', '2 место', '3 место'];
     const MEDAL_COLORS = ['var(--gold)', 'var(--silver)', 'var(--bronze)'];
     
     const CACHE_KEY_ENTRIES = 'contest_entries_cache';
@@ -246,72 +241,44 @@
     let unsubscribeEntries = null;
     let unsubscribeScores = null;
     
-    // Функции кэширования
-    function saveToCache(key, data) {
-      try {
-        localStorage.setItem(key, JSON.stringify(data));
-      } catch(e) {
-        console.log('Cache save error:', e);
-      }
-    }
-    
-    function loadFromCache(key) {
-      try {
-        const data = localStorage.getItem(key);
-        return data ? JSON.parse(data) : null;
-      } catch(e) {
-        console.log('Cache load error:', e);
-        return null;
-      }
-    }
-    
+    function saveToCache(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+    function loadFromCache(key) { try { return JSON.parse(localStorage.getItem(key)); } catch(e){ return null; } }
     function isCacheValid() {
-      const timestamp = localStorage.getItem(CACHE_KEY_TIMESTAMP);
-      if (!timestamp) return false;
-      return (Date.now() - parseInt(timestamp)) < CACHE_DURATION;
+      const ts = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+      return ts && (Date.now() - parseInt(ts)) < CACHE_DURATION;
     }
     
-    // Дебаунсинг rebuild для уменьшения перерисовок
     function scheduleRebuild() {
       if (rebuildTimeout) clearTimeout(rebuildTimeout);
       rebuildTimeout = setTimeout(() => {
         rebuild();
-        // Сохраняем в кэш после rebuild
         saveToCache(CACHE_KEY_ENTRIES, entries);
         saveToCache(CACHE_KEY_SCORES, scores);
         saveToCache(CACHE_KEY_TIMESTAMP, Date.now().toString());
-      }, 300); // 300ms задержка
+      }, 300);
     }
 
-    // Модальное окно
     infoBtn.addEventListener('click', () => infoModal.classList.add('active'));
     closeModal.addEventListener('click', () => infoModal.classList.remove('active'));
-    infoModal.addEventListener('click', (e) => {
-      if (e.target === infoModal) infoModal.classList.remove('active');
-    });
+    infoModal.addEventListener('click', (e) => { if(e.target === infoModal) infoModal.classList.remove('active'); });
     
-    // Принудительное обновление
     refreshBtn.addEventListener('click', () => {
       refreshBtn.disabled = true;
       refreshBtn.innerHTML = '<div class="loading-spinner" style="width:16px;height:16px;border-width:2px;margin:0;"></div>';
-      localStorage.removeItem(CACHE_KEY_TIMESTAMP); // Инвалидируем кэш
+      localStorage.removeItem(CACHE_KEY_TIMESTAMP);
       setupRealtimeListeners();
       setTimeout(() => {
         refreshBtn.disabled = false;
-        refreshBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;">
-              <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-            </svg>`;
+        refreshBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/></svg>`;
         if (unsubscribeEntries) unsubscribeEntries();
         if (unsubscribeScores) unsubscribeScores();
-      }, 5000); // 5 секунд на обновление
+      }, 5000);
     });
 
     const provider = new GoogleAuthProvider();
     signBtn.addEventListener('click', async () => {
       if (!currentUser) {
-        try {
-          await signInWithPopup(auth, provider);
-        } catch(e){ alert('Ошибка входа: ' + e.message); }
+        try { await signInWithPopup(auth, provider); } catch(e){ alert('Ошибка входа: ' + e.message); }
       } else {
         await signOut(auth);
       }
@@ -321,192 +288,142 @@
       currentUser = user;
       signBtn.textContent = user ? 'Выйти (' + (user.email || user.displayName || '') + ')' : 'Войти';
       adminWrap.classList.toggle('hidden', !(user && user.email === ADMIN_EMAIL));
-      
-      // Админ всегда получает свежие данные
-      if (user && user.email === ADMIN_EMAIL) {
-        setupRealtimeListeners();
-      }
+      if (user && user.email === ADMIN_EMAIL) setupRealtimeListeners();
     });
 
+    // UPDATE: Upload to Storage
     addBtn.addEventListener('click', async () => {
       adminMsg.textContent = '';
-      if (!currentUser || currentUser.email !== ADMIN_EMAIL) { adminMsg.textContent = 'Требуется вход админа'; return; }
+      if (!currentUser || currentUser.email !== ADMIN_EMAIL) return;
       const author = (authorInput.value || '').trim();
       const f = fileInput.files[0];
       if (!author) { adminMsg.textContent = 'Введите ник автора'; return; }
       if (!f) { adminMsg.textContent = 'Выберите файл'; return; }
+      
       adminMsg.textContent = 'Загрузка...';
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        try {
-          const dataUrl = ev.target.result;
-          await addDoc(collection(db, 'contest_entries'), {
-            authorName: author,
-            skinData: dataUrl,
-            createdAt: serverTimestamp()
-          });
-          adminMsg.textContent = 'Добавлено успешно';
-          authorInput.value = ''; fileInput.value = '';
-          // Инвалидируем кэш после добавления
-          localStorage.removeItem(CACHE_KEY_TIMESTAMP);
-          setTimeout(()=> adminMsg.textContent = '',2000);
-        } catch(e) {
-          console.error(e);
-          adminMsg.textContent = 'Ошибка: ' + (e.message||e);
-        }
-      };
-      reader.readAsDataURL(f);
+      try {
+        // 1. Upload to Storage
+        const storageRef = ref(storage, `contest-skins/${Date.now()}_${f.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, f);
+        
+        uploadTask.on('state_changed', null, 
+          (error) => { adminMsg.textContent = 'Ошибка: ' + error.message; }, 
+          async () => {
+            // 2. Get URL
+            const url = await getDownloadURL(uploadTask.snapshot.ref);
+            // 3. Save to Firestore
+            await addDoc(collection(db, 'contest_entries'), {
+              authorName: author,
+              skinUrl: url, // Using URL now
+              createdAt: serverTimestamp()
+            });
+            adminMsg.textContent = 'Добавлено успешно';
+            authorInput.value = ''; fileInput.value = '';
+            localStorage.removeItem(CACHE_KEY_TIMESTAMP);
+            setTimeout(()=> adminMsg.textContent = '', 2000);
+          }
+        );
+      } catch(e) {
+        console.error(e);
+        adminMsg.textContent = 'Ошибка: ' + e.message;
+      }
     });
 
-    // Загрузка данных с использованием кэша
     async function loadData() {
-      // Проверяем кэш
       if (isCacheValid()) {
         const cachedEntries = loadFromCache(CACHE_KEY_ENTRIES);
         const cachedScores = loadFromCache(CACHE_KEY_SCORES);
-        
         if (cachedEntries && cachedScores) {
-          console.log('Загружено из кэша');
-          entries = cachedEntries;
-          scores = cachedScores;
+          entries = cachedEntries; scores = cachedScores;
           rebuild();
+          return;
         }
       }
-      
-      // Подписываемся на изменения (только если пользователь админ или кэш устарел)
       if (!isCacheValid() || (currentUser && currentUser.email === ADMIN_EMAIL)) {
         setupRealtimeListeners();
       }
     }
     
     function setupRealtimeListeners() {
-      // Отписываемся от предыдущих подписок
       if (unsubscribeEntries) unsubscribeEntries();
       if (unsubscribeScores) unsubscribeScores();
-      
-      console.log('Подписка на обновления Firebase');
       
       const entriesQ = query(collection(db, 'contest_entries'), orderBy('createdAt','desc'));
       unsubscribeEntries = onSnapshot(entriesQ, snap => {
         snap.docChanges().forEach(ch => {
-          const id = ch.doc.id;
-          if (ch.type === 'removed') {
-            delete entries[id];
-          } else {
-            entries[id] = { id, ...ch.doc.data() };
-          }
+          if (ch.type === 'removed') delete entries[ch.doc.id];
+          else entries[ch.doc.id] = { id: ch.doc.id, ...ch.doc.data() };
         });
         scheduleRebuild();
       });
 
       const scoresQ = query(collection(db, 'contest_scores'), orderBy('createdAt','asc'));
       unsubscribeScores = onSnapshot(scoresQ, snap => {
-        // Инкрементальное обновление вместо полной перезаписи
         snap.docChanges().forEach(ch => {
           const o = ch.doc.data();
           const sid = o.skinId;
-          
           if (ch.type === 'removed') {
-            if (scores[sid]) {
-              scores[sid] = scores[sid].filter(s => s.id !== ch.doc.id);
-              if (scores[sid].length === 0) delete scores[sid];
-            }
+            if (scores[sid]) scores[sid] = scores[sid].filter(s => s.id !== ch.doc.id);
           } else {
             if (!scores[sid]) scores[sid] = [];
-            const existingIndex = scores[sid].findIndex(s => s.id === ch.doc.id);
-            if (existingIndex >= 0) {
-              scores[sid][existingIndex] = { id: ch.doc.id, ...o };
-            } else {
-              scores[sid].push({ id: ch.doc.id, ...o });
-            }
+            const idx = scores[sid].findIndex(s => s.id === ch.doc.id);
+            if (idx >= 0) scores[sid][idx] = { id: ch.doc.id, ...o };
+            else scores[sid].push({ id: ch.doc.id, ...o });
           }
         });
         scheduleRebuild();
       });
     }
-    
-    // Периодическое обновление (раз в 10 минут)
-    setInterval(() => {
-      if (document.visibilityState === 'visible' && !isCacheValid()) {
-        console.log('Периодическое обновление');
-        setupRealtimeListeners();
-        // Отписываемся через 10 секунд после обновления
-        setTimeout(() => {
-          if (unsubscribeEntries) {
-            unsubscribeEntries();
-            unsubscribeEntries = null;
-          }
-          if (unsubscribeScores) {
-            unsubscribeScores();
-            unsubscribeScores = null;
-          }
-        }, 10000);
-      }
-    }, 10 * 60 * 1000);
-    
-    // Обновление при возврате на вкладку
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && !isCacheValid()) {
-        loadData();
-      }
-    });
+
+    // Helper to get skin source (handles both new URLs and old Base64)
+    function getSkinSrc(item) {
+      return item.skinUrl || item.skinData;
+    }
 
     function rebuild(){
-      // Очищаем предыдущие наблюдения
       previewObserver.disconnect();
-      
-      // Обновляем индикатор кэша
       if (cacheIndicator) {
-        const timestamp = localStorage.getItem(CACHE_KEY_TIMESTAMP);
-        if (timestamp && isCacheValid()) {
-          const minutes = Math.floor((Date.now() - parseInt(timestamp)) / 60000);
-          cacheIndicator.textContent = `Кэш: ${minutes} мин назад`;
-        } else {
-          cacheIndicator.textContent = 'Актуальные данные';
-        }
+        const ts = localStorage.getItem(CACHE_KEY_TIMESTAMP);
+        cacheIndicator.textContent = (ts && isCacheValid()) ? 'Кэш' : 'Актуально';
       }
       
       const arr = Object.values(entries).map(e => {
         const s = scores[e.id] || [];
-        const judgeCount = s.length;
         const sum = s.reduce((a,b)=>a+(b.total||0),0);
-        const avgRaw = judgeCount? sum/judgeCount : 0;
-        const avgCeil = judgeCount? Math.ceil(avgRaw) : 0;
-        return { ...e, judgeCount, judges: s, sum, avgRaw, avgCeil };
+        const avgCeil = s.length ? Math.ceil(sum/s.length) : 0;
+        return { ...e, judgeCount: s.length, avgCeil };
       });
 
       if (!arr.length) {
-        listWrap.innerHTML = '';
-        podiumSection.style.display = 'none';
-        emptyMsg.style.display = 'block';
-        return;
+        listWrap.innerHTML = ''; podiumSection.style.display = 'none'; emptyMsg.style.display = 'block'; return;
       }
       emptyMsg.style.display = 'none';
       
       arr.sort((a,b) => {
         if (b.avgCeil !== a.avgCeil) return b.avgCeil - a.avgCeil;
-        return (b.avgRaw || 0) - (a.avgRaw || 0);
+        return 0;
       });
 
       const top3 = arr.slice(0,3);
       const rest = arr.slice(3);
 
       podiumWrap.innerHTML = '';
-      podiumSection.style.display = top3.length ? 'block' : 'none';
+      podiumSection.style.display = top3.length ? 'flex' : 'none';
       
       top3.forEach((it, idx) => {
         const place = idx + 1;
-        const column = document.createElement('div');
-        column.className = `podium-column podium-column-${place}`;
+        const col = document.createElement('div');
+        col.className = `podium-column podium-column-${place}`;
+        const skinSrc = getSkinSrc(it);
         
-        column.innerHTML = `
+        col.innerHTML = `
           <div class="podium-medal-single">
             <div class="podium-number podium-number-${place}">${place}</div>
             <div class="podium-medal-label" style="color:${MEDAL_COLORS[idx]};">место</div>
           </div>
           <div class="place">
             <div class="place-content">
-              <div class="place-preview" id="pv_${it.id}" data-skin-id="${it.id}" data-skin-data="${it.skinData}" data-priority="high">
+              <div class="place-preview" id="pv_${it.id}" data-skin-src="${skinSrc}" data-priority="high">
                 <div class="loading-spinner"></div>
               </div>
               <div class="place-author">${escapeHtml(it.authorName || '—')}</div>
@@ -514,163 +431,117 @@
             </div>
           </div>
         `;
-        
-        column.querySelector('.place').addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
-        podiumWrap.appendChild(column);
-        
-        // Подключаем observer для ленивой загрузки
-        const previewEl = document.getElementById(`pv_${it.id}`);
-        if (previewEl) previewObserver.observe(previewEl);
+        col.querySelector('.place').addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
+        podiumWrap.appendChild(col);
+        const el = document.getElementById(`pv_${it.id}`);
+        if(el) previewObserver.observe(el);
       });
 
       listWrap.innerHTML = '';
       rest.forEach((it, idx) => {
         const place = idx + 4;
+        const skinSrc = getSkinSrc(it);
         const card = document.createElement('div');
         card.className = 'card';
         
-        let placeDisplay = `<strong style="font-size:1.3rem;">#${place}</strong>`;
-        
         card.innerHTML = `
-          <div class="thumb" id="thumb_${it.id}" data-skin-id="${it.id}" data-skin-data="${it.skinData}">
+          <div class="thumb" id="thumb_${it.id}" data-skin-src="${skinSrc}">
             <div class="loading-spinner"></div>
           </div>
           <div class="meta">
             <h2>${escapeHtml(it.authorName || '—')}</h2>
-            <div class="small">Место: ${placeDisplay} • Оценок: ${it.judgeCount}</div>
+            <div class="small">Место: <strong>#${place}</strong> • Оценок: ${it.judgeCount}</div>
             <div class="score-badge">Средний балл: ${it.avgCeil} / 90</div>
           </div>
         `;
         card.addEventListener('click', ()=> window.location.href = 'skin.html?id='+it.id);
         listWrap.appendChild(card);
-        
-        // Подключаем observer для ленивой загрузки
-        const thumbEl = document.getElementById(`thumb_${it.id}`);
-        if (thumbEl) previewObserver.observe(thumbEl);
+        const el = document.getElementById(`thumb_${it.id}`);
+        if(el) previewObserver.observe(el);
       });
     }
 
-    // Кэш для сгенерированных превью
     const previewCache = new Map();
-    
-    // Семафор для ограничения параллельных рендеров
     let activeRenders = 0;
     const MAX_PARALLEL_RENDERS = 3;
     
-    // Intersection Observer для ленивой загрузки
     const previewObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          const container = entry.target;
-          const skinId = container.dataset.skinId;
-          const skinData = container.dataset.skinData;
-          const priority = container.dataset.priority === 'high';
+          const el = entry.target;
+          const src = el.dataset.skinSrc;
+          const priority = el.dataset.priority === 'high';
           
-          if (skinId && skinData && !container.dataset.loaded) {
-            container.dataset.loaded = 'true';
-            
-            // Приоритетные превью загружаем сразу
-            if (priority) {
-              init3DPreview(container.id, skinData);
-            } else {
-              // Остальные с небольшой задержкой
-              setTimeout(() => init3DPreview(container.id, skinData), 50);
-            }
+          if (src && !el.dataset.loaded) {
+            el.dataset.loaded = 'true';
+            if (priority) init3DPreview(el.id, src);
+            else setTimeout(() => init3DPreview(el.id, src), 50);
           }
         }
       });
-    }, {
-      rootMargin: '200px', // Начинаем загрузку за 200px до появления
-      threshold: 0.01
-    });
+    }, { rootMargin: '200px' });
     
-    async function init3DPreview(containerId, skinDataUrl){
+    async function init3DPreview(containerId, skinSrc){
       const container = document.getElementById(containerId);
-      if (!container || !skinDataUrl) return;
+      if (!container || !skinSrc) return;
       
-      const isPriority = container.dataset.priority === 'high';
-      
-      // Проверяем кэш
-      if (previewCache.has(skinDataUrl)) {
-        const cachedImg = document.createElement('img');
-        cachedImg.src = previewCache.get(skinDataUrl);
-        cachedImg.style.width = '100%';
-        cachedImg.style.height = '100%';
-        cachedImg.style.objectFit = 'cover';
-        container.innerHTML = '';
-        container.appendChild(cachedImg);
+      if (previewCache.has(skinSrc)) {
+        const img = document.createElement('img');
+        img.src = previewCache.get(skinSrc);
+        img.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+        container.innerHTML = ''; container.appendChild(img);
         return;
       }
       
-      // Ждём свободный слот для рендера
       while (activeRenders >= MAX_PARALLEL_RENDERS) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(r => setTimeout(r, 100));
       }
-      
       activeRenders++;
       
       try {
-        // Показываем оригинальный скин сразу
-        const img = document.createElement('img');
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
-        img.style.opacity = '0.95';
-        img.src = skinDataUrl;
-        container.innerHTML = '';
-        container.appendChild(img);
-        
-        // Генерируем 3D превью
         const off = document.createElement('canvas');
         const isMobile = window.innerWidth <= 640;
-        // Топ-3 получают лучшее качество, остальные - стандартное
-        const targetWidth = isPriority ? (isMobile ? 340 : 400) : (isMobile ? 280 : 320);
-        const targetHeight = Math.round(targetWidth * 1.35);
-        off.width = targetWidth;
-        off.height = targetHeight;
+        const priority = container.dataset.priority === 'high';
+        const w = priority ? (isMobile ? 340 : 400) : (isMobile ? 280 : 320);
+        const h = Math.round(w * 1.35);
+        off.width = w; off.height = h;
         
         const viewer = new skinview3d.SkinViewer({
-          canvas: off,
-          width: targetWidth,
-          height: targetHeight,
+          canvas: off, width: w, height: h,
           preserveDrawingBuffer: true
         });
         
         try { viewer.renderer.setClearColor(0x15151c, 1); } catch(_) {}
         
-        await viewer.loadSkin(skinDataUrl);
+        await viewer.loadSkin(skinSrc);
         viewer.zoom = 0.95;
         viewer.autoRotate = false;
         
         try {
-          const walk = new skinview3d.WalkingAnimation(viewer);
-          walk.speed = 1.0;
-          walk.paused = true;
-          walk.progress = 0.30;
           viewer.playerObject.rotation.y = -0.4;
           viewer.camera.position.set(0, 24, 46);
           viewer.camera.lookAt(0, 18, 0);
-        } catch(e) {
-          try { viewer.playerObject.rotation.y = -0.4; } catch(_) {}
-        }
+        } catch(_) {}
         
-        await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+        await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
         
-        // Топ-3 сохраняем с лучшим качеством
-        const quality = isPriority ? 0.92 : 0.8;
-        const renderedDataUrl = off.toDataURL('image/png', quality);
-        previewCache.set(skinDataUrl, renderedDataUrl);
+        const quality = priority ? 0.92 : 0.8;
+        const dataUrl = off.toDataURL('image/png', quality);
+        previewCache.set(skinSrc, dataUrl);
         
-        img.src = renderedDataUrl;
-        
-        try { viewer.dispose(); } catch(e) {}
-      } catch(e) {
-        console.error('3D preview error:', e);
         const img = document.createElement('img');
-        img.src = skinDataUrl;
-        img.style.width = '100%';
-        img.style.height = '100%';
-        img.style.objectFit = 'cover';
+        img.src = dataUrl;
+        img.style.cssText = 'width:100%;height:100%;object-fit:contain;transition:transform 0.4s ease;';
+        
+        container.innerHTML = '';
+        container.appendChild(img);
+        viewer.dispose();
+      } catch(e) {
+        console.error('3D Error:', e);
+        const img = document.createElement('img');
+        img.crossOrigin = "anonymous"; // CORS fix for fallback
+        img.src = skinSrc;
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;opacity:0.9;';
         container.innerHTML = '';
         container.appendChild(img);
       } finally {
@@ -680,9 +551,6 @@
 
     function escapeHtml(s){ if (!s && s !== 0) return ''; return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
     
-    // Загружаем данные при старте
-    console.log('Система оптимизации Firebase reads активна');
-    console.log('Кэш действителен:', isCacheValid());
     loadData();
   </script>
 </body>
