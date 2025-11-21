@@ -8,8 +8,8 @@
 <style>
   :root {
     --bg: #050505;
-    --glass: rgba(22, 22, 26, 0.85);
-    --glass-border: rgba(255, 255, 255, 0.12);
+    --glass: rgba(20, 20, 25, 0.8);
+    --glass-border: rgba(255, 255, 255, 0.1);
     --text: #eaeaf2;
     --muted: #888899;
     --sakura: #ffb7c5;
@@ -24,192 +24,184 @@
   
   body {
     margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); 
-    padding: 16px; min-height: 100vh;
-    background-image: radial-gradient(circle at 50% 0%, #2a1b3d 0%, #050505 60%);
+    padding: 12px; min-height: 100vh;
+    background-image: radial-gradient(circle at 50% 0%, #1a0b2e 0%, #000 70%);
     background-attachment: fixed;
   }
 
   .wrap { max-width: 1200px; margin: 0 auto; position: relative; z-index: 2; }
 
-  /* --- 1. HEADER (Flex fix) --- */
+  /* --- HEADER --- */
   header {
-    display: flex; justify-content: space-between; align-items: center; 
-    margin-bottom: 24px; padding: 12px 16px;
-    background: rgba(20, 20, 25, 0.6); backdrop-filter: blur(20px);
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 12px 16px;
+    background: rgba(20, 20, 25, 0.6); backdrop-filter: blur(12px);
     border: 1px solid var(--glass-border); border-radius: 16px;
-    gap: 12px;
+    gap: 10px;
   }
+  h1 { margin: 0; font-size: 1.1rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; display:flex; align-items:center; gap:8px; white-space: nowrap;}
   
-  h1 { 
-    margin: 0; font-size: 1.1rem; font-weight: 900; 
-    color: #fff; text-transform: uppercase; letter-spacing: 0.5px; 
-    display: flex; align-items: center; gap: 8px;
-    white-space: nowrap;
-  }
-  
-  .nav-group { display: flex; gap: 8px; }
+  .nav-group { display: flex; gap: 10px; }
 
   .btn {
     background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 8px;
-    text-decoration: none; font-weight: 700; cursor: pointer; border: none; font-size: 0.85rem;
-    display: inline-flex; align-items: center; justify-content: center;
-    transition: transform 0.2s;
+    text-decoration: none; font-weight: 700; cursor: pointer; border: none; font-size: 0.8rem;
+    white-space: nowrap; display: flex; align-items: center; justify-content: center;
   }
-  .btn:active { transform: scale(0.95); }
   .btn-ghost { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); }
 
-  /* --- 5. ADMIN PANEL (Collapsible) --- */
-  .admin-toggle {
-    width: 100%; text-align: center; background: rgba(255,0,85,0.1); 
-    color: var(--neon-pink); border: 1px dashed var(--neon-pink); 
-    padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.9rem;
-    margin-bottom: 20px;
+  /* --- ADMIN --- */
+  .admin-panel {
+    background: rgba(255, 0, 85, 0.08); border: 1px dashed var(--neon-pink); border-radius: 16px; padding: 16px; margin-bottom: 30px; 
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
   }
-  .admin-content {
-    display: none; flex-direction: column; gap: 12px; 
-    background: rgba(20,20,25,0.9); padding: 16px; border-radius: 16px; border: 1px solid var(--glass-border);
-    margin-bottom: 30px;
-  }
-  .admin-content.open { display: flex; }
-  .admin-content input { 
-    background: #000; border: 1px solid var(--glass-border); padding: 12px; 
-    border-radius: 8px; color: #fff; width: 100%;
+  .admin-panel input { 
+    background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); padding: 10px; border-radius: 8px; color: #fff; flex: 1; min-width: 200px;
   }
 
-  /* --- 2. LEADERBOARD (Pyramid Layout) --- */
-  #podiumSection { margin-bottom: 40px; }
+  /* --- PODIUM --- */
+  #podiumSection { margin-bottom: 30px; }
   .podium-title {
-    text-align: center; font-size: 1.6rem; font-weight: 900; margin-bottom: 24px;
+    text-align: center; font-size: 1.4rem; font-weight: 900; margin-bottom: 20px;
     background: linear-gradient(90deg, var(--gold), var(--silver), var(--bronze));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     text-transform: uppercase; letter-spacing: 2px;
   }
 
+  /* Desktop Podium Layout (Default) */
   .podium-wrapper { 
-    display: grid; 
-    /* На десктопе все в ряд */
-    grid-template-columns: 1fr 1.1fr 1fr; 
-    align-items: end; 
-    gap: 20px; 
-    max-width: 800px; margin: 0 auto;
+    display: flex; align-items: flex-end; justify-content: center; gap: 20px; 
   }
   
-  /* Порядок элементов для пирамиды через order */
-  .col-1 { order: 2; z-index: 10; } /* 1 место в центре */
-  .col-2 { order: 1; } /* 2 место слева */
-  .col-3 { order: 3; } /* 3 место справа */
-
-  .podium-col { display: flex; flex-direction: column; align-items: center; width: 100%; }
+  .podium-column { display: flex; flex-direction: column; align-items: center; position: relative; width: 220px; }
   
-  .medal-label { 
-    font-size: 0.75rem; font-weight: 800; margin-bottom: 6px; 
-    text-transform: uppercase; letter-spacing: 1px; 
-    background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 6px;
-  }
-  .lbl-1 { color: var(--gold); border: 1px solid var(--gold); }
-  .lbl-2 { color: var(--silver); border: 1px solid var(--silver); }
-  .lbl-3 { color: var(--bronze); border: 1px solid var(--bronze); }
+  .medal-label { font-size: 0.8rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; }
+  .lbl-1 { color: var(--gold); } .lbl-2 { color: var(--silver); } .lbl-3 { color: var(--bronze); }
 
-  /* --- 3. CARD DESIGN (Full height skin) --- */
   .place-card {
     width: 100%;
-    background: linear-gradient(180deg, rgba(35,35,40,0.9), rgba(10,10,12,0.95));
+    background: linear-gradient(180deg, rgba(40,40,45,0.8), rgba(10,10,15,0.95));
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 16px; 
     position: relative; cursor: pointer; overflow: hidden;
-    /* Убрал паддинги чтобы скин был огромным */
     padding: 0; 
     display: flex; flex-direction: column;
-    transition: transform 0.2s;
   }
-  .place-card:active { transform: scale(0.98); }
+  
+  /* Desktop Heights */
+  .col-1 .place-card { height: 320px; border: 2px solid var(--gold); box-shadow: 0 0 25px rgba(255,215,0,0.15); }
+  .col-2 .place-card { height: 270px; border-top: 4px solid var(--silver); }
+  .col-3 .place-card { height: 270px; border-top: 4px solid var(--bronze); }
 
-  /* Высота карточек */
-  .col-1 .place-card { aspect-ratio: 4/5; border: 2px solid var(--gold); box-shadow: 0 0 30px rgba(255,215,0,0.2); }
-  .col-2 .place-card { aspect-ratio: 4/5; border-top: 4px solid var(--silver); }
-  .col-3 .place-card { aspect-ratio: 4/5; border-top: 4px solid var(--bronze); }
+  .col-1 { order: 2; z-index: 2; margin-bottom: 10px; }
+  .col-2 { order: 1; }
+  .col-3 { order: 3; }
 
   .place-card img { 
     width: 100%; height: 100%; 
-    object-fit: cover; /* Заполняет всё пространство */
-    object-position: top center; /* Фокус на голову/грудь */
-    display: block;
+    object-fit: contain; /* Гарантирует, что скин влезет целиком */
+    object-position: bottom center;
+    display: block; 
   }
 
   .place-info { 
     position: absolute; bottom: 0; left: 0; width: 100%; 
-    padding: 12px 8px; text-align: center;
-    background: linear-gradient(to top, rgba(0,0,0,0.95) 40%, transparent);
+    padding: 10px; text-align: center;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 30%, transparent);
   }
-  .place-name { font-weight: 800; font-size: 1rem; color: #fff; text-shadow: 0 2px 4px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .place-name { font-weight: 800; font-size: 1rem; color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .place-score { font-weight: 900; font-size: 0.9rem; color: var(--sakura); margin-top: 2px; }
 
-  /* --- 4. LIST ITEMS (Grid 4+) --- */
+  /* --- GRID --- */
   .grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
     gap: 12px; 
   }
 
   .card {
-    background: var(--glass); border: 1px solid var(--glass-border);
-    border-radius: 14px; cursor: pointer; position: relative; overflow: hidden;
+    background: rgba(20, 20, 25, 0.5); backdrop-filter: blur(10px);
+    border: 1px solid var(--glass-border);
+    border-radius: 14px; padding: 6px; cursor: pointer; 
     display: flex; flex-direction: column;
   }
 
   .rank-badge {
-    position: absolute; top: 8px; left: 8px; z-index: 2;
-    background: rgba(0,0,0,0.85); color: #fff;
-    font-weight: 800; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px;
+    position: absolute; top: 10px; left: 10px; z-index: 2;
+    background: rgba(0,0,0,0.8); color: #fff;
+    font-weight: 800; font-size: 0.7rem; padding: 2px 6px; border-radius: 6px;
     border: 1px solid rgba(255,255,255,0.2);
   }
 
-  .card-img-wrap {
-    width: 100%; aspect-ratio: 1/1; /* Квадратные для компактности */
-    background: #08080a; position: relative;
+  .preview-box {
+    width: 100%; 
+    /* Чуть вытянутый формат для скина в полный рост */
+    aspect-ratio: 3 / 4; 
+    background: #0a0a0f; border-radius: 10px;
+    overflow: hidden; position: relative; margin-bottom: 6px;
   }
-  .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
-
-  .card-footer { 
-    padding: 10px; display: flex; justify-content: space-between; align-items: center; 
-    background: #111; border-top: 1px solid var(--glass-border);
+  .preview-box img { 
+    width: 100%; height: 100%; 
+    object-fit: contain; /* Полный рост без обрезки */
+    object-position: center; 
+    display: block; 
   }
   
+  .card-footer { display: flex; justify-content: space-between; align-items: center; height: 34px; padding: 0 4px; }
   .card-name { 
-    font-weight: 700; font-size: 0.85rem; color: #fff; 
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;
+    font-weight: 700; font-size: 0.85rem; line-height: 1.2; color: #fff; 
+    flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding-right: 8px; text-align: left;
   }
-  
-  .card-score {
-    font-weight: 800; font-size: 0.9rem; color: var(--sakura);
-    background: rgba(255, 183, 197, 0.1); padding: 2px 6px; border-radius: 4px;
+  .card-score-box {
+    background: rgba(138, 43, 226, 0.25); border: 1px solid var(--accent);
+    min-width: 30px; height: 30px; border-radius: 8px; 
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.85rem; color: #fff;
   }
 
-  /* --- MOBILE MEDIA QUERIES (The Fix) --- */
+  /* --- MOBILE FIXES (Pyramid Layout + Full Body) --- */
   @media (max-width: 768px) {
-    /* Header Fix */
-    header { padding: 10px 14px; }
-    .nav-group .btn span { display: none; } /* Скрыть текст "Назад" если надо */
+    .wrap { padding: 0 8px; }
     
-    /* Pyramid Layout Mobile Fix */
+    /* Header overflow fix */
+    @media (max-width: 380px) {
+        .btn-text { display: none; }
+    }
+
+    /* Grid: Strict 2 Columns */
+    .grid { 
+      grid-template-columns: 1fr 1fr; 
+      gap: 10px; 
+    }
+    
+    /* PODIUM PYRAMID LAYOUT */
     .podium-wrapper {
-        grid-template-columns: 1fr 1fr; /* 2 колонки */
+        display: grid;
+        grid-template-columns: 1fr 1fr;
         grid-template-areas: 
             "first first"
             "second third";
-        gap: 12px;
+        gap: 10px;
+        align-items: end;
     }
-    .col-1 { grid-area: first; width: 60%; justify-self: center; } /* 1 место по центру сверху */
-    .col-2 { grid-area: second; }
-    .col-3 { grid-area: third; }
     
-    /* Card sizes on mobile */
-    .col-1 .place-card { aspect-ratio: 3/4; }
-    .col-2 .place-card, .col-3 .place-card { aspect-ratio: 3/4; }
+    /* 1st Place: Center top, Bigger */
+    .col-1 { 
+        grid-area: first; 
+        width: 60% !important; 
+        justify-self: center;
+        margin-bottom: 10px; 
+        order: unset;
+    }
+    .col-1 .place-card { height: 240px; }
 
-    /* Grid 4+ Fix */
-    .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-    .card-name { font-size: 0.8rem; }
+    /* 2nd & 3rd: Side by side below */
+    .col-2 { grid-area: second; width: 100% !important; order: unset; }
+    .col-3 { grid-area: third; width: 100% !important; order: unset; }
+    
+    .col-2 .place-card, .col-3 .place-card { height: 180px; }
+    
+    /* Admin Panel Stack */
+    .admin-panel { flex-direction: column; align-items: stretch; }
   }
 
   /* --- MODAL --- */
@@ -220,14 +212,14 @@
   .modal-overlay.active { display: flex; }
 
   .viewer-section { flex: 1; position: relative; background: radial-gradient(circle at center, #1a1a20 0%, #000 100%); }
-  .details-section { padding: 20px; background: #0e0e12; border-top: 1px solid var(--glass-border); max-height: 50vh; overflow-y: auto; }
+  .details-section { padding: 20px; background: #0e0e12; border-top: 1px solid var(--glass-border); }
   
   @media (min-width: 900px) {
     .modal-overlay { background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
     .modal-glass { width: 900px; height: 80vh; display: grid; grid-template-columns: 1fr 320px; border: 1px solid var(--glass-border); border-radius: 24px; overflow:hidden; background:#000; }
     .viewer-section { height: auto; }
-    .details-section { border-top: none; border-left: 1px solid var(--glass-border); max-height: none; }
-    .modal-overlay { flex-direction: row; }
+    .details-section { border-top: none; border-left: 1px solid var(--glass-border); }
+    .modal-overlay { flex-direction: row; } 
   }
 
   .close-btn {
@@ -237,390 +229,14 @@
   }
 
   .rating-wrap { margin-top: 10px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; }
+  
   input[type=range] { width: 100%; -webkit-appearance: none; background: transparent; margin: 12px 0; height: 30px; }
   input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #444; border-radius: 3px; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--neon-pink); border: 2px solid #fff; margin-top: -9px; box-shadow: 0 0 10px var(--neon-pink); }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%;
+    background: var(--neon-pink); border: 2px solid #fff; margin-top: -9px;
+    box-shadow: 0 0 10px var(--neon-pink);
+  }
+
   .big-score { font-size: 2.5rem; font-weight: 900; text-align: center; color: #fff; margin: 5px 0; }
-  
-  .hidden { display: none !important; }
-</style>
-</head>
-<body>
-
-<div class="wrap">
-  <header>
-    <h1><span>🌸</span> ASIA FEST</h1>
-    <div class="nav-group">
-      <a href="contests.html" class="btn btn-ghost">Назад</a>
-      <button id="authBtn" class="btn">Войти</button>
-    </div>
-  </header>
-
-  <div id="adminPanel" class="hidden">
-    <div class="admin-toggle" id="adminToggle">⚙️ Админ панель</div>
-    <div class="admin-content" id="adminContent">
-      <input type="text" id="newAuthor" placeholder="Ник автора">
-      <input type="file" id="newFile" accept="image/png">
-      <button id="addEntryBtn" class="btn" style="width:100%; margin-top:10px;">Загрузить скин</button>
-      <div id="adminStatus" style="color:#fff; text-align:center; margin-top:5px;"></div>
-    </div>
-  </div>
-
-  <!-- Podium -->
-  <div id="podiumSection" class="hidden">
-    <div class="podium-title">Лидеры</div>
-    <div id="podiumWrapper" class="podium-wrapper"></div>
-  </div>
-
-  <!-- Grid -->
-  <div id="grid" class="grid"></div>
-  <div id="loading" style="text-align:center; padding: 40px; color:var(--muted)">Загрузка...</div>
-</div>
-
-<!-- Modal -->
-<div id="modal" class="modal-overlay">
-  <div class="modal-glass">
-    <button class="close-btn" id="closeModal">×</button>
-    <div class="viewer-section" id="viewerContainer"></div>
-    <div class="details-section">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div>
-            <h2 id="mAuthor" style="margin:0; font-size:1.4rem;">Author</h2>
-            <span style="font-size:0.75rem; color:var(--muted)">ASIA ENTRY</span>
-          </div>
-          <div style="text-align:right;">
-             <strong id="mTotal" style="font-size:1.8rem; color:var(--sakura)">0</strong>
-          </div>
-      </div>
-      
-      <div style="flex:1; margin-bottom:10px;">
-        <div id="judgesList" style="font-size:0.85rem; color:var(--muted);"></div>
-      </div>
-
-      <div id="judgeControls" class="rating-wrap hidden">
-        <div class="big-score" id="scoreDisplay">5</div>
-        <input type="range" id="scoreInput" min="1" max="10" value="5" step="1">
-        <button id="submitScore" class="btn" style="width:100%;">Оценить</button>
-      </div>
-      
-      <div id="judgeError" style="margin-top:10px; text-align:center; color:var(--muted); font-size:0.8rem;" class="hidden">
-        Только для судей.
-      </div>
-    </div>
-  </div>
-</div>
-
-<script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-  import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  import { getStorage, ref, uploadBytesResumable, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
-
-  const firebaseConfig = {
-      apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
-      authDomain: "skinsrzt.firebaseapp.com",
-      projectId: "skinsrzt",
-      storageBucket: "skinsrzt.firebasestorage.app",
-      messagingSenderId: "1084042281569",
-      appId: "1:1084042281569:web:25872944cf7dac7fd66020"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-  const storage = getStorage(app);
-  const ADMIN_EMAIL = "nmprokhorov@gmail.com";
-
-  let currentUser = null;
-  let isJudge = false;
-  let currentSkinId = null;
-  let viewer = null;
-  let entries = [];
-  let scores = {};
-
-  // DOM
-  const grid = document.getElementById('grid');
-  const podiumSection = document.getElementById('podiumSection');
-  const podiumWrapper = document.getElementById('podiumWrapper');
-  const modal = document.getElementById('modal');
-  const viewerContainer = document.getElementById('viewerContainer');
-  const authBtn = document.getElementById('authBtn');
-
-  const MEDAL_LABELS = ['1 МЕСТО', '2 МЕСТО', '3 МЕСТО'];
-  const MEDAL_CLASSES = ['lbl-1', 'lbl-2', 'lbl-3'];
-
-  // --- AUTH ---
-  const provider = new GoogleAuthProvider();
-  authBtn.addEventListener('click', async () => {
-    if(!currentUser) await signInWithPopup(auth, provider);
-    else await signOut(auth);
-  });
-
-  onAuthStateChanged(auth, async user => {
-    currentUser = user;
-    authBtn.textContent = user ? 'Выйти' : 'Войти';
-    
-    const adminPanel = document.getElementById('adminPanel');
-    if (user && user.email === ADMIN_EMAIL) {
-        adminPanel.classList.remove('hidden');
-        // Toggle logic
-        document.getElementById('adminToggle').onclick = () => {
-            document.getElementById('adminContent').classList.toggle('open');
-        };
-    } else {
-        adminPanel.classList.add('hidden');
-    }
-    
-    if(user) {
-      const snap = await getDoc(doc(db, 'judges', user.uid));
-      isJudge = snap.exists();
-    } else { isJudge = false; }
-    if(currentSkinId) updateModalUI();
-  });
-
-  // --- DATA ---
-  onSnapshot(query(collection(db, 'asia_entries'), orderBy('createdAt', 'desc')), snap => {
-    entries = [];
-    snap.forEach(d => entries.push({id: d.id, ...d.data()}));
-    rebuildAll();
-  });
-
-  onSnapshot(collection(db, 'asia_scores'), snap => {
-    scores = {};
-    snap.forEach(d => {
-      const s = d.data();
-      if(!scores[s.entryId]) scores[s.entryId] = [];
-      scores[s.entryId].push(s);
-    });
-    rebuildAll();
-    if(currentSkinId) updateModalStats(currentSkinId);
-  });
-
-  // --- RENDER ---
-  function rebuildAll() {
-    document.getElementById('loading').style.display = 'none';
-    
-    const sorted = [...entries].map(e => {
-        const entryScores = scores[e.id] || [];
-        const total = entryScores.reduce((acc, cur) => acc + cur.score, 0);
-        return { ...e, total };
-    }).sort((a,b) => b.total - a.total);
-
-    const podiumList = sorted.slice(0, 3);
-    const gridList = sorted.slice(3);
-
-    renderPodium(podiumList);
-    renderGrid(gridList);
-  }
-
-  function renderPodium(list) {
-    if(list.length === 0) { podiumSection.classList.add('hidden'); return; }
-    podiumSection.classList.remove('hidden');
-    podiumWrapper.innerHTML = '';
-    
-    // Order for CSS Grid / Flex: 2, 1, 3
-    const order = [1, 0, 2]; 
-    
-    order.forEach(idx => {
-        if(!list[idx]) return;
-        const e = list[idx];
-        const place = idx + 1;
-        const col = document.createElement('div');
-        col.className = `podium-col col-${place}`;
-        const imgSrc = e.previewUrl || e.skinUrl;
-
-        col.innerHTML = `
-            <div class="medal-label ${MEDAL_CLASSES[idx]}">${MEDAL_LABELS[idx]}</div>
-            <div class="place-card">
-                <img src="${imgSrc}" loading="lazy">
-                <div class="place-info">
-                    <div class="place-name">${escapeHtml(e.authorName)}</div>
-                    <div class="place-score">${e.total}</div>
-                </div>
-            </div>
-        `;
-        col.querySelector('.place-card').addEventListener('click', () => openModal(e));
-        podiumWrapper.appendChild(col);
-    });
-  }
-
-  function renderGrid(list) {
-    grid.innerHTML = '';
-    list.forEach((e, index) => {
-      const card = document.createElement('div');
-      card.className = 'card';
-      const imgSrc = e.previewUrl || e.skinUrl;
-      const rank = index + 4; 
-      
-      card.innerHTML = `
-        <div class="rank-badge">#${rank}</div>
-        <div class="card-img-wrap">
-          <img src="${imgSrc}" loading="lazy">
-        </div>
-        <div class="card-footer">
-          <div class="card-name">${escapeHtml(e.authorName)}</div>
-          <div class="card-score">${e.total}</div>
-        </div>
-      `;
-      card.addEventListener('click', () => openModal(e));
-      grid.appendChild(card);
-    });
-  }
-
-  // --- MODAL ---
-  function openModal(entry) {
-    currentSkinId = entry.id;
-    modal.classList.add('active');
-    document.getElementById('mAuthor').textContent = entry.authorName;
-    
-    if(viewer) viewer.dispose();
-    viewerContainer.innerHTML = '';
-    const canvas = document.createElement('canvas');
-    canvas.style.width = '100%'; canvas.style.height = '100%';
-    viewerContainer.appendChild(canvas);
-    
-    viewer = new skinview3d.SkinViewer({
-      canvas: canvas, width: viewerContainer.clientWidth, height: viewerContainer.clientHeight, skin: entry.skinUrl
-    });
-    viewer.autoRotate = true; viewer.autoRotateSpeed = 0.5; 
-    viewer.camera.position.set(0, 20, 50);
-
-    updateModalUI();
-    updateModalStats(entry.id);
-  }
-
-  function updateModalUI() {
-    const controls = document.getElementById('judgeControls');
-    const error = document.getElementById('judgeError');
-    const input = document.getElementById('scoreInput');
-    const disp = document.getElementById('scoreDisplay');
-
-    if(isJudge && currentUser) {
-      controls.classList.remove('hidden');
-      error.classList.add('hidden');
-      const entryScores = scores[currentSkinId] || [];
-      const myScore = entryScores.find(s => s.judgeId === currentUser.uid);
-      if(myScore) {
-        input.value = myScore.score; disp.textContent = myScore.score;
-        document.getElementById('submitScore').textContent = "Обновить";
-      } else {
-        input.value = 5; disp.textContent = 5;
-        document.getElementById('submitScore').textContent = "Подтвердить";
-      }
-    } else {
-      controls.classList.add('hidden');
-      error.classList.remove('hidden');
-    }
-  }
-
-  function updateModalStats(id) {
-    const entryScores = scores[id] || [];
-    const total = entryScores.reduce((acc, cur) => acc + cur.score, 0);
-    document.getElementById('mTotal').textContent = total;
-    document.getElementById('judgesList').innerHTML = entryScores.map(s => 
-      `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span>${escapeHtml(s.judgeName||'Судья')}</span><b style="color:#fff">${s.score}</b></div>`
-    ).join('');
-  }
-
-  document.getElementById('closeModal').addEventListener('click', () => {
-    modal.classList.remove('active');
-    if(viewer) { viewer.dispose(); viewer = null; }
-    currentSkinId = null;
-  });
-
-  const scoreInput = document.getElementById('scoreInput');
-  scoreInput.addEventListener('input', (e) => { document.getElementById('scoreDisplay').textContent = e.target.value; });
-
-  document.getElementById('submitScore').addEventListener('click', async () => {
-    if(!currentUser || !isJudge) return;
-    const score = parseInt(scoreInput.value);
-    const btn = document.getElementById('submitScore');
-    btn.disabled = true; btn.textContent = '...';
-    try {
-      let judgeName = currentUser.displayName || 'Судья';
-      const uDoc = await getDoc(doc(db, 'users', currentUser.uid));
-      if(uDoc.exists() && uDoc.data().displayName) judgeName = uDoc.data().displayName;
-      
-      const q = query(collection(db, 'asia_scores'), where('judgeId', '==', currentUser.uid), where('entryId', '==', currentSkinId));
-      const snap = await getDocs(q);
-      
-      if(!snap.empty) await updateDoc(snap.docs[0].ref, { score, judgeName });
-      else await addDoc(collection(db, 'asia_scores'), {
-          judgeId: currentUser.uid, judgeName, entryId: currentSkinId, score, createdAt: serverTimestamp()
-      });
-      btn.textContent = 'Готово!';
-    } catch(e) { console.error(e); alert(e.message); }
-    btn.disabled = false;
-  });
-
-  // --- GENERATE PREVIEW (ZOOMED IN & HIGH RES) ---
-  async function generatePreview(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            const skinData = e.target.result;
-            const offCanvas = document.createElement('canvas');
-            // High Resolution
-            offCanvas.width = 1024;
-            offCanvas.height = 1024; 
-            
-            const offViewer = new skinview3d.SkinViewer({
-                canvas: offCanvas, width: 1024, height: 1024, preserveDrawingBuffer: true
-            });
-            
-            try {
-                offViewer.renderer.setClearColor(0x000000, 0);
-                await offViewer.loadSkin(skinData);
-                
-                // --- CAMERA SETTINGS: BUST SHOT ---
-                offViewer.zoom = 1.0; 
-                offViewer.autoRotate = false;
-                offViewer.playerObject.rotation.y = -0.5; 
-                
-                // Camera VERY close and slightly above eye level
-                // Y=24 looks at head/neck area. Z=25 is closeup distance.
-                offViewer.camera.position.set(0, 28, 28); 
-                offViewer.camera.lookAt(0, 18, 0);
-                
-                offViewer.render();
-                const dataUrl = offCanvas.toDataURL('image/png');
-                offViewer.dispose();
-                resolve(dataUrl);
-            } catch(err) { reject(err); }
-        };
-        reader.readAsDataURL(file);
-    });
-  }
-
-  document.getElementById('addEntryBtn').addEventListener('click', async () => {
-    const author = document.getElementById('newAuthor').value;
-    const file = document.getElementById('newFile').files[0];
-    const status = document.getElementById('adminStatus');
-    if(!author || !file) return;
-    status.textContent = 'Обработка...';
-    
-    try {
-      const dataUrl = await generatePreview(file); 
-      status.textContent = 'Загрузка...';
-      const skinRef = ref(storage, `asia-skins/${Date.now()}_${file.name}`);
-      const skinTask = await uploadBytesResumable(skinRef, file);
-      const skinUrl = await getDownloadURL(skinTask.ref);
-      
-      const previewRef = ref(storage, `asia-skins/${Date.now()}_preview.png`);
-      await uploadString(previewRef, dataUrl, 'data_url');
-      const previewUrl = await getDownloadURL(previewRef);
-      
-      await addDoc(collection(db, 'asia_entries'), {
-        authorName: author, skinUrl: skinUrl, previewUrl: previewUrl, createdAt: serverTimestamp()
-      });
-      status.textContent = 'OK!';
-      document.getElementById('newAuthor').value = '';
-    } catch(e) { status.textContent = 'Error'; console.error(e); }
-  });
-
-  function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;") : ''; }
-  window.addEventListener('resize', () => { if(viewer && modal.classList.contains('active')) { viewer.width = viewerContainer.clientWidth; viewer.height = viewerContainer.clientHeight; } });
-</script>
-</body>
-</html>
+  .hidden { display: none !impo
