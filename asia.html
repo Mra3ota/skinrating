@@ -61,12 +61,10 @@
   .admin-header strong { color: var(--neon-pink); display: flex; align-items: center; gap: 10px; }
   .admin-arrow { transition: transform 0.3s ease; font-size: 1.2rem; color: var(--neon-pink); }
   
-  /* Контент админки */
   .admin-content {
     max-height: 0; opacity: 0; transition: max-height 0.4s ease, opacity 0.3s ease;
     padding: 0 20px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center;
   }
-  /* Класс для открытия */
   .admin-panel.open .admin-content { max-height: 500px; opacity: 1; padding-bottom: 20px; }
   .admin-panel.open .admin-arrow { transform: rotate(180deg); }
 
@@ -104,14 +102,15 @@
     overflow: hidden;
   }
   
-  /* FIX: Pixelated & Full Body Visibility */
+  /* FIX: Center Skin & Pixel Perfect */
   .place-card img { 
     width: 100%; 
-    height: calc(100% - 40px); /* Оставляем место под инфо */
+    height: 100%; /* Занимает всю высоту карточки */
     object-fit: contain; 
-    object-position: center bottom; 
+    object-position: center center; /* Центрируем, чтобы не тонул */
     image-rendering: pixelated;
     transition: transform 0.4s; display: block; 
+    margin-bottom: 10px; /* Небольшой отступ снизу, чтобы ноги не лезли на текст */
   }
   .place-card:hover img { transform: scale(1.05); }
 
@@ -127,8 +126,8 @@
 
   .place-info { 
     position: absolute; bottom: 0; left: 0; width: 100%; 
-    padding: 10px 5px; text-align: center;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    padding: 12px 5px; text-align: center;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 20%, transparent); /* Более темная подложка для читаемости */
   }
   .place-name { font-weight: 800; font-size: 1.1rem; margin-bottom: 2px; color: #fff; text-shadow: 0 2px 4px #000; }
   .place-score { font-weight: 900; font-size: 1rem; color: var(--sakura); }
@@ -136,7 +135,6 @@
   /* --- GRID (LIST 4+) --- */
   .grid { 
     display: grid; 
-    /* Desktop: Grid Cards */
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
     gap: 16px; 
   }
@@ -148,7 +146,6 @@
   }
   .card:active { transform: scale(0.98); }
 
-  /* Rank Badge */
   .rank-badge {
     position: absolute; top: 8px; left: 8px; z-index: 2;
     background: rgba(0,0,0,0.8); color: #fff;
@@ -180,72 +177,82 @@
     font-weight: 900; font-size: 0.9rem; color: #fff;
   }
 
-  /* --- MOBILE OPTIMIZATIONS (Critical Fixes) --- */
+  /* --- MOBILE OPTIMIZATIONS (FIXES) --- */
   @media (max-width: 768px) {
     body { padding: 12px; }
     header { padding: 12px 16px; margin-bottom: 20px; }
     h1 { font-size: 1.2rem; }
     
-    /* Header Button Tweaks */
     @media (max-width: 400px) {
-        .logout-text { display: none; } /* Скрываем текст "Выйти" */
-        .btn { padding: 8px; } /* Компактная кнопка */
+        .logout-text { display: none; } 
+        .btn { padding: 8px; }
     }
 
-    /* 1. Admin Panel Accordion styles already active via JS toggling class */
-
-    /* 2. Podium: Pyramid Layout */
+    /* Podium Fixes */
     .podium-wrapper { 
         display: grid; 
         grid-template-columns: 1fr 1fr; 
         gap: 10px; 
         align-items: start;
     }
-    /* 1st place: Full width on top */
-    .col-1 { grid-column: 1 / -1; order: 1; margin-bottom: 10px; width: 100%; }
-    .col-1 .place-card { width: 100%; height: 220px; } /* Большой скин */
+    /* 1st place: Centered & Constrained Width */
+    .col-1 { 
+        grid-column: 1 / -1; 
+        order: 1; 
+        margin-bottom: 10px; 
+        width: 100%; 
+        display: flex; 
+        justify-content: center; /* Center the column content */
+    }
+    .col-1 .place-card { 
+        width: 100%; 
+        max-width: 240px; /* FIX: Не дает растягиваться на весь экран */
+        height: 260px; 
+    }
     
-    /* 2nd and 3rd: Side by side below */
+    /* 2nd and 3rd */
     .col-2 { grid-column: 1; order: 2; width: 100%; }
-    .col-2 .place-card { width: 100%; height: 180px; }
+    .col-2 .place-card { width: 100%; height: 200px; }
     
     .col-3 { grid-column: 2; order: 3; width: 100%; }
-    .col-3 .place-card { width: 100%; height: 180px; }
+    .col-3 .place-card { width: 100%; height: 200px; }
 
     .place-name { font-size: 1rem; }
     
-    /* 3. List (4+) -> Horizontal compact bars */
+    /* List Fixes: Bigger Cards */
     .grid {
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
     }
     
     .card {
-        flex-direction: row; /* Горизонтально */
+        flex-direction: row; 
         align-items: center;
-        height: 60px;
-        padding: 6px 12px;
-        gap: 12px;
+        height: 85px; /* FIX: Увеличили высоту (было 60px) */
+        padding: 10px 12px;
+        gap: 16px;
     }
     
     .rank-badge {
-        position: static; /* В поток */
+        position: static; 
         margin-right: 0;
-        font-size: 0.85rem;
+        font-size: 1rem; /* Крупнее цифра */
         background: transparent; border: none; padding: 0;
-        min-width: 25px;
+        min-width: 30px;
     }
     
     .preview-box {
-        width: 45px; height: 45px; aspect-ratio: 1;
-        border-radius: 50%; /* Круглая аватарка */
+        width: 65px; height: 65px; /* FIX: Крупная аватарка (было 45px) */
+        aspect-ratio: 1;
+        border-radius: 50%; 
         margin-bottom: 0;
         flex-shrink: 0;
+        border: 2px solid rgba(255,255,255,0.1);
     }
     .preview-box img {
         object-fit: cover; 
-        object-position: top center; /* Фокус на лицо */
+        object-position: top center; 
     }
 
     .card-footer {
@@ -254,9 +261,13 @@
         justify-content: space-between;
     }
     .card-name {
-        font-size: 0.95rem;
-        -webkit-line-clamp: 1; /* Одна строка */
+        font-size: 1.1rem; /* Крупнее текст */
+        -webkit-line-clamp: 1; 
         margin-right: 10px;
+    }
+    .card-score-box {
+        width: 38px; height: 38px; /* Крупнее оценка */
+        font-size: 1rem;
     }
   }
 
@@ -315,7 +326,6 @@
     <div style="display:flex; gap:10px;">
       <a href="contests.html" class="btn btn-ghost">←</a>
       <button id="authBtn" class="btn">
-        <!-- Icon door -->
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         <span class="logout-text">Войти</span>
       </button>
@@ -488,7 +498,6 @@
     podiumSection.classList.remove('hidden');
     podiumWrapper.innerHTML = '';
 
-    // Visual Order in HTML (Controlled by CSS Order/Grid)
     const order = [1, 0, 2]; 
     order.forEach(idx => {
         if(!list[idx]) return;
