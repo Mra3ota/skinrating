@@ -4,19 +4,17 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
 <link rel="icon" href="data:,">
-<title>Asia Festival — Contest</title>
+<title>Asia Festival</title>
 <style>
   :root {
     --bg: #050505;
-    --glass: rgba(20, 20, 25, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass: rgba(22, 22, 26, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.12);
     --text: #eaeaf2;
     --muted: #888899;
     --sakura: #ffb7c5;
     --neon-pink: #ff0055;
     --accent: #8a2be2;
-    
-    /* Медали */
     --gold: #ffd700;
     --silver: #c0c0c0;
     --bronze: #cd7f32;
@@ -25,234 +23,252 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   
   body {
-    margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); padding: 20px; min-height: 100vh;
-    background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.15), transparent 25%), radial-gradient(circle at 85% 30%, rgba(255, 0, 85, 0.1), transparent 25%);
+    margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); 
+    padding: 16px; min-height: 100vh;
+    background-image: radial-gradient(circle at 50% 0%, #2a1b3d 0%, #050505 60%);
     background-attachment: fixed;
   }
 
-  .wrap { max-width: 1400px; margin: 0 auto; position: relative; z-index: 2; }
+  .wrap { max-width: 1200px; margin: 0 auto; position: relative; z-index: 2; }
 
-  /* --- HEADER --- */
+  /* --- 1. HEADER (Flex fix) --- */
   header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 16px 24px;
-    background: rgba(20, 20, 25, 0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--glass-border); border-radius: 24px;
+    display: flex; justify-content: space-between; align-items: center; 
+    margin-bottom: 24px; padding: 12px 16px;
+    background: rgba(20, 20, 25, 0.6); backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border); border-radius: 16px;
+    gap: 12px;
   }
-  h1 { margin: 0; font-size: 1.5rem; font-weight: 900; background: linear-gradient(90deg, #fff, var(--sakura)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; }
   
+  h1 { 
+    margin: 0; font-size: 1.1rem; font-weight: 900; 
+    color: #fff; text-transform: uppercase; letter-spacing: 0.5px; 
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+  }
+  
+  .nav-group { display: flex; gap: 8px; }
+
   .btn {
-    background: linear-gradient(135deg, var(--accent), #b042ff); color: #fff; padding: 8px 16px; border-radius: 12px;
-    text-decoration: none; font-weight: 700; cursor: pointer; border: none; transition: all 0.3s ease; font-size: 0.9rem;
+    background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 8px;
+    text-decoration: none; font-weight: 700; cursor: pointer; border: none; font-size: 0.85rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: transform 0.2s;
   }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(138, 43, 226, 0.5); }
-  .btn-ghost { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); }
-  .btn-ghost:hover { background: rgba(255,255,255,0.1); }
+  .btn:active { transform: scale(0.95); }
+  .btn-ghost { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); }
 
-  /* --- ADMIN --- */
-  .admin-panel {
-    background: rgba(255, 0, 85, 0.05); border: 1px dashed var(--neon-pink); border-radius: 20px; padding: 20px; margin-bottom: 30px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
+  /* --- 5. ADMIN PANEL (Collapsible) --- */
+  .admin-toggle {
+    width: 100%; text-align: center; background: rgba(255,0,85,0.1); 
+    color: var(--neon-pink); border: 1px dashed var(--neon-pink); 
+    padding: 10px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.9rem;
+    margin-bottom: 20px;
   }
-  .admin-panel input { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 10px 15px; border-radius: 10px; color: #fff; }
-  .hidden { display: none !important; }
+  .admin-content {
+    display: none; flex-direction: column; gap: 12px; 
+    background: rgba(20,20,25,0.9); padding: 16px; border-radius: 16px; border: 1px solid var(--glass-border);
+    margin-bottom: 30px;
+  }
+  .admin-content.open { display: flex; }
+  .admin-content input { 
+    background: #000; border: 1px solid var(--glass-border); padding: 12px; 
+    border-radius: 8px; color: #fff; width: 100%;
+  }
 
-  /* --- PODIUM (ПЬЕДЕСТАЛ) --- */
+  /* --- 2. LEADERBOARD (Pyramid Layout) --- */
+  #podiumSection { margin-bottom: 40px; }
   .podium-title {
-    text-align: center; font-size: 2rem; font-weight: 900; margin-bottom: 30px;
+    text-align: center; font-size: 1.6rem; font-weight: 900; margin-bottom: 24px;
     background: linear-gradient(90deg, var(--gold), var(--silver), var(--bronze));
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     text-transform: uppercase; letter-spacing: 2px;
-    text-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
   }
 
   .podium-wrapper { 
-    display: flex; align-items: flex-end; justify-content: center; gap: 16px; margin-bottom: 50px; 
-    flex-wrap: wrap; /* Чтобы на совсем мелких не ломалось */
+    display: grid; 
+    /* На десктопе все в ряд */
+    grid-template-columns: 1fr 1.1fr 1fr; 
+    align-items: end; 
+    gap: 20px; 
+    max-width: 800px; margin: 0 auto;
   }
-  .podium-column { display: flex; flex-direction: column; align-items: center; transition: transform 0.3s; position: relative; }
   
-  .podium-medal-label { font-size: 1rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; }
-  .medal-1 { color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.5); }
-  .medal-2 { color: var(--silver); text-shadow: 0 0 10px rgba(192,192,192,0.5); }
-  .medal-3 { color: var(--bronze); text-shadow: 0 0 10px rgba(205,127,50,0.5); }
+  /* Порядок элементов для пирамиды через order */
+  .col-1 { order: 2; z-index: 10; } /* 1 место в центре */
+  .col-2 { order: 1; } /* 2 место слева */
+  .col-3 { order: 3; } /* 3 место справа */
 
-  /* Карточка на подиуме */
+  .podium-col { display: flex; flex-direction: column; align-items: center; width: 100%; }
+  
+  .medal-label { 
+    font-size: 0.75rem; font-weight: 800; margin-bottom: 6px; 
+    text-transform: uppercase; letter-spacing: 1px; 
+    background: rgba(0,0,0,0.5); padding: 4px 8px; border-radius: 6px;
+  }
+  .lbl-1 { color: var(--gold); border: 1px solid var(--gold); }
+  .lbl-2 { color: var(--silver); border: 1px solid var(--silver); }
+  .lbl-3 { color: var(--bronze); border: 1px solid var(--bronze); }
+
+  /* --- 3. CARD DESIGN (Full height skin) --- */
   .place-card {
-    background: rgba(20, 20, 25, 0.8); backdrop-filter: blur(12px);
-    border-radius: 16px; padding: 10px;
-    border: 2px solid transparent;
-    display: flex; flex-direction: column; align-items: center;
-    position: relative; cursor: pointer;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    overflow: hidden;
+    width: 100%;
+    background: linear-gradient(180deg, rgba(35,35,40,0.9), rgba(10,10,12,0.95));
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; 
+    position: relative; cursor: pointer; overflow: hidden;
+    /* Убрал паддинги чтобы скин был огромным */
+    padding: 0; 
+    display: flex; flex-direction: column;
+    transition: transform 0.2s;
   }
-  
-  /* Убираем лишние отступы внутри превью */
-  .place-card img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.4s; display: block; }
-  .place-card:hover img { transform: scale(1.05); }
+  .place-card:active { transform: scale(0.98); }
 
-  /* Размеры мест (Оптимизировано) */
-  .col-1 { order: 2; z-index: 3; }
-  .col-1 .place-card { width: 220px; height: 280px; border-color: var(--gold); background: linear-gradient(180deg, rgba(255,215,0,0.15), rgba(0,0,0,0.9)); }
-  
-  .col-2 { order: 1; z-index: 2; }
-  .col-2 .place-card { width: 190px; height: 240px; border-color: var(--silver); background: linear-gradient(180deg, rgba(192,192,192,0.15), rgba(0,0,0,0.9)); }
-  
-  .col-3 { order: 3; z-index: 2; }
-  .col-3 .place-card { width: 190px; height: 240px; border-color: var(--bronze); background: linear-gradient(180deg, rgba(205,127,50,0.15), rgba(0,0,0,0.9)); }
+  /* Высота карточек */
+  .col-1 .place-card { aspect-ratio: 4/5; border: 2px solid var(--gold); box-shadow: 0 0 30px rgba(255,215,0,0.2); }
+  .col-2 .place-card { aspect-ratio: 4/5; border-top: 4px solid var(--silver); }
+  .col-3 .place-card { aspect-ratio: 4/5; border-top: 4px solid var(--bronze); }
+
+  .place-card img { 
+    width: 100%; height: 100%; 
+    object-fit: cover; /* Заполняет всё пространство */
+    object-position: top center; /* Фокус на голову/грудь */
+    display: block;
+  }
 
   .place-info { 
     position: absolute; bottom: 0; left: 0; width: 100%; 
-    padding: 10px 5px; text-align: center;
-    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    padding: 12px 8px; text-align: center;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 40%, transparent);
   }
-  .place-name { font-weight: 800; font-size: 1.1rem; margin-bottom: 2px; color: #fff; text-shadow: 0 2px 4px #000; }
-  .place-score { font-weight: 900; font-size: 1rem; color: var(--sakura); }
+  .place-name { font-weight: 800; font-size: 1rem; color: #fff; text-shadow: 0 2px 4px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .place-score { font-weight: 900; font-size: 0.9rem; color: var(--sakura); margin-top: 2px; }
 
-  /* --- GRID (MOBILE OPTIMIZED) --- */
+  /* --- 4. LIST ITEMS (Grid 4+) --- */
   .grid { 
     display: grid; 
-    /* Desktop default */
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); 
-    gap: 16px; 
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+    gap: 12px; 
   }
 
   .card {
-    background: var(--glass); backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
-    border-radius: 16px; padding: 8px; cursor: pointer; transition: all 0.3s;
-    display: flex; flex-direction: column; position: relative; overflow: hidden;
+    background: var(--glass); border: 1px solid var(--glass-border);
+    border-radius: 14px; cursor: pointer; position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
   }
-  .card:active { transform: scale(0.98); } /* Mobile feedback */
 
-  /* Rank Badge */
   .rank-badge {
     position: absolute; top: 8px; left: 8px; z-index: 2;
-    background: rgba(0,0,0,0.8); color: #fff;
-    font-weight: 800; font-size: 0.75rem; padding: 3px 7px; border-radius: 6px;
-    border: 1px solid rgba(255,255,255,0.15);
+    background: rgba(0,0,0,0.85); color: #fff;
+    font-weight: 800; font-size: 0.75rem; padding: 3px 8px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.2);
   }
 
-  .preview-box {
-    width: 100%; 
-    aspect-ratio: 1 / 1.15; /* Делаем более компактным по высоте */
-    background: #0a0a0f; border-radius: 12px;
-    overflow: hidden; position: relative; margin-bottom: 8px;
-    border: 1px solid rgba(255,255,255,0.05);
+  .card-img-wrap {
+    width: 100%; aspect-ratio: 1/1; /* Квадратные для компактности */
+    background: #08080a; position: relative;
   }
-  .preview-box img { width: 100%; height: 100%; object-fit: cover; transition: 0.4s; display: block; }
-  
-  /* Footer Layout */
-  .card-footer { display: flex; justify-content: space-between; align-items: center; padding: 0 4px; }
+  .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+
+  .card-footer { 
+    padding: 10px; display: flex; justify-content: space-between; align-items: center; 
+    background: #111; border-top: 1px solid var(--glass-border);
+  }
   
   .card-name { 
-    font-weight: 700; font-size: 0.9rem; line-height: 1.1; color: #fff; 
-    max-width: 70%; word-break: break-word; text-align: left;
-    overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    font-weight: 700; font-size: 0.85rem; color: #fff; 
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;
   }
   
-  .card-score-box {
-    background: rgba(138, 43, 226, 0.2); border: 1px solid var(--accent);
-    width: 32px; height: 32px; border-radius: 8px; 
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 0.9rem; color: #fff;
+  .card-score {
+    font-weight: 800; font-size: 0.9rem; color: var(--sakura);
+    background: rgba(255, 183, 197, 0.1); padding: 2px 6px; border-radius: 4px;
   }
 
-  /* --- MOBILE OPTIMIZATIONS --- */
-  @media (max-width: 600px) {
-    body { padding: 12px; }
-    header { padding: 12px 16px; margin-bottom: 20px; }
-    h1 { font-size: 1.2rem; }
+  /* --- MOBILE MEDIA QUERIES (The Fix) --- */
+  @media (max-width: 768px) {
+    /* Header Fix */
+    header { padding: 10px 14px; }
+    .nav-group .btn span { display: none; } /* Скрыть текст "Назад" если надо */
     
-    /* Force 2 columns on mobile */
-    .grid { 
-      grid-template-columns: 1fr 1fr; 
-      gap: 10px; 
+    /* Pyramid Layout Mobile Fix */
+    .podium-wrapper {
+        grid-template-columns: 1fr 1fr; /* 2 колонки */
+        grid-template-areas: 
+            "first first"
+            "second third";
+        gap: 12px;
     }
+    .col-1 { grid-area: first; width: 60%; justify-self: center; } /* 1 место по центру сверху */
+    .col-2 { grid-area: second; }
+    .col-3 { grid-area: third; }
     
-    /* Scale down podium to fit screen */
-    .podium-wrapper { gap: 8px; align-items: flex-end; }
-    .col-1 .place-card { width: 130px; height: 180px; }
-    .col-2 .place-card, .col-3 .place-card { width: 100px; height: 140px; }
-    
-    .place-name { font-size: 0.9rem; }
-    .place-score { font-size: 0.8rem; }
-    .podium-medal-label { font-size: 0.7rem; margin-bottom: 4px; }
-    
-    /* Compact cards */
-    .card { border-radius: 12px; }
+    /* Card sizes on mobile */
+    .col-1 .place-card { aspect-ratio: 3/4; }
+    .col-2 .place-card, .col-3 .place-card { aspect-ratio: 3/4; }
+
+    /* Grid 4+ Fix */
+    .grid { grid-template-columns: 1fr 1fr; gap: 10px; }
     .card-name { font-size: 0.8rem; }
-    .card-score-box { width: 28px; height: 28px; font-size: 0.8rem; }
   }
 
   /* --- MODAL --- */
   .modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9);
-    backdrop-filter: blur(8px); z-index: 100; display: none; align-items: center; justify-content: center;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000;
+    z-index: 100; display: none; flex-direction: column;
   }
-  .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
-  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  .modal-overlay.active { display: flex; }
 
-  .modal-glass {
-    width: 90%; max-width: 1100px; height: 85vh; background: #111;
-    border: 1px solid var(--glass-border); border-radius: 24px;
-    display: grid; grid-template-columns: 1fr 350px; overflow: hidden;
-    position: relative;
+  .viewer-section { flex: 1; position: relative; background: radial-gradient(circle at center, #1a1a20 0%, #000 100%); }
+  .details-section { padding: 20px; background: #0e0e12; border-top: 1px solid var(--glass-border); max-height: 50vh; overflow-y: auto; }
+  
+  @media (min-width: 900px) {
+    .modal-overlay { background: rgba(0,0,0,0.9); align-items: center; justify-content: center; }
+    .modal-glass { width: 900px; height: 80vh; display: grid; grid-template-columns: 1fr 320px; border: 1px solid var(--glass-border); border-radius: 24px; overflow:hidden; background:#000; }
+    .viewer-section { height: auto; }
+    .details-section { border-top: none; border-left: 1px solid var(--glass-border); max-height: none; }
+    .modal-overlay { flex-direction: row; }
   }
-
-  .viewer-section { position: relative; background: radial-gradient(circle at center, #1a1a20 0%, #000 100%); }
-  .details-section { padding: 24px; border-left: 1px solid var(--glass-border); display: flex; flex-direction: column; background: #0e0e12; }
 
   .close-btn {
-    position: absolute; top: 15px; right: 15px; width: 36px; height: 36px; border-radius: 50%;
-    background: rgba(255,255,255,0.15); border: none; color: #fff; font-size: 1.5rem;
+    position: absolute; top: 15px; right: 15px; width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 24px;
     cursor: pointer; z-index: 20; display: flex; align-items: center; justify-content: center;
   }
 
-  /* Rating Controls */
-  .rating-wrap { margin-top: auto; background: rgba(255,255,255,0.03); padding: 16px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
+  .rating-wrap { margin-top: 10px; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; }
+  input[type=range] { width: 100%; -webkit-appearance: none; background: transparent; margin: 12px 0; height: 30px; }
+  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; background: #444; border-radius: 3px; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: var(--neon-pink); border: 2px solid #fff; margin-top: -9px; box-shadow: 0 0 10px var(--neon-pink); }
+  .big-score { font-size: 2.5rem; font-weight: 900; text-align: center; color: #fff; margin: 5px 0; }
   
-  input[type=range] { width: 100%; -webkit-appearance: none; background: transparent; margin: 15px 0; height: 30px; cursor: pointer; }
-  input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8px; background: #444; border-radius: 4px; }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; height: 28px; width: 28px; border-radius: 50%;
-    background: var(--neon-pink); border: 3px solid #fff; margin-top: -11px;
-    box-shadow: 0 0 15px var(--neon-pink);
-  }
-
-  .big-score {
-    font-size: 3rem; font-weight: 900; text-align: center; color: #fff;
-    text-shadow: 0 0 20px var(--sakura); margin: 5px 0;
-  }
-
-  @media (max-width: 900px) {
-    .modal-glass { grid-template-columns: 1fr; grid-template-rows: 1fr auto; height: 90vh; max-height: 600px; }
-    .details-section { padding: 16px; overflow-y: auto; }
-    .viewer-section { height: 50%; }
-  }
+  .hidden { display: none !important; }
 </style>
 </head>
 <body>
 
 <div class="wrap">
   <header>
-    <h1><span style="font-size:1.2em;margin-right:8px;">🌸</span> ASIA FESTIVAL</h1>
-    <div style="display:flex; gap:10px;">
-      <a href="contests.html" class="btn btn-ghost">←</a>
+    <h1><span>🌸</span> ASIA FEST</h1>
+    <div class="nav-group">
+      <a href="contests.html" class="btn btn-ghost">Назад</a>
       <button id="authBtn" class="btn">Войти</button>
     </div>
   </header>
 
-  <div id="adminPanel" class="admin-panel hidden">
-    <strong style="width:100%;color:var(--neon-pink)">АДМИН ПАНЕЛЬ</strong>
-    <input type="text" id="newAuthor" placeholder="Ник автора" style="flex:1">
-    <input type="file" id="newFile" accept="image/png" style="display:none">
-    <button onclick="document.getElementById('newFile').click()" class="btn btn-ghost">Выбрать файл</button>
-    <button id="addEntryBtn" class="btn">Добавить</button>
-    <span id="adminStatus" style="font-size:0.9rem; margin-left:10px;"></span>
+  <div id="adminPanel" class="hidden">
+    <div class="admin-toggle" id="adminToggle">⚙️ Админ панель</div>
+    <div class="admin-content" id="adminContent">
+      <input type="text" id="newAuthor" placeholder="Ник автора">
+      <input type="file" id="newFile" accept="image/png">
+      <button id="addEntryBtn" class="btn" style="width:100%; margin-top:10px;">Загрузить скин</button>
+      <div id="adminStatus" style="color:#fff; text-align:center; margin-top:5px;"></div>
+    </div>
   </div>
 
   <!-- Podium -->
   <div id="podiumSection" class="hidden">
-    <div class="podium-title">ПРИЗЁРЫ</div>
+    <div class="podium-title">Лидеры</div>
     <div id="podiumWrapper" class="podium-wrapper"></div>
   </div>
 
@@ -267,25 +283,28 @@
     <button class="close-btn" id="closeModal">×</button>
     <div class="viewer-section" id="viewerContainer"></div>
     <div class="details-section">
-      <h2 id="mAuthor" style="margin:0 0 5px 0; font-size:1.5rem;">Author</h2>
-      <p style="color:var(--muted); font-size:0.8rem; margin-bottom:15px;">ASIA FESTIVAL ENTRY</p>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div>
+            <h2 id="mAuthor" style="margin:0; font-size:1.4rem;">Author</h2>
+            <span style="font-size:0.75rem; color:var(--muted)">ASIA ENTRY</span>
+          </div>
+          <div style="text-align:right;">
+             <strong id="mTotal" style="font-size:1.8rem; color:var(--sakura)">0</strong>
+          </div>
+      </div>
       
-      <div style="flex:1; overflow-y:auto; margin-bottom:10px;">
-        <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
-          <span>Сумма баллов:</span> <strong id="mTotal" style="color:var(--sakura)">0</strong>
-        </div>
+      <div style="flex:1; margin-bottom:10px;">
         <div id="judgesList" style="font-size:0.85rem; color:var(--muted);"></div>
       </div>
 
       <div id="judgeControls" class="rating-wrap hidden">
-        <div style="text-align:center; font-weight:bold; margin-bottom:5px; color:var(--muted); font-size:0.75rem;">ВАША ОЦЕНКА</div>
         <div class="big-score" id="scoreDisplay">5</div>
         <input type="range" id="scoreInput" min="1" max="10" value="5" step="1">
-        <button id="submitScore" class="btn" style="width:100%;">Подтвердить</button>
+        <button id="submitScore" class="btn" style="width:100%;">Оценить</button>
       </div>
       
-      <div id="judgeError" style="margin-top:10px; text-align:center; color:var(--muted); font-style:italic; font-size:0.85rem;" class="hidden">
-        Оценивание только для судей.
+      <div id="judgeError" style="margin-top:10px; text-align:center; color:var(--muted); font-size:0.8rem;" class="hidden">
+        Только для судей.
       </div>
     </div>
   </div>
@@ -329,7 +348,7 @@
   const authBtn = document.getElementById('authBtn');
 
   const MEDAL_LABELS = ['1 МЕСТО', '2 МЕСТО', '3 МЕСТО'];
-  const MEDAL_CLASSES = ['medal-1', 'medal-2', 'medal-3'];
+  const MEDAL_CLASSES = ['lbl-1', 'lbl-2', 'lbl-3'];
 
   // --- AUTH ---
   const provider = new GoogleAuthProvider();
@@ -341,14 +360,22 @@
   onAuthStateChanged(auth, async user => {
     currentUser = user;
     authBtn.textContent = user ? 'Выйти' : 'Войти';
-    document.getElementById('adminPanel').classList.toggle('hidden', !(user && user.email === ADMIN_EMAIL));
+    
+    const adminPanel = document.getElementById('adminPanel');
+    if (user && user.email === ADMIN_EMAIL) {
+        adminPanel.classList.remove('hidden');
+        // Toggle logic
+        document.getElementById('adminToggle').onclick = () => {
+            document.getElementById('adminContent').classList.toggle('open');
+        };
+    } else {
+        adminPanel.classList.add('hidden');
+    }
     
     if(user) {
       const snap = await getDoc(doc(db, 'judges', user.uid));
       isJudge = snap.exists();
-    } else {
-      isJudge = false;
-    }
+    } else { isJudge = false; }
     if(currentSkinId) updateModalUI();
   });
 
@@ -388,26 +415,25 @@
   }
 
   function renderPodium(list) {
-    if(list.length === 0) {
-        podiumSection.classList.add('hidden');
-        return;
-    }
+    if(list.length === 0) { podiumSection.classList.add('hidden'); return; }
     podiumSection.classList.remove('hidden');
     podiumWrapper.innerHTML = '';
-
+    
+    // Order for CSS Grid / Flex: 2, 1, 3
     const order = [1, 0, 2]; 
+    
     order.forEach(idx => {
         if(!list[idx]) return;
         const e = list[idx];
         const place = idx + 1;
         const col = document.createElement('div');
-        col.className = `podium-column col-${place}`;
+        col.className = `podium-col col-${place}`;
         const imgSrc = e.previewUrl || e.skinUrl;
 
         col.innerHTML = `
-            <div class="podium-medal-label ${MEDAL_CLASSES[idx]}">${MEDAL_LABELS[idx]}</div>
+            <div class="medal-label ${MEDAL_CLASSES[idx]}">${MEDAL_LABELS[idx]}</div>
             <div class="place-card">
-                <img src="${imgSrc}" loading="lazy" style="object-fit: cover;">
+                <img src="${imgSrc}" loading="lazy">
                 <div class="place-info">
                     <div class="place-name">${escapeHtml(e.authorName)}</div>
                     <div class="place-score">${e.total}</div>
@@ -429,12 +455,12 @@
       
       card.innerHTML = `
         <div class="rank-badge">#${rank}</div>
-        <div class="preview-box">
+        <div class="card-img-wrap">
           <img src="${imgSrc}" loading="lazy">
         </div>
         <div class="card-footer">
           <div class="card-name">${escapeHtml(e.authorName)}</div>
-          <div class="card-score-box">${e.total}</div>
+          <div class="card-score">${e.total}</div>
         </div>
       `;
       card.addEventListener('click', () => openModal(e));
@@ -457,7 +483,8 @@
     viewer = new skinview3d.SkinViewer({
       canvas: canvas, width: viewerContainer.clientWidth, height: viewerContainer.clientHeight, skin: entry.skinUrl
     });
-    viewer.autoRotate = true; viewer.autoRotateSpeed = 0.5; viewer.camera.position.set(0, 20, 50);
+    viewer.autoRotate = true; viewer.autoRotateSpeed = 0.5; 
+    viewer.camera.position.set(0, 20, 50);
 
     updateModalUI();
     updateModalStats(entry.id);
@@ -527,31 +554,34 @@
     btn.disabled = false;
   });
 
-  // --- GENERATE HIGH-RES PREVIEW WITH BETTER CROP ---
+  // --- GENERATE PREVIEW (ZOOMED IN & HIGH RES) ---
   async function generatePreview(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = async (e) => {
             const skinData = e.target.result;
             const offCanvas = document.createElement('canvas');
-            // Увеличено разрешение для четкости на мобильных
-            offCanvas.width = 600;
-            offCanvas.height = 700; 
+            // High Resolution
+            offCanvas.width = 1024;
+            offCanvas.height = 1024; 
             
             const offViewer = new skinview3d.SkinViewer({
-                canvas: offCanvas, width: 600, height: 700, preserveDrawingBuffer: true
+                canvas: offCanvas, width: 1024, height: 1024, preserveDrawingBuffer: true
             });
             
             try {
                 offViewer.renderer.setClearColor(0x000000, 0);
                 await offViewer.loadSkin(skinData);
                 
-                // FIX: Camera Closer + Better Angle
-                offViewer.zoom = 1.0; // Zoom in closer (was 0.85)
+                // --- CAMERA SETTINGS: BUST SHOT ---
+                offViewer.zoom = 1.0; 
                 offViewer.autoRotate = false;
-                offViewer.playerObject.rotation.y = -0.5;
-                offViewer.camera.position.set(0, 25, 40); // Closer camera
-                offViewer.camera.lookAt(0, 12, 0);
+                offViewer.playerObject.rotation.y = -0.5; 
+                
+                // Camera VERY close and slightly above eye level
+                // Y=24 looks at head/neck area. Z=25 is closeup distance.
+                offViewer.camera.position.set(0, 28, 28); 
+                offViewer.camera.lookAt(0, 18, 0);
                 
                 offViewer.render();
                 const dataUrl = offCanvas.toDataURL('image/png');
@@ -571,7 +601,7 @@
     status.textContent = 'Обработка...';
     
     try {
-      const dataUrl = await generatePreview(file); // New logic
+      const dataUrl = await generatePreview(file); 
       status.textContent = 'Загрузка...';
       const skinRef = ref(storage, `asia-skins/${Date.now()}_${file.name}`);
       const skinTask = await uploadBytesResumable(skinRef, file);
