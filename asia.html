@@ -239,4 +239,362 @@
   }
 
   .big-score { font-size: 2.5rem; font-weight: 900; text-align: center; color: #fff; margin: 5px 0; }
-  .hidden { display: none !impo
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1><span>🌸</span> ASIA FESTIVAL</h1>
+    <div class="nav-group">
+      <a href="contests.html" class="btn btn-ghost">←</a>
+      <button id="authBtn" class="btn"><span class="btn-text">Войти</span><span style="margin-left:5px">➔</span></button>
+    </div>
+  </header>
+
+  <div id="adminPanel" class="admin-panel hidden">
+    <strong style="width:100%;color:var(--neon-pink)">АДМИН ПАНЕЛЬ</strong>
+    <input type="text" id="newAuthor" placeholder="Ник автора">
+    <input type="file" id="newFile" accept="image/png" style="display:none">
+    <button onclick="document.getElementById('newFile').click()" class="btn btn-ghost" style="flex:1">Файл</button>
+    <button id="addEntryBtn" class="btn" style="flex:1">Загрузить</button>
+    <div id="adminStatus" style="font-size:0.8rem; width:100%; text-align:center; margin-top:5px;"></div>
+  </div>
+
+  <!-- Podium -->
+  <div id="podiumSection" class="hidden">
+    <div class="podium-title">Призёры</div>
+    <div id="podiumWrapper" class="podium-wrapper"></div>
+  </div>
+
+  <!-- Grid -->
+  <div id="grid" class="grid"></div>
+  <div id="loading" style="text-align:center; padding: 40px; color:var(--muted)">Загрузка...</div>
+</div>
+
+<!-- Modal Structure -->
+<div id="modal" class="modal-overlay">
+  <div class="modal-glass" id="modalGlass">
+    <button class="close-btn" id="closeModal">×</button>
+    <div class="viewer-section" id="viewerContainer"></div>
+    <div class="details-section">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div>
+            <h2 id="mAuthor" style="margin:0; font-size:1.4rem;">Author</h2>
+            <span style="font-size:0.75rem; color:var(--muted)">ASIA ENTRY</span>
+          </div>
+          <div style="text-align:right;">
+             <strong id="mTotal" style="font-size:1.8rem; color:var(--sakura)">0</strong>
+          </div>
+      </div>
+      
+      <div style="flex:1; overflow-y:auto; margin-bottom:10px; min-height: 60px;">
+        <div id="judgesList" style="font-size:0.85rem; color:var(--muted);"></div>
+      </div>
+
+      <div id="judgeControls" class="rating-wrap hidden">
+        <div class="big-score" id="scoreDisplay">5</div>
+        <input type="range" id="scoreInput" min="1" max="10" value="5" step="1">
+        <button id="submitScore" class="btn" style="width:100%;">Оценить</button>
+      </div>
+      
+      <div id="judgeError" style="margin-top:10px; text-align:center; color:var(--muted); font-size:0.8rem;" class="hidden">
+        Только для судей.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+  import { getStorage, ref, uploadBytesResumable, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
+
+  const firebaseConfig = {
+      apiKey: "AIzaSyBTClf2FpsEGwBBP6hFNFV2Zn8DordYLkA",
+      authDomain: "skinsrzt.firebaseapp.com",
+      projectId: "skinsrzt",
+      storageBucket: "skinsrzt.firebasestorage.app",
+      messagingSenderId: "1084042281569",
+      appId: "1:1084042281569:web:25872944cf7dac7fd66020"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const storage = getStorage(app);
+  const ADMIN_EMAIL = "nmprokhorov@gmail.com";
+
+  let currentUser = null;
+  let isJudge = false;
+  let currentSkinId = null;
+  let viewer = null;
+  let entries = [];
+  let scores = {};
+
+  // DOM
+  const grid = document.getElementById('grid');
+  const podiumSection = document.getElementById('podiumSection');
+  const podiumWrapper = document.getElementById('podiumWrapper');
+  const modal = document.getElementById('modal');
+  const viewerContainer = document.getElementById('viewerContainer');
+  const authBtn = document.getElementById('authBtn');
+
+  const MEDAL_LABELS = ['1 МЕСТО', '2 МЕСТО', '3 МЕСТО'];
+  const MEDAL_CLASSES = ['lbl-1', 'lbl-2', 'lbl-3'];
+
+  const provider = new GoogleAuthProvider();
+  authBtn.addEventListener('click', async () => {
+    if(!currentUser) await signInWithPopup(auth, provider);
+    else await signOut(auth);
+  });
+
+  onAuthStateChanged(auth, async user => {
+    currentUser = user;
+    const btnText = authBtn.querySelector('.btn-text');
+    if (btnText) btnText.textContent = user ? 'Выйти' : 'Войти';
+    
+    document.getElementById('adminPanel').classList.toggle('hidden', !(user && user.email === ADMIN_EMAIL));
+    if(user) {
+      const snap = await getDoc(doc(db, 'judges', user.uid));
+      isJudge = snap.exists();
+    } else { isJudge = false; }
+    if(currentSkinId) updateModalUI();
+  });
+
+  onSnapshot(query(collection(db, 'asia_entries'), orderBy('createdAt', 'desc')), snap => {
+    entries = [];
+    snap.forEach(d => entries.push({id: d.id, ...d.data()}));
+    rebuildAll();
+  });
+
+  onSnapshot(collection(db, 'asia_scores'), snap => {
+    scores = {};
+    snap.forEach(d => {
+      const s = d.data();
+      if(!scores[s.entryId]) scores[s.entryId] = [];
+      scores[s.entryId].push(s);
+    });
+    rebuildAll();
+    if(currentSkinId) updateModalStats(currentSkinId);
+  });
+
+  function rebuildAll() {
+    document.getElementById('loading').style.display = 'none';
+    const sorted = [...entries].map(e => {
+        const entryScores = scores[e.id] || [];
+        const total = entryScores.reduce((acc, cur) => acc + cur.score, 0);
+        return { ...e, total };
+    }).sort((a,b) => b.total - a.total);
+
+    const podiumList = sorted.slice(0, 3);
+    const gridList = sorted.slice(3);
+    renderPodium(podiumList);
+    renderGrid(gridList);
+  }
+
+  function renderPodium(list) {
+    if(list.length === 0) { podiumSection.classList.add('hidden'); return; }
+    podiumSection.classList.remove('hidden');
+    podiumWrapper.innerHTML = '';
+    
+    const order = [1, 0, 2];
+    order.forEach(idx => {
+        if(!list[idx]) return;
+        const e = list[idx];
+        const place = idx + 1;
+        const col = document.createElement('div');
+        col.className = `podium-column col-${place}`;
+        const imgSrc = e.previewUrl || e.skinUrl;
+
+        col.innerHTML = `
+            <div class="medal-label ${MEDAL_CLASSES[idx]}">${MEDAL_LABELS[idx]}</div>
+            <div class="place-card">
+                <img src="${imgSrc}" loading="lazy">
+                <div class="place-info">
+                    <div class="place-name">${escapeHtml(e.authorName)}</div>
+                    <div class="place-score">${e.total}</div>
+                </div>
+            </div>
+        `;
+        col.querySelector('.place-card').addEventListener('click', () => openModal(e));
+        podiumWrapper.appendChild(col);
+    });
+  }
+
+  function renderGrid(list) {
+    grid.innerHTML = '';
+    list.forEach((e, index) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      const imgSrc = e.previewUrl || e.skinUrl;
+      const rank = index + 4; 
+      
+      card.innerHTML = `
+        <div class="rank-badge">#${rank}</div>
+        <div class="preview-box"><img src="${imgSrc}" loading="lazy"></div>
+        <div class="card-footer">
+          <div class="card-name">${escapeHtml(e.authorName)}</div>
+          <div class="card-score-box">${e.total}</div>
+        </div>
+      `;
+      card.addEventListener('click', () => openModal(e));
+      grid.appendChild(card);
+    });
+  }
+
+  function openModal(entry) {
+    currentSkinId = entry.id;
+    modal.classList.add('active');
+    if(window.innerWidth >= 900) document.getElementById('modalGlass').classList.add('modal-glass');
+    document.getElementById('mAuthor').textContent = entry.authorName;
+    
+    if(viewer) viewer.dispose();
+    viewerContainer.innerHTML = '';
+    const canvas = document.createElement('canvas');
+    canvas.style.width = '100%'; canvas.style.height = '100%';
+    viewerContainer.appendChild(canvas);
+    
+    viewer = new skinview3d.SkinViewer({
+      canvas: canvas, width: viewerContainer.clientWidth, height: viewerContainer.clientHeight, skin: entry.skinUrl
+    });
+    viewer.autoRotate = true; viewer.autoRotateSpeed = 0.5; 
+    viewer.camera.position.set(0, 20, 50);
+
+    updateModalUI();
+    updateModalStats(entry.id);
+  }
+
+  function updateModalUI() {
+    const controls = document.getElementById('judgeControls');
+    const error = document.getElementById('judgeError');
+    const input = document.getElementById('scoreInput');
+    const disp = document.getElementById('scoreDisplay');
+
+    if(isJudge && currentUser) {
+      controls.classList.remove('hidden');
+      error.classList.add('hidden');
+      const entryScores = scores[currentSkinId] || [];
+      const myScore = entryScores.find(s => s.judgeId === currentUser.uid);
+      if(myScore) {
+        input.value = myScore.score; disp.textContent = myScore.score;
+        document.getElementById('submitScore').textContent = "Обновить";
+      } else {
+        input.value = 5; disp.textContent = 5;
+        document.getElementById('submitScore').textContent = "Подтвердить";
+      }
+    } else {
+      controls.classList.add('hidden');
+      error.classList.remove('hidden');
+    }
+  }
+
+  function updateModalStats(id) {
+    const entryScores = scores[id] || [];
+    const total = entryScores.reduce((acc, cur) => acc + cur.score, 0);
+    document.getElementById('mTotal').textContent = total;
+    document.getElementById('judgesList').innerHTML = entryScores.map(s => 
+      `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05)"><span>${escapeHtml(s.judgeName||'Судья')}</span><b style="color:#fff">${s.score}</b></div>`
+    ).join('');
+  }
+
+  document.getElementById('closeModal').addEventListener('click', () => {
+    modal.classList.remove('active');
+    if(viewer) { viewer.dispose(); viewer = null; }
+    currentSkinId = null;
+  });
+
+  const scoreInput = document.getElementById('scoreInput');
+  scoreInput.addEventListener('input', (e) => { document.getElementById('scoreDisplay').textContent = e.target.value; });
+
+  document.getElementById('submitScore').addEventListener('click', async () => {
+    if(!currentUser || !isJudge) return;
+    const score = parseInt(scoreInput.value);
+    const btn = document.getElementById('submitScore');
+    btn.disabled = true; btn.textContent = '...';
+    try {
+      let judgeName = currentUser.displayName || 'Судья';
+      const uDoc = await getDoc(doc(db, 'users', currentUser.uid));
+      if(uDoc.exists() && uDoc.data().displayName) judgeName = uDoc.data().displayName;
+      
+      const q = query(collection(db, 'asia_scores'), where('judgeId', '==', currentUser.uid), where('entryId', '==', currentSkinId));
+      const snap = await getDocs(q);
+      
+      if(!snap.empty) await updateDoc(snap.docs[0].ref, { score, judgeName });
+      else await addDoc(collection(db, 'asia_scores'), {
+          judgeId: currentUser.uid, judgeName, entryId: currentSkinId, score, createdAt: serverTimestamp()
+      });
+      btn.textContent = 'Готово!';
+    } catch(e) { console.error(e); alert(e.message); }
+    btn.disabled = false;
+  });
+
+  // --- GENERATE PREVIEW (FULL BODY FIX) ---
+  async function generatePreview(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const skinData = e.target.result;
+            const offCanvas = document.createElement('canvas');
+            offCanvas.width = 400;
+            offCanvas.height = 600; 
+            
+            const offViewer = new skinview3d.SkinViewer({
+                canvas: offCanvas, width: 400, height: 600, preserveDrawingBuffer: true
+            });
+            
+            try {
+                offViewer.renderer.setClearColor(0x000000, 0);
+                await offViewer.loadSkin(skinData);
+                
+                // FIX: FULL BODY VIEW SETTINGS
+                offViewer.zoom = 0.85; 
+                offViewer.autoRotate = false;
+                offViewer.playerObject.rotation.y = -0.5;
+                // X=0, Y=20 (Center Body), Z=50 (Far enough for full body)
+                offViewer.camera.position.set(0, 20, 50); 
+                offViewer.camera.lookAt(0, 18, 0);
+                
+                offViewer.render();
+                const dataUrl = offCanvas.toDataURL('image/png');
+                offViewer.dispose();
+                resolve(dataUrl);
+            } catch(err) { reject(err); }
+        };
+        reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('addEntryBtn').addEventListener('click', async () => {
+    const author = document.getElementById('newAuthor').value;
+    const file = document.getElementById('newFile').files[0];
+    const status = document.getElementById('adminStatus');
+    if(!author || !file) return;
+    status.textContent = 'Обработка...';
+    
+    try {
+      const dataUrl = await generatePreview(file);
+      status.textContent = 'Загрузка...';
+      const skinRef = ref(storage, `asia-skins/${Date.now()}_${file.name}`);
+      const skinTask = await uploadBytesResumable(skinRef, file);
+      const skinUrl = await getDownloadURL(skinTask.ref);
+      const previewRef = ref(storage, `asia-skins/${Date.now()}_preview.png`);
+      await uploadString(previewRef, dataUrl, 'data_url');
+      const previewUrl = await getDownloadURL(previewRef);
+      
+      await addDoc(collection(db, 'asia_entries'), {
+        authorName: author, skinUrl: skinUrl, previewUrl: previewUrl, createdAt: serverTimestamp()
+      });
+      status.textContent = 'OK!';
+      document.getElementById('newAuthor').value = '';
+    } catch(e) { status.textContent = 'Error'; console.error(e); }
+  });
+
+  function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;") : ''; }
+  window.addEventListener('resize', () => { if(viewer && modal.classList.contains('active')) { viewer.width = viewerContainer.clientWidth; viewer.height = viewerContainer.clientHeight; } });
+</script>
+</body>
+</html>
