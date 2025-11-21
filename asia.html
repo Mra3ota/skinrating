@@ -91,7 +91,7 @@
   .medal-2 { color: var(--silver); text-shadow: 0 0 10px rgba(192,192,192,0.5); }
   .medal-3 { color: var(--bronze); text-shadow: 0 0 10px rgba(205,127,50,0.5); }
 
-  /* --- PODIUM CARD (FIXED HEIGHT LAYOUT) --- */
+  /* --- PODIUM CARD --- */
   .place-card {
     background: rgba(20, 20, 25, 0.6); backdrop-filter: blur(12px);
     border-radius: 24px; padding: 0;
@@ -102,45 +102,49 @@
     overflow: hidden;
   }
   
-  /* Контейнер картинки: Строго 82% высоты, чтобы ноги не резались */
+  /* Контейнер картинки: Увеличил до 85%, чтобы наверняка */
   .place-img-box {
-      height: 82%; 
+      height: 85%; 
       width: 100%;
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 15px 15px 0 15px;
+      padding: 10px; /* Меньше паддингов */
       background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent);
+      overflow: hidden; /* Обрезаем лишнее, если вылезет */
   }
 
   .place-img-box img { 
     max-width: 100%; 
-    max-height: 100%; /* Никогда не выйдет за границы бокса */
+    max-height: 100%; 
     object-fit: contain; 
-    object-position: center center; /* Строго по центру бокса */
+    object-position: center center;
     image-rendering: pixelated;
     transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
     filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+    /* FIX: Компенсация пустого пространства сверху на старых картинках */
+    transform: translateY(0); 
   }
   
-  .place-card:hover img { transform: scale(1.1) translateY(-10px); }
+  .place-card:hover img { transform: scale(1.1) translateY(-5px); }
 
-  /* Инфо-блок: Строго внизу, фиксированная высота */
+  /* Инфо-блок: 15% высоты, черный фон */
   .place-info { 
-    height: 18%; /* Оставшиеся 18% */
+    height: 15%; 
     width: 100%; 
     display: flex; flex-direction: column; justify-content: center; align-items: center;
-    background: rgba(0,0,0,0.6); /* Темнее фон */
-    border-top: 1px solid rgba(255,255,255,0.05);
+    background: #000; /* Абсолютно черный, чтобы текст читался */
+    border-top: 1px solid rgba(255,255,255,0.1);
     z-index: 5;
+    padding: 5px;
   }
-  .place-name { font-weight: 800; font-size: 1.3rem; margin-bottom: 2px; color: #fff; line-height: 1; }
-  .place-score { font-weight: 900; font-size: 1.1rem; color: var(--sakura); line-height: 1; margin-top: 4px; }
+  .place-name { font-weight: 800; font-size: 1.2rem; margin-bottom: 2px; color: #fff; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; }
+  .place-score { font-weight: 900; font-size: 1rem; color: var(--sakura); line-height: 1; margin-top: 2px; }
 
   /* --- SIZES (PC) --- */
   .col-1 { order: 2; z-index: 3; }
-  .col-1 .place-card { width: 320px; height: 450px; border-color: var(--gold); } /* Чуть выше */
+  .col-1 .place-card { width: 320px; height: 450px; border-color: var(--gold); }
   
   .col-2 { order: 1; z-index: 2; }
   .col-2 .place-card { width: 270px; height: 380px; border-color: var(--silver); }
@@ -230,7 +234,7 @@
     .col-1 .place-card { 
         width: 100%; 
         max-width: 240px; 
-        height: 340px; /* Еще выше для мобилки */
+        height: 340px; 
     }
     
     .col-2 { grid-column: 1; order: 2; width: 100%; }
@@ -632,29 +636,34 @@
     btn.disabled = false;
   });
 
-  // --- GENERATE HIGH-RES PREVIEW ---
+  // --- GENERATE HIGH-RES PREVIEW WITH CENTER FIX ---
   async function generatePreview(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = async (e) => {
             const skinData = e.target.result;
             const offCanvas = document.createElement('canvas');
-            offCanvas.width = 600;
-            offCanvas.height = 700; 
+            // Увеличим разрешение еще сильнее
+            offCanvas.width = 800;
+            offCanvas.height = 900; 
             
             const offViewer = new skinview3d.SkinViewer({
-                canvas: offCanvas, width: 600, height: 700, preserveDrawingBuffer: true
+                canvas: offCanvas, width: 800, height: 900, preserveDrawingBuffer: true
             });
             
             try {
                 offViewer.renderer.setClearColor(0x000000, 0);
                 await offViewer.loadSkin(skinData);
                 
-                offViewer.zoom = 1.0; 
+                // --- КЛЮЧЕВЫЕ ИЗМЕНЕНИЯ КАМЕРЫ ---
+                offViewer.zoom = 1.1; // Сильно приближаем, чтобы заполнить кадр
                 offViewer.autoRotate = false;
                 offViewer.playerObject.rotation.y = -0.5;
-                offViewer.camera.position.set(0, 25, 40); 
-                offViewer.camera.lookAt(0, 12, 0);
+                
+                // Ставим камеру НИЖЕ (15) и БЛИЖЕ (35), чтобы убрать "небо" сверху
+                // y=16 - это примерно центр тела игрока.
+                offViewer.camera.position.set(0, 15, 35); 
+                offViewer.camera.lookAt(0, 16, 0);
                 
                 offViewer.render();
                 const dataUrl = offCanvas.toDataURL('image/png');
