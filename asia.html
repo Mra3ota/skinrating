@@ -76,7 +76,7 @@
   /* Карточка на подиуме */
   .place-card {
     background: rgba(20, 20, 25, 0.8); backdrop-filter: blur(12px);
-    border-radius: 20px; padding: 20px;
+    border-radius: 20px; padding: 15px;
     border: 2px solid transparent;
     display: flex; flex-direction: column; align-items: center;
     position: relative; cursor: pointer;
@@ -85,24 +85,26 @@
   .place-card img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.4s; }
   .place-card:hover img { transform: scale(1.1); }
 
-  /* Размеры мест */
+  /* Размеры мест (УМЕНЬШЕНА ВЫСОТА) */
   .col-1 { order: 2; }
-  .col-1 .place-card { width: 280px; height: 380px; border-color: var(--gold); background: linear-gradient(180deg, rgba(255,215,0,0.1), rgba(0,0,0,0.8)); }
+  .col-1 .place-card { width: 280px; height: 320px; border-color: var(--gold); background: linear-gradient(180deg, rgba(255,215,0,0.1), rgba(0,0,0,0.8)); }
+  
   .col-2 { order: 1; }
-  .col-2 .place-card { width: 240px; height: 320px; border-color: var(--silver); background: linear-gradient(180deg, rgba(192,192,192,0.1), rgba(0,0,0,0.8)); }
+  .col-2 .place-card { width: 240px; height: 270px; border-color: var(--silver); background: linear-gradient(180deg, rgba(192,192,192,0.1), rgba(0,0,0,0.8)); }
+  
   .col-3 { order: 3; }
-  .col-3 .place-card { width: 240px; height: 320px; border-color: var(--bronze); background: linear-gradient(180deg, rgba(205,127,50,0.1), rgba(0,0,0,0.8)); }
+  .col-3 .place-card { width: 240px; height: 270px; border-color: var(--bronze); background: linear-gradient(180deg, rgba(205,127,50,0.1), rgba(0,0,0,0.8)); }
 
   .place-info { text-align: center; margin-top: auto; width: 100%; }
-  .place-name { font-weight: 800; font-size: 1.3rem; margin-bottom: 5px; color: #fff; }
-  .place-score { font-weight: 900; font-size: 1.2rem; padding: 5px 15px; background: rgba(255,255,255,0.1); border-radius: 10px; display: inline-block; }
+  .place-name { font-weight: 800; font-size: 1.2rem; margin-bottom: 5px; color: #fff; }
+  .place-score { font-weight: 900; font-size: 1.1rem; padding: 4px 12px; background: rgba(255,255,255,0.1); border-radius: 10px; display: inline-block; }
 
   /* --- GRID (Updated size) --- */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
 
   .card {
     background: var(--glass); backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
-    border-radius: 20px; padding: 12px; cursor: pointer; transition: all 0.3s;
+    border-radius: 20px; padding: 10px; cursor: pointer; transition: all 0.3s;
     display: flex; flex-direction: column; position: relative; overflow: hidden;
   }
   .card:hover { transform: translateY(-6px); border-color: var(--sakura); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -111,13 +113,15 @@
   .rank-badge {
     position: absolute; top: 10px; left: 10px; z-index: 2;
     background: rgba(0,0,0,0.7); color: var(--muted);
-    font-weight: 800; font-size: 0.9rem; padding: 4px 8px; border-radius: 8px;
+    font-weight: 800; font-size: 0.85rem; padding: 4px 8px; border-radius: 8px;
     border: 1px solid rgba(255,255,255,0.1);
   }
 
   .preview-box {
-    width: 100%; aspect-ratio: 3/4; background: #0a0a0f; border-radius: 14px;
-    overflow: hidden; position: relative; margin-bottom: 12px;
+    width: 100%; 
+    aspect-ratio: 5/6; /* ИЗМЕНЕНО: с 3/4 на 5/6, чтобы уменьшить высоту */
+    background: #0a0a0f; border-radius: 14px;
+    overflow: hidden; position: relative; margin-bottom: 8px;
     border: 1px solid rgba(255,255,255,0.05);
   }
   .preview-box img { width: 100%; height: 100%; object-fit: contain; transition: 0.4s; }
@@ -127,15 +131,15 @@
   .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding: 4px 2px; }
   
   .card-name { 
-    font-weight: 800; font-size: 1rem; line-height: 1.2; color: #fff; 
+    font-weight: 800; font-size: 0.95rem; line-height: 1.2; color: #fff; 
     max-width: 70%; word-break: break-word; text-align: left;
   }
   
   .card-score-box {
     background: rgba(138, 43, 226, 0.2); border: 1px solid var(--accent);
-    width: 38px; height: 38px; border-radius: 10px; 
+    width: 36px; height: 36px; border-radius: 10px; 
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 1rem; color: #fff;
+    font-weight: 900; font-size: 0.95rem; color: #fff;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
 
