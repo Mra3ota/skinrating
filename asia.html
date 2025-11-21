@@ -24,8 +24,8 @@
   
   body {
     margin: 0; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); 
-    padding: 12px; min-height: 100vh;
-    background-image: radial-gradient(circle at 50% 0%, #1a0b2e 0%, #000 70%);
+    padding: 16px; min-height: 100vh;
+    background-image: radial-gradient(circle at 50% 0%, #1a0b2e 0%, #050505 60%);
     background-attachment: fixed;
   }
 
@@ -33,60 +33,81 @@
 
   /* --- HEADER --- */
   header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 12px 16px;
-    background: rgba(20, 20, 25, 0.6); backdrop-filter: blur(12px);
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 12px 20px;
+    background: rgba(20, 20, 25, 0.6); backdrop-filter: blur(16px);
     border: 1px solid var(--glass-border); border-radius: 16px;
     gap: 10px;
   }
-  h1 { margin: 0; font-size: 1.1rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; display:flex; align-items:center; gap:8px; white-space: nowrap;}
+  h1 { margin: 0; font-size: 1.2rem; font-weight: 900; color: #fff; text-transform: uppercase; letter-spacing: 1px; display:flex; align-items:center; gap:8px; }
   
-  .nav-group { display: flex; gap: 10px; }
-
   .btn {
-    background: var(--accent); color: #fff; padding: 8px 14px; border-radius: 8px;
-    text-decoration: none; font-weight: 700; cursor: pointer; border: none; font-size: 0.8rem;
-    white-space: nowrap; display: flex; align-items: center; justify-content: center;
+    background: var(--accent); color: #fff; padding: 8px 16px; border-radius: 8px;
+    text-decoration: none; font-weight: 700; cursor: pointer; border: none; font-size: 0.85rem; white-space: nowrap;
   }
   .btn-ghost { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); }
 
-  /* --- ADMIN --- */
-  .admin-panel {
-    background: rgba(255, 0, 85, 0.08); border: 1px dashed var(--neon-pink); border-radius: 16px; padding: 16px; margin-bottom: 30px; 
-    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  /* Header Mobile Fix */
+  @media (max-width: 380px) {
+    header { padding: 10px; }
+    h1 { font-size: 1rem; }
+    /* Скрываем текст, оставляем иконку или меняем контент через CSS */
+    #authBtn span { display: none; }
+    #authBtn::after { content: '➜'; } 
   }
+
+  /* --- ADMIN PANEL (Collapsible) --- */
+  .admin-panel {
+    background: rgba(255, 0, 85, 0.08); border: 1px dashed var(--neon-pink); border-radius: 16px; 
+    margin-bottom: 30px; overflow: hidden; transition: all 0.3s ease;
+  }
+  .admin-header {
+    padding: 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  }
+  .admin-content {
+    padding: 0 16px 16px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .admin-panel.collapsed .admin-content { display: none; }
+  
   .admin-panel input { 
     background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); padding: 10px; border-radius: 8px; color: #fff; flex: 1; min-width: 200px;
   }
 
-  /* --- PODIUM --- */
-  #podiumSection { margin-bottom: 30px; }
+  /* --- PODIUM (DESKTOP) --- */
+  #podiumSection { margin-bottom: 40px; }
   .podium-title {
-    text-align: center; font-size: 1.4rem; font-weight: 900; margin-bottom: 20px;
-    background: linear-gradient(90deg, var(--gold), var(--silver), var(--bronze));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    text-transform: uppercase; letter-spacing: 2px;
+    text-align: center; font-size: 1.5rem; font-weight: 900; margin-bottom: 20px;
+    color: var(--gold); text-transform: uppercase; letter-spacing: 2px;
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.15);
   }
 
-  /* Desktop Podium Layout (Default) */
   .podium-wrapper { 
-    display: flex; align-items: flex-end; justify-content: center; gap: 20px; 
+    display: flex; align-items: flex-end; justify-content: center; gap: 16px; 
   }
+  .podium-col { display: flex; flex-direction: column; align-items: center; position: relative; width: 220px; }
   
-  .podium-column { display: flex; flex-direction: column; align-items: center; position: relative; width: 220px; }
-  
-  .medal-label { font-size: 0.8rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; }
+  .medal-label { font-size: 0.85rem; font-weight: 800; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
   .lbl-1 { color: var(--gold); } .lbl-2 { color: var(--silver); } .lbl-3 { color: var(--bronze); }
 
   .place-card {
     width: 100%;
-    background: linear-gradient(180deg, rgba(40,40,45,0.8), rgba(10,10,15,0.95));
+    background: linear-gradient(180deg, rgba(30,30,35,0.9), rgba(10,10,15,0.95));
     border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px; 
-    position: relative; cursor: pointer; overflow: hidden;
-    padding: 0; 
-    display: flex; flex-direction: column;
+    border-radius: 16px; padding: 0; /* Zero padding for full image */
+    display: flex; flex-direction: column; align-items: center;
+    position: relative; cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    overflow: hidden;
   }
   
+  /* FULL BODY FIX: Contain image, anchor bottom */
+  .place-card img { 
+    width: 100%; height: 100%; 
+    object-fit: contain; 
+    object-position: bottom center; 
+    display: block; 
+    filter: drop-shadow(0 5px 10px rgba(0,0,0,0.5)); 
+  }
+
   /* Desktop Heights */
   .col-1 .place-card { height: 320px; border: 2px solid var(--gold); box-shadow: 0 0 25px rgba(255,215,0,0.15); }
   .col-2 .place-card { height: 270px; border-top: 4px solid var(--silver); }
@@ -96,30 +117,23 @@
   .col-2 { order: 1; }
   .col-3 { order: 3; }
 
-  .place-card img { 
-    width: 100%; height: 100%; 
-    object-fit: contain; /* Гарантирует, что скин влезет целиком */
-    object-position: bottom center;
-    display: block; 
-  }
-
   .place-info { 
     position: absolute; bottom: 0; left: 0; width: 100%; 
-    padding: 10px; text-align: center;
-    background: linear-gradient(to top, rgba(0,0,0,0.9) 30%, transparent);
+    padding: 12px 8px; text-align: center;
+    background: linear-gradient(to top, rgba(0,0,0,0.95) 40%, transparent);
   }
   .place-name { font-weight: 800; font-size: 1rem; color: #fff; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
   .place-score { font-weight: 900; font-size: 0.9rem; color: var(--sakura); margin-top: 2px; }
 
-  /* --- GRID --- */
+  /* --- GRID (Main List) --- */
   .grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
-    gap: 12px; 
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); 
+    gap: 16px; 
   }
 
   .card {
-    background: rgba(20, 20, 25, 0.5); backdrop-filter: blur(10px);
+    background: rgba(20, 20, 25, 0.4); backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border);
     border-radius: 14px; padding: 6px; cursor: pointer; 
     display: flex; flex-direction: column;
@@ -128,80 +142,79 @@
   .rank-badge {
     position: absolute; top: 10px; left: 10px; z-index: 2;
     background: rgba(0,0,0,0.8); color: #fff;
-    font-weight: 800; font-size: 0.7rem; padding: 2px 6px; border-radius: 6px;
+    font-weight: 800; font-size: 0.75rem; padding: 2px 6px; border-radius: 6px;
     border: 1px solid rgba(255,255,255,0.2);
   }
 
   .preview-box {
     width: 100%; 
-    /* Чуть вытянутый формат для скина в полный рост */
-    aspect-ratio: 3 / 4; 
+    aspect-ratio: 1 / 1.2; /* Taller for full body */
     background: #0a0a0f; border-radius: 10px;
     overflow: hidden; position: relative; margin-bottom: 6px;
+    border: 1px solid rgba(255,255,255,0.05);
   }
+  /* FULL BODY FIX IN GRID */
   .preview-box img { 
     width: 100%; height: 100%; 
-    object-fit: contain; /* Полный рост без обрезки */
-    object-position: center; 
+    object-fit: contain; 
+    object-position: bottom center; 
     display: block; 
   }
   
-  .card-footer { display: flex; justify-content: space-between; align-items: center; height: 34px; padding: 0 4px; }
+  .card-footer { display: flex; justify-content: space-between; align-items: center; height: 34px; padding: 0 4px; margin-top: auto; }
   .card-name { 
     font-weight: 700; font-size: 0.85rem; line-height: 1.2; color: #fff; 
     flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; padding-right: 8px; text-align: left;
   }
+  
   .card-score-box {
     background: rgba(138, 43, 226, 0.25); border: 1px solid var(--accent);
-    min-width: 30px; height: 30px; border-radius: 8px; 
+    min-width: 32px; height: 32px; border-radius: 8px; 
     display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 0.85rem; color: #fff;
+    font-weight: 800; font-size: 0.9rem; color: #fff;
   }
 
-  /* --- MOBILE FIXES (Pyramid Layout + Full Body) --- */
+  /* --- MOBILE PYRAMID & LAYOUT (CRITICAL FIX) --- */
   @media (max-width: 768px) {
-    .wrap { padding: 0 8px; }
+    body { padding: 10px; }
     
-    /* Header overflow fix */
-    @media (max-width: 380px) {
-        .btn-text { display: none; }
-    }
-
-    /* Grid: Strict 2 Columns */
-    .grid { 
-      grid-template-columns: 1fr 1fr; 
-      gap: 10px; 
-    }
+    .admin-content { flex-direction: column; align-items: stretch; }
     
-    /* PODIUM PYRAMID LAYOUT */
+    /* Grid: Always 2 columns */
+    .grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+    
+    /* Podium: Grid Pyramid */
     .podium-wrapper {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-areas: 
-            "first first"
-            "second third";
-        gap: 10px;
-        align-items: end;
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* 2 columns */
+      gap: 10px;
+      align-items: start;
     }
     
-    /* 1st Place: Center top, Bigger */
+    .podium-col { width: 100%; margin: 0; }
+    
+    /* 1st Place: Full Width, Top */
     .col-1 { 
-        grid-area: first; 
-        width: 60% !important; 
-        justify-self: center;
-        margin-bottom: 10px; 
-        order: unset;
+      grid-column: 1 / -1; /* Span full width */
+      order: 1; 
+      margin-bottom: 10px;
     }
-    .col-1 .place-card { height: 240px; }
-
-    /* 2nd & 3rd: Side by side below */
-    .col-2 { grid-area: second; width: 100% !important; order: unset; }
-    .col-3 { grid-area: third; width: 100% !important; order: unset; }
+    .col-1 .place-card { 
+      width: 60%; /* Not too wide */
+      margin: 0 auto; 
+      height: 240px; 
+    }
     
-    .col-2 .place-card, .col-3 .place-card { height: 180px; }
+    /* 2nd & 3rd: Side by Side below */
+    .col-2 { order: 2; }
+    .col-3 { order: 3; }
+    .col-2 .place-card, .col-3 .place-card { 
+      width: 100%; 
+      height: 180px; 
+    }
     
-    /* Admin Panel Stack */
-    .admin-panel { flex-direction: column; align-items: stretch; }
+    .place-info { padding: 6px; }
+    .place-name { font-size: 0.9rem; }
   }
 
   /* --- MODAL --- */
@@ -219,7 +232,7 @@
     .modal-glass { width: 900px; height: 80vh; display: grid; grid-template-columns: 1fr 320px; border: 1px solid var(--glass-border); border-radius: 24px; overflow:hidden; background:#000; }
     .viewer-section { height: auto; }
     .details-section { border-top: none; border-left: 1px solid var(--glass-border); }
-    .modal-overlay { flex-direction: row; } 
+    .modal-overlay { flex-direction: row; }
   }
 
   .close-btn {
@@ -247,19 +260,24 @@
 <div class="wrap">
   <header>
     <h1><span>🌸</span> ASIA FESTIVAL</h1>
-    <div class="nav-group">
+    <div style="display:flex; gap:10px;">
       <a href="contests.html" class="btn btn-ghost">←</a>
-      <button id="authBtn" class="btn"><span class="btn-text">Войти</span><span style="margin-left:5px">➔</span></button>
+      <button id="authBtn" class="btn"><span>Войти</span></button>
     </div>
   </header>
 
-  <div id="adminPanel" class="admin-panel hidden">
-    <strong style="width:100%;color:var(--neon-pink)">АДМИН ПАНЕЛЬ</strong>
-    <input type="text" id="newAuthor" placeholder="Ник автора">
-    <input type="file" id="newFile" accept="image/png" style="display:none">
-    <button onclick="document.getElementById('newFile').click()" class="btn btn-ghost" style="flex:1">Файл</button>
-    <button id="addEntryBtn" class="btn" style="flex:1">Загрузить</button>
-    <div id="adminStatus" style="font-size:0.8rem; width:100%; text-align:center; margin-top:5px;"></div>
+  <div id="adminPanel" class="admin-panel hidden collapsed">
+    <div class="admin-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <strong style="color:var(--neon-pink)">АДМИН ПАНЕЛЬ (Нажми чтобы открыть)</strong>
+        <span style="font-size:0.8rem">▼</span>
+    </div>
+    <div class="admin-content">
+        <input type="text" id="newAuthor" placeholder="Ник автора">
+        <input type="file" id="newFile" accept="image/png" style="display:none">
+        <button onclick="document.getElementById('newFile').click()" class="btn btn-ghost" style="flex:1">Файл</button>
+        <button id="addEntryBtn" class="btn" style="flex:1">Загрузить</button>
+        <div id="adminStatus" style="font-size:0.8rem; width:100%; text-align:center; margin-top:5px;"></div>
+    </div>
   </div>
 
   <!-- Podium -->
@@ -273,7 +291,7 @@
   <div id="loading" style="text-align:center; padding: 40px; color:var(--muted)">Загрузка...</div>
 </div>
 
-<!-- Modal Structure -->
+<!-- Modal -->
 <div id="modal" class="modal-overlay">
   <div class="modal-glass" id="modalGlass">
     <button class="close-btn" id="closeModal">×</button>
@@ -346,6 +364,7 @@
   const MEDAL_LABELS = ['1 МЕСТО', '2 МЕСТО', '3 МЕСТО'];
   const MEDAL_CLASSES = ['lbl-1', 'lbl-2', 'lbl-3'];
 
+  // --- AUTH ---
   const provider = new GoogleAuthProvider();
   authBtn.addEventListener('click', async () => {
     if(!currentUser) await signInWithPopup(auth, provider);
@@ -354,8 +373,11 @@
 
   onAuthStateChanged(auth, async user => {
     currentUser = user;
-    const btnText = authBtn.querySelector('.btn-text');
-    if (btnText) btnText.textContent = user ? 'Выйти' : 'Войти';
+    if(user) {
+        authBtn.innerHTML = '<span>Выйти</span>';
+    } else {
+        authBtn.innerHTML = '<span>Войти</span>';
+    }
     
     document.getElementById('adminPanel').classList.toggle('hidden', !(user && user.email === ADMIN_EMAIL));
     if(user) {
@@ -365,6 +387,7 @@
     if(currentSkinId) updateModalUI();
   });
 
+  // --- DATA ---
   onSnapshot(query(collection(db, 'asia_entries'), orderBy('createdAt', 'desc')), snap => {
     entries = [];
     snap.forEach(d => entries.push({id: d.id, ...d.data()}));
@@ -407,7 +430,7 @@
         const e = list[idx];
         const place = idx + 1;
         const col = document.createElement('div');
-        col.className = `podium-column col-${place}`;
+        col.className = `podium-col col-${place}`;
         const imgSrc = e.previewUrl || e.skinUrl;
 
         col.innerHTML = `
@@ -432,7 +455,6 @@
       card.className = 'card';
       const imgSrc = e.previewUrl || e.skinUrl;
       const rank = index + 4; 
-      
       card.innerHTML = `
         <div class="rank-badge">#${rank}</div>
         <div class="preview-box"><img src="${imgSrc}" loading="lazy"></div>
@@ -449,7 +471,9 @@
   function openModal(entry) {
     currentSkinId = entry.id;
     modal.classList.add('active');
-    if(window.innerWidth >= 900) document.getElementById('modalGlass').classList.add('modal-glass');
+    if(window.innerWidth >= 900) {
+        document.getElementById('modalGlass').classList.add('modal-glass');
+    }
     document.getElementById('mAuthor').textContent = entry.authorName;
     
     if(viewer) viewer.dispose();
@@ -539,24 +563,23 @@
         reader.onload = async (e) => {
             const skinData = e.target.result;
             const offCanvas = document.createElement('canvas');
-            offCanvas.width = 400;
-            offCanvas.height = 600; 
-            
+            offCanvas.width = 600;
+            offCanvas.height = 800; // Taller canvas for full body
             const offViewer = new skinview3d.SkinViewer({
-                canvas: offCanvas, width: 400, height: 600, preserveDrawingBuffer: true
+                canvas: offCanvas, width: 600, height: 800, preserveDrawingBuffer: true
             });
-            
             try {
                 offViewer.renderer.setClearColor(0x000000, 0);
                 await offViewer.loadSkin(skinData);
                 
-                // FIX: FULL BODY VIEW SETTINGS
-                offViewer.zoom = 0.85; 
+                // FULL BODY SETTINGS
+                offViewer.zoom = 0.9; 
                 offViewer.autoRotate = false;
                 offViewer.playerObject.rotation.y = -0.5;
-                // X=0, Y=20 (Center Body), Z=50 (Far enough for full body)
-                offViewer.camera.position.set(0, 20, 50); 
-                offViewer.camera.lookAt(0, 18, 0);
+                
+                // Camera farther back (Z=45) and aiming at Hips (Y=16)
+                offViewer.camera.position.set(0, 20, 45); 
+                offViewer.camera.lookAt(0, 16, 0);
                 
                 offViewer.render();
                 const dataUrl = offCanvas.toDataURL('image/png');
@@ -573,8 +596,7 @@
     const file = document.getElementById('newFile').files[0];
     const status = document.getElementById('adminStatus');
     if(!author || !file) return;
-    status.textContent = 'Обработка...';
-    
+    status.textContent = 'Генерация 3D...';
     try {
       const dataUrl = await generatePreview(file);
       status.textContent = 'Загрузка...';
@@ -584,10 +606,7 @@
       const previewRef = ref(storage, `asia-skins/${Date.now()}_preview.png`);
       await uploadString(previewRef, dataUrl, 'data_url');
       const previewUrl = await getDownloadURL(previewRef);
-      
-      await addDoc(collection(db, 'asia_entries'), {
-        authorName: author, skinUrl: skinUrl, previewUrl: previewUrl, createdAt: serverTimestamp()
-      });
+      await addDoc(collection(db, 'asia_entries'), { authorName: author, skinUrl: skinUrl, previewUrl: previewUrl, createdAt: serverTimestamp() });
       status.textContent = 'OK!';
       document.getElementById('newAuthor').value = '';
     } catch(e) { status.textContent = 'Error'; console.error(e); }
