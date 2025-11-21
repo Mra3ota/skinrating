@@ -15,6 +15,11 @@
     --sakura: #ffb7c5;
     --neon-pink: #ff0055;
     --accent: #8a2be2;
+    
+    /* Медали */
+    --gold: #ffd700;
+    --silver: #c0c0c0;
+    --bronze: #cd7f32;
   }
 
   * { box-sizing: border-box; }
@@ -50,8 +55,50 @@
   .admin-panel input { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 10px 15px; border-radius: 10px; color: #fff; }
   .hidden { display: none !important; }
 
-  /* --- GRID --- */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+  /* --- PODIUM (ПЬЕДЕСТАЛ) --- */
+  .podium-title {
+    text-align: center; font-size: 2.2rem; font-weight: 900; margin-bottom: 40px;
+    background: linear-gradient(90deg, var(--gold), var(--silver), var(--bronze));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    text-transform: uppercase; letter-spacing: 2px;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
+  }
+
+  .podium-wrapper { display: flex; align-items: flex-end; justify-content: center; gap: 20px; margin-bottom: 60px; }
+  .podium-column { display: flex; flex-direction: column; align-items: center; transition: transform 0.3s; }
+  .podium-column:hover { transform: translateY(-10px); }
+
+  .podium-medal-label { font-size: 1.2rem; font-weight: 800; margin-bottom: 10px; text-transform: uppercase; }
+  .medal-1 { color: var(--gold); text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+  .medal-2 { color: var(--silver); text-shadow: 0 0 10px rgba(192,192,192,0.5); }
+  .medal-3 { color: var(--bronze); text-shadow: 0 0 10px rgba(205,127,50,0.5); }
+
+  /* Карточка на подиуме */
+  .place-card {
+    background: rgba(20, 20, 25, 0.8); backdrop-filter: blur(12px);
+    border-radius: 20px; padding: 20px;
+    border: 2px solid transparent;
+    display: flex; flex-direction: column; align-items: center;
+    position: relative; cursor: pointer;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+  .place-card img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.4s; }
+  .place-card:hover img { transform: scale(1.1); }
+
+  /* Размеры мест */
+  .col-1 { order: 2; }
+  .col-1 .place-card { width: 280px; height: 380px; border-color: var(--gold); background: linear-gradient(180deg, rgba(255,215,0,0.1), rgba(0,0,0,0.8)); }
+  .col-2 { order: 1; }
+  .col-2 .place-card { width: 240px; height: 320px; border-color: var(--silver); background: linear-gradient(180deg, rgba(192,192,192,0.1), rgba(0,0,0,0.8)); }
+  .col-3 { order: 3; }
+  .col-3 .place-card { width: 240px; height: 320px; border-color: var(--bronze); background: linear-gradient(180deg, rgba(205,127,50,0.1), rgba(0,0,0,0.8)); }
+
+  .place-info { text-align: center; margin-top: auto; width: 100%; }
+  .place-name { font-weight: 800; font-size: 1.3rem; margin-bottom: 5px; color: #fff; }
+  .place-score { font-weight: 900; font-size: 1.2rem; padding: 5px 15px; background: rgba(255,255,255,0.1); border-radius: 10px; display: inline-block; }
+
+  /* --- GRID (Updated size) --- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
 
   .card {
     background: var(--glass); backdrop-filter: blur(10px); border: 1px solid var(--glass-border);
@@ -59,6 +106,14 @@
     display: flex; flex-direction: column; position: relative; overflow: hidden;
   }
   .card:hover { transform: translateY(-6px); border-color: var(--sakura); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+  /* Rank Badge (#4, #5...) */
+  .rank-badge {
+    position: absolute; top: 10px; left: 10px; z-index: 2;
+    background: rgba(0,0,0,0.7); color: var(--muted);
+    font-weight: 800; font-size: 0.9rem; padding: 4px 8px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
 
   .preview-box {
     width: 100%; aspect-ratio: 3/4; background: #0a0a0f; border-radius: 14px;
@@ -68,19 +123,19 @@
   .preview-box img { width: 100%; height: 100%; object-fit: contain; transition: 0.4s; }
   .card:hover .preview-box img { transform: scale(1.05); }
   
-  /* Footer Layout (Исправление дизайна) */
+  /* Footer Layout */
   .card-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; padding: 4px 2px; }
   
   .card-name { 
-    font-weight: 800; font-size: 1.1rem; line-height: 1.2; color: #fff; 
+    font-weight: 800; font-size: 1rem; line-height: 1.2; color: #fff; 
     max-width: 70%; word-break: break-word; text-align: left;
   }
   
   .card-score-box {
     background: rgba(138, 43, 226, 0.2); border: 1px solid var(--accent);
-    width: 42px; height: 42px; border-radius: 10px; 
+    width: 38px; height: 38px; border-radius: 10px; 
     display: flex; align-items: center; justify-content: center;
-    font-weight: 900; font-size: 1.1rem; color: #fff;
+    font-weight: 900; font-size: 1rem; color: #fff;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
 
@@ -112,7 +167,7 @@
   /* Rating Controls */
   .rating-wrap { margin-top: auto; background: rgba(255,255,255,0.03); padding: 20px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); }
   
-  /* Контрастный ползунок (Исправлено) */
+  /* Контрастный ползунок */
   input[type=range] {
     width: 100%; -webkit-appearance: none; background: transparent; margin: 20px 0; height: 30px; cursor: pointer;
   }
@@ -148,6 +203,8 @@
     .modal-glass { grid-template-columns: 1fr; grid-template-rows: 1fr auto; height: 90vh; }
     .details-section { padding: 20px; overflow-y: auto; }
     .viewer-section { height: 300px; }
+    .podium-wrapper { flex-direction: column; align-items: center; }
+    .podium-column { order: unset !important; margin-bottom: 20px; }
   }
 </style>
 </head>
@@ -162,7 +219,6 @@
     </div>
   </header>
 
-  <!-- Панель админа для загрузки скинов с авто-генерацией превью -->
   <div id="adminPanel" class="admin-panel hidden">
     <strong style="width:100%;color:var(--neon-pink)">АДМИН ПАНЕЛЬ</strong>
     <input type="text" id="newAuthor" placeholder="Ник автора" style="flex:1">
@@ -172,10 +228,18 @@
     <span id="adminStatus" style="font-size:0.9rem; margin-left:10px;"></span>
   </div>
 
+  <!-- Podium Section -->
+  <div id="podiumSection" class="hidden">
+    <div class="podium-title">Призёры конкурса</div>
+    <div id="podiumWrapper" class="podium-wrapper"></div>
+  </div>
+
+  <!-- Main Grid -->
   <div id="grid" class="grid"></div>
   <div id="loading" style="text-align:center; padding: 40px; color:var(--muted)">Загрузка...</div>
 </div>
 
+<!-- Modal -->
 <div id="modal" class="modal-overlay">
   <button class="close-btn" id="closeModal">×</button>
   <div class="modal-glass">
@@ -210,7 +274,6 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
   import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-  // Важно: Импортируем uploadString для загрузки base64 превью
   import { getStorage, ref, uploadBytesResumable, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
   const firebaseConfig = {
@@ -237,9 +300,14 @@
 
   // DOM
   const grid = document.getElementById('grid');
+  const podiumSection = document.getElementById('podiumSection');
+  const podiumWrapper = document.getElementById('podiumWrapper');
   const modal = document.getElementById('modal');
   const viewerContainer = document.getElementById('viewerContainer');
   const authBtn = document.getElementById('authBtn');
+
+  const MEDAL_LABELS = ['1 МЕСТО', '2 МЕСТО', '3 МЕСТО'];
+  const MEDAL_CLASSES = ['medal-1', 'medal-2', 'medal-3'];
 
   // --- AUTH ---
   const provider = new GoogleAuthProvider();
@@ -262,11 +330,11 @@
     if(currentSkinId) updateModalUI();
   });
 
-  // --- DATA LOADING ---
+  // --- DATA ---
   onSnapshot(query(collection(db, 'asia_entries'), orderBy('createdAt', 'desc')), snap => {
     entries = [];
     snap.forEach(d => entries.push({id: d.id, ...d.data()}));
-    rebuildGrid();
+    rebuildAll();
   });
 
   onSnapshot(collection(db, 'asia_scores'), snap => {
@@ -276,30 +344,76 @@
       if(!scores[s.entryId]) scores[s.entryId] = [];
       scores[s.entryId].push(s);
     });
-    rebuildGrid();
+    rebuildAll();
     if(currentSkinId) updateModalStats(currentSkinId);
   });
 
-  // --- GRID RENDERING (OPTIMIZED: Just Images) ---
-  function rebuildGrid() {
+  // --- RENDER LOGIC ---
+  function rebuildAll() {
     document.getElementById('loading').style.display = 'none';
     
+    // Sort by total score
     const sorted = [...entries].map(e => {
         const entryScores = scores[e.id] || [];
         const total = entryScores.reduce((acc, cur) => acc + cur.score, 0);
         return { ...e, total };
     }).sort((a,b) => b.total - a.total);
 
+    // Split Podium and Grid
+    const podiumList = sorted.slice(0, 3);
+    const gridList = sorted.slice(3);
+
+    renderPodium(podiumList);
+    renderGrid(gridList);
+  }
+
+  function renderPodium(list) {
+    if(list.length === 0) {
+        podiumSection.classList.add('hidden');
+        return;
+    }
+    podiumSection.classList.remove('hidden');
+    podiumWrapper.innerHTML = '';
+
+    // Reorder for Podium: 2 - 1 - 3
+    const order = [1, 0, 2]; // Indexes from sorted list
+    
+    order.forEach(idx => {
+        if(!list[idx]) return;
+        const e = list[idx];
+        const place = idx + 1;
+        
+        const col = document.createElement('div');
+        col.className = `podium-column col-${place}`;
+        const imgSrc = e.previewUrl || e.skinUrl;
+
+        col.innerHTML = `
+            <div class="podium-medal-label ${MEDAL_CLASSES[idx]}">${MEDAL_LABELS[idx]}</div>
+            <div class="place-card">
+                <img src="${imgSrc}" loading="lazy">
+                <div class="place-info">
+                    <div class="place-name">${escapeHtml(e.authorName)}</div>
+                    <div class="place-score">${e.total}</div>
+                </div>
+            </div>
+        `;
+        col.querySelector('.place-card').addEventListener('click', () => openModal(e));
+        podiumWrapper.appendChild(col);
+    });
+  }
+
+  function renderGrid(list) {
     grid.innerHTML = '';
-    sorted.forEach(e => {
+    list.forEach((e, index) => {
       const card = document.createElement('div');
       card.className = 'card';
       
-      // Если есть готовое превью (URL), используем его. Если нет (старые скины), берем скин (fallback)
-      // Для старых скинов это покажет развертку, но для новых будет красивое 3D превью
       const imgSrc = e.previewUrl || e.skinUrl;
+      // Rank starts from 4
+      const rank = index + 4; 
       
       card.innerHTML = `
+        <div class="rank-badge">#${rank}</div>
         <div class="preview-box">
           <img src="${imgSrc}" loading="lazy" style="width:100%;height:100%;object-fit:contain;">
         </div>
@@ -313,7 +427,7 @@
     });
   }
 
-  // --- MODAL LOGIC (Full 3D) ---
+  // --- MODAL ---
   function openModal(entry) {
     currentSkinId = entry.id;
     modal.classList.add('active');
@@ -325,7 +439,6 @@
     canvas.style.width = '100%'; canvas.style.height = '100%';
     viewerContainer.appendChild(canvas);
     
-    // В модалке мы всегда крутим реальный скин
     viewer = new skinview3d.SkinViewer({
       canvas: canvas,
       width: viewerContainer.clientWidth,
@@ -421,7 +534,7 @@
     btn.disabled = false;
   });
 
-  // --- ADMIN UPLOAD: GENERATE PREVIEW ON CLIENT ---
+  // --- ADMIN UPLOAD: GENERATE PREVIEW (UPDATED ANGLE) ---
   document.getElementById('addEntryBtn').addEventListener('click', async () => {
     const author = document.getElementById('newAuthor').value;
     const file = document.getElementById('newFile').files[0];
@@ -431,26 +544,21 @@
     status.textContent = 'Генерация 3D...';
     
     try {
-      // 1. Генерируем скриншот на клиенте
       const dataUrl = await generatePreview(file);
-      
       status.textContent = 'Загрузка файлов...';
       
-      // 2. Загружаем оригинальный скин
       const skinRef = ref(storage, `asia-skins/${Date.now()}_${file.name}`);
       const skinTask = await uploadBytesResumable(skinRef, file);
       const skinUrl = await getDownloadURL(skinTask.ref);
       
-      // 3. Загружаем скриншот
       const previewRef = ref(storage, `asia-skins/${Date.now()}_preview.png`);
       await uploadString(previewRef, dataUrl, 'data_url');
       const previewUrl = await getDownloadURL(previewRef);
       
-      // 4. Сохраняем в базу
       await addDoc(collection(db, 'asia_entries'), {
         authorName: author,
         skinUrl: skinUrl,
-        previewUrl: previewUrl, // Ссылка на готовое превью
+        previewUrl: previewUrl,
         createdAt: serverTimestamp()
       });
       
@@ -464,7 +572,6 @@
     }
   });
 
-  // Функция для создания скриншота в памяти
   async function generatePreview(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -481,9 +588,14 @@
             try {
                 offViewer.renderer.setClearColor(0x000000, 0);
                 await offViewer.loadSkin(skinData);
+                
+                // UPDATE: Angle to look like results.html
                 offViewer.zoom = 0.85;
                 offViewer.autoRotate = false;
-                offViewer.camera.position.set(0, 20, 50);
+                offViewer.playerObject.rotation.y = -0.6; // Rotate slightly
+                offViewer.camera.position.set(0, 35, 50); // Higher camera
+                offViewer.camera.lookAt(0, 10, 0);        // Look down at body
+                
                 offViewer.render();
                 
                 const dataUrl = offCanvas.toDataURL('image/png');
@@ -496,18 +608,8 @@
     });
   }
 
-  function escapeHtml(text) {
-    if (!text) return text;
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-  }
-  
-  window.addEventListener('resize', () => {
-    if(viewer && modal.classList.contains('active')) {
-       viewer.width = viewerContainer.clientWidth;
-       viewer.height = viewerContainer.clientHeight;
-    }
-  });
-
+  function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;") : ''; }
+  window.addEventListener('resize', () => { if(viewer && modal.classList.contains('active')) { viewer.width = viewerContainer.clientWidth; viewer.height = viewerContainer.clientHeight; } });
 </script>
 </body>
 </html>
