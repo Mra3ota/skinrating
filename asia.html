@@ -396,6 +396,67 @@
       margin: 3px 0;
     }
   }
+
+
+  /* ============================================ */
+  /* MOBILE OPTIMIZATION */
+  /* ============================================ */
+
+  @media (max-width: 900px) {
+    header { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .header-right { width: 100%; justify-content: space-between; }
+  }
+
+  @media (max-width: 768px) {
+    .wrap { padding: 16px; max-width: 100%; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .card { padding: 10px; border-radius: 16px; }
+    .card-title { font-size: 0.85rem; margin-top: 8px; }
+    .btn { min-height: 48px; padding: 12px 18px; font-size: 0.95rem; }
+    #adminWrap { padding: 16px; border-radius: 16px; }
+  }
+
+  @media (max-width: 480px) {
+    .wrap { padding: 12px; }
+    .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .card { padding: 8px; }
+    .card-title { font-size: 0.8rem; }
+    header h1 { font-size: 1.5rem; }
+    .btn { padding: 10px 14px; font-size: 0.9rem; }
+  }
+
+  @media (max-width: 400px) {
+    .grid { gap: 8px; }
+    .card { padding: 6px; border-radius: 12px; }
+    header h1 { font-size: 1.3rem; }
+  }
+
+  /* Modal optimization */
+  .eval-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(12px); z-index: 9999; display: none; align-items: center; justify-content: center;
+    padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .eval-modal.active { display: flex; }
+  .eval-content { background: var(--glass); border: 1px solid var(--glass-border); border-radius: 24px;
+    padding: 24px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .eval-slider { width: 100%; height: 48px; background: transparent; cursor: pointer;
+    -webkit-appearance: none; appearance: none; }
+  .eval-slider::-webkit-slider-track { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; }
+  .eval-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--sakura), var(--neon-pink)); cursor: pointer;
+    box-shadow: 0 4px 12px rgba(255, 183, 197, 0.5); transition: transform 0.2s; }
+  .eval-slider::-webkit-slider-thumb:active { transform: scale(1.2); }
+  .eval-slider::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--sakura), var(--neon-pink)); border: none;
+    box-shadow: 0 4px 12px rgba(255, 183, 197, 0.5); }
+
+  @media (max-width: 768px) {
+    .eval-modal { padding: 12px; align-items: flex-start; }
+    .eval-content { padding: 20px 16px; margin-top: 20px; }
+    .eval-slider { height: 52px; }
+    .eval-slider::-webkit-slider-thumb { width: 32px; height: 32px; }
+    .eval-slider::-moz-range-thumb { width: 32px; height: 32px; }
+  }
+
 </style>
 </head>
 <body>
@@ -403,8 +464,15 @@
 <div class="wrap">
   <header>
     <h1><span style="font-size:1.2em;margin-right:8px;">🌸</span> ASIA FESTIVAL</h1>
-    <div style="display:flex; gap:10px;">
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
       <a href="contests.html" class="btn btn-ghost">←</a>
+      <button id="privacyToggleBtn" class="btn" style="display: none; background: rgba(74, 222, 128, 0.15); border: 1px solid rgba(74, 222, 128, 0.3); color: #4ade80; gap: 8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        <span id="privacyStatusText">👁️ Публичный</span>
+      </button>
       <button id="authBtn" class="btn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
         <span class="logout-text">Войти</span>
@@ -774,6 +842,101 @@
 
   function escapeHtml(text) { return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;") : ''; }
   window.addEventListener('resize', () => { if(viewer && modal.classList.contains('active')) { viewer.width = viewerContainer.clientWidth; viewer.height = viewerContainer.clientHeight; } });
+
+
+// ============================================
+// PRIVACY SYSTEM
+// ============================================
+const privacyToggleBtn = document.getElementById('privacyToggleBtn');
+const privacyStatusText = document.getElementById('privacyStatusText');
+let contestIsPrivate = false;
+const CONTEST_ID = 'asia-festival';
+
+async function loadPrivacyStatus() {
+    try {
+        const contestRef = doc(db, 'contests', CONTEST_ID);
+        const contestDoc = await getDoc(contestRef);
+        if (contestDoc.exists()) {
+            contestIsPrivate = contestDoc.data().isPrivate || false;
+            updatePrivacyUI();
+        }
+    } catch(e) { console.error('Privacy load error:', e); }
+}
+
+privacyToggleBtn.addEventListener('click', async () => {
+    if (!currentUser) return;
+    const newState = !contestIsPrivate;
+    const confirmMsg = newState ? '🔒 Скрыть конкурс от публики?\n\nВидно только админу и судьям.' : '👁️ Сделать конкурс публичным?';
+    if (!confirm(confirmMsg)) return;
+
+    privacyToggleBtn.disabled = true;
+    privacyStatusText.textContent = '⏳';
+
+    try {
+        const contestRef = doc(db, 'contests', CONTEST_ID);
+        const contestDoc = await getDoc(contestRef);
+
+        if (contestDoc.exists()) {
+            await updateDoc(contestRef, { isPrivate: newState, updatedAt: serverTimestamp() });
+        } else {
+            await setDoc(contestRef, { id: CONTEST_ID, name: 'Asia Festival', isPrivate: newState, createdAt: serverTimestamp() });
+        }
+
+        contestIsPrivate = newState;
+        updatePrivacyUI();
+        alert(newState ? '✅ Конкурс скрыт' : '✅ Конкурс опубликован');
+        loadData();
+      updatePrivacyButtonVisibility();
+      checkContentVisibility();
+    } catch(e) {
+        alert('Ошибка: ' + e.message);
+    } finally {
+        privacyToggleBtn.disabled = false;
+    }
+});
+
+function updatePrivacyUI() {
+    if (contestIsPrivate) {
+        privacyToggleBtn.style.background = 'rgba(239, 68, 68, 0.15)';
+        privacyToggleBtn.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+        privacyToggleBtn.style.color = '#ef4444';
+        privacyStatusText.textContent = '🔒 Приватный';
+    } else {
+        privacyToggleBtn.style.background = 'rgba(74, 222, 128, 0.15)';
+        privacyToggleBtn.style.borderColor = 'rgba(74, 222, 128, 0.3)';
+        privacyToggleBtn.style.color = '#4ade80';
+        privacyStatusText.textContent = '👁️ Публичный';
+    }
+}
+
+function checkContentVisibility() {
+    if (contestIsPrivate) {
+        const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+        const isJudge = currentUser && judges.some(j => j.id === currentUser.uid);
+
+        if (!isAdmin && !isJudge) {
+            const contentWrap = document.getElementById('contentWrap');
+            if (contentWrap) contentWrap.style.display = 'none';
+
+            const msg = document.createElement('div');
+            msg.style.cssText = 'text-align: center; padding: 60px 20px; color: var(--muted);';
+            msg.innerHTML = '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:20px; opacity:0.3;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg><h2 style="margin:0 0 12px 0; color:var(--text);">🔒 Конкурс закрыт</h2><p style="font-size:1.1rem;">Результаты пока недоступны</p>';
+            document.querySelector('.wrap').appendChild(msg);
+            return false;
+        }
+    }
+    return true;
+}
+
+function updatePrivacyButtonVisibility() {
+    if (currentUser && currentUser.email === ADMIN_EMAIL) {
+        privacyToggleBtn.style.display = 'inline-flex';
+        loadPrivacyStatus();
+    } else {
+        privacyToggleBtn.style.display = 'none';
+    }
+}
+
 </script>
 </body>
 </html>
