@@ -457,9 +457,125 @@
     .eval-slider::-moz-range-thumb { width: 32px; height: 32px; }
   }
 
+
+  /* --- MOBILE OPTIMIZATION & PIXEL PERFECT --- */
+  canvas, img, .skin-viewer {
+      image-rendering: pixelated !important;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+  }
+
+  /* Mobile Modal Fixes */
+  @media (max-width: 768px) {
+      .wrap { padding: 0 10px; }
+
+      header {
+          flex-direction: column;
+          gap: 15px;
+          padding: 15px;
+          margin-bottom: 20px;
+      }
+
+      /* Grid becomes responsive 2-column or 1-column */
+      .grid {
+          grid-template-columns: repeat(2, 1fr) !important; 
+          gap: 10px !important;
+      }
+
+      /* Modal overhaul for mobile */
+      .modal-glass {
+          width: 95% !important;
+          height: 90vh !important;
+          flex-direction: column !important;
+          overflow-y: auto !important; /* Enable scrolling for the whole card */
+          padding: 0 !important;
+          border-radius: 16px !important;
+      }
+
+      .viewer-section {
+          width: 100% !important;
+          height: 350px !important; /* Allocate space for 3D model/image */
+          background: rgba(0,0,0,0.3);
+          flex: none !important;
+          border-right: none !important;
+          border-bottom: 1px solid var(--glass-border);
+      }
+
+      .details-section {
+          width: 100% !important;
+          padding: 20px !important;
+          flex: none !important;
+      }
+
+      .close-btn {
+          top: 10px;
+          right: 10px;
+          z-index: 100;
+          background: rgba(0,0,0,0.5);
+          border-radius: 50%;
+          width: 32px;
+          height: 32px;
+          display: flex; align-items: center; justify-content: center;
+      }
+  }
+
+  /* Ultra-Small Screens */
+  @media (max-width: 400px) {
+      .grid { grid-template-columns: 1fr !important; }
+  }
+
+  /* Privacy / Lock Screen Styles */
+  #lockScreen {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #050505;
+      z-index: 99999;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.5s ease;
+  }
+  .lock-content {
+      text-align: center;
+      background: rgba(20, 20, 25, 0.8);
+      padding: 40px;
+      border-radius: 24px;
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 0 50px rgba(138, 43, 226, 0.1);
+  }
+  .lock-input {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--glass-border);
+      padding: 12px 20px;
+      border-radius: 12px;
+      color: #fff;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      outline: none;
+      width: 100%;
+      font-family: inherit;
+      text-align: center;
+  }
+  .lock-input:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(138, 43, 226, 0.3); }
+  .hidden-content { opacity: 0; pointer-events: none; height: 0; overflow: hidden; }
+
+  /* Hide scrollbar for modal */
+  .modal-glass::-webkit-scrollbar { width: 6px; }
+  .modal-glass::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
 </style>
 </head>
 <body>
+
+<!-- LOCK SCREEN FOR PRIVACY -->
+<div id="lockScreen">
+    <div class="lock-content">
+        <h1 style="font-size: 2rem; margin-bottom: 10px;">ACCESS RESTRICTED</h1>
+        <p style="color: var(--muted);">This area is for Judges & Admins only.</p>
+        <input type="password" id="adminPass" class="lock-input" placeholder="Enter Access Code">
+        <button id="unlockBtn" class="btn" style="width: 100%; margin-top: 10px;">Unlock</button>
+        <p id="lockMsg" style="color: var(--neon-pink); margin-top: 10px; font-size: 0.8rem;"></p>
+    </div>
+</div>
+
 
 <div class="wrap">
   <header>
@@ -938,5 +1054,38 @@ function updatePrivacyButtonVisibility() {
 }
 
 </script>
+
+<script>
+  // --- ADMIN LOCK SYSTEM ---
+  const LOCK_KEY = 'asia_contest_access';
+  const ACCESS_CODE = 'admin2025'; // SIMPLE PASSWORD
+
+  function checkAccess() {
+      if (localStorage.getItem(LOCK_KEY) === 'granted') {
+          document.getElementById('lockScreen').style.opacity = '0';
+          setTimeout(() => {
+              document.getElementById('lockScreen').style.display = 'none';
+          }, 500);
+          return;
+      }
+  }
+
+  document.getElementById('unlockBtn').addEventListener('click', () => {
+      const input = document.getElementById('adminPass').value;
+      if (input === ACCESS_CODE) {
+          localStorage.setItem(LOCK_KEY, 'granted');
+          checkAccess();
+      } else {
+          document.getElementById('lockMsg').textContent = 'Incorrect Access Code';
+          document.getElementById('adminPass').style.borderColor = 'var(--neon-pink)';
+      }
+  });
+
+  // Check on load
+  checkAccess();
+
+  // --- END LOCK SYSTEM ---
+</script>
+
 </body>
 </html>
