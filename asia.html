@@ -357,22 +357,26 @@
   @media (max-width: 900px) {
     .modal-glass { 
       grid-template-columns: 1fr; 
-      grid-template-rows: 70% auto; 
-      height: 98vh; 
+      grid-template-rows: 60% auto; 
+      height: 95vh; 
       max-height: none;
-      width: 98%;
     }
     .details-section { 
-      padding: 12px 16px; 
+      padding: 16px; 
       overflow-y: auto; 
-      max-height: 30%;
+      max-height: 40%;
     }
     .viewer-section { 
       height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 10px;
+    }
+
+    /* Увеличиваем размер 3D модели на мобилках */
+    .viewer-section canvas {
+      max-width: 100%;
+      max-height: 100%;
     }
   }
 </style>
@@ -621,15 +625,7 @@
     viewer = new skinview3d.SkinViewer({
       canvas: canvas, width: viewerContainer.clientWidth, height: viewerContainer.clientHeight, skin: entry.skinUrl
     });
-    viewer.autoRotate = true; viewer.autoRotateSpeed = 0.5; 
-
-    // Адаптивное позиционирование камеры
-    if(window.innerWidth <= 900) {
-      viewer.camera.position.set(0, 16, 32);
-      viewer.zoom = 0.85;
-    } else {
-      viewer.camera.position.set(0, 20, 50);
-    }
+    viewer.autoRotate = true; viewer.autoRotateSpeed = 0.5; viewer.camera.position.set(0, 20, 50);
 
     updateModalUI();
     updateModalStats(entry.id);
