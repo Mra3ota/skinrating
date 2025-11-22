@@ -201,76 +201,6 @@
     font-weight: 900; font-size: 1rem; color: #fff;
   }
 
-  /* --- MOBILE OPTIMIZATIONS --- */
-  @media (max-width: 768px) {
-    body { padding: 12px; }
-    header { padding: 12px 16px; margin-bottom: 20px; }
-    h1 { font-size: 1.2rem; }
-    
-    @media (max-width: 400px) {
-        .logout-text { display: none; } 
-        .btn { padding: 8px; }
-    }
-
-    /* Podium */
-    .podium-wrapper { 
-        display: grid; 
-        grid-template-columns: 1fr 1fr; 
-        gap: 10px; 
-        align-items: start;
-    }
-    .col-1 { 
-        grid-column: 1 / -1; 
-        order: 1; 
-        margin-bottom: 10px; 
-        width: 100%; 
-        display: flex; 
-        justify-content: center;
-    }
-    .col-1 .place-card { 
-        width: 100%; 
-        max-width: 240px; 
-        height: 340px; /* Еще выше для мобилки */
-    }
-    
-    .col-2 { grid-column: 1; order: 2; width: 100%; }
-    .col-2 .place-card { width: 100%; height: 280px; }
-    
-    .col-3 { grid-column: 2; order: 3; width: 100%; }
-    .col-3 .place-card { width: 100%; height: 280px; }
-
-    /* Текст чуть компактнее на мобилке */
-    .place-name { font-size: 1.1rem; }
-    .place-score { font-size: 1rem; }
-    
-    /* --- LIST (4+) --- */
-    .grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-    }
-    
-    .card {
-        flex-direction: column;
-        padding: 8px;
-    }
-
-    .preview-box {
-        aspect-ratio: 1 / 1.3; 
-        border-radius: 12px;
-        margin-bottom: 8px;
-    }
-
-    .preview-box img {
-        object-fit: contain; 
-        object-position: center bottom;
-    }
-
-    .card-footer { padding: 0 4px; }
-    .card-name { font-size: 0.9rem; }
-    .card-score-box { width: 32px; height: 32px; font-size: 0.9rem; }
-  }
-
   /* --- MODAL --- */
   .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9);
@@ -343,8 +273,8 @@
     height: 22px;
     width: 22px;
     border-radius: 50%;
-    background: var(--neon-pink);
-    border: 3px solid #fff;
+    background: var(--neon-pink); 
+    border: 3px solid #fff; 
     box-shadow: 0 0 15px var(--neon-pink);
     cursor: pointer;
   }
@@ -358,14 +288,15 @@
     .modal-glass { 
       grid-template-columns: 1fr;
       grid-template-rows: auto 1fr;
-      height: 92vh;
+      height: 90dvh; /* Используем dynamic viewport height для мобилок */
       max-height: none;
+      border-radius: 16px;
     }
 
     .viewer-section { 
-      min-height: 280px;
-      max-height: 400px;
-      height: 45vh;
+      /* Уменьшаем высоту вьювера на мобилках, чтобы оставить место деталям */
+      min-height: 250px;
+      height: 35vh;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -373,14 +304,14 @@
     }
 
     .details-section { 
-      padding: 12px 16px;
+      padding: 16px;
       overflow-y: auto;
       flex: 1;
       display: flex;
       flex-direction: column;
+      -webkit-overflow-scrolling: touch; /* Плавный скролл */
     }
 
-    /* Уменьшаем размеры текста для экономии места */
     #mAuthor {
       font-size: 1.2rem !important;
       margin-bottom: 3px !important;
@@ -389,6 +320,11 @@
     .rating-wrap {
       margin-top: 10px;
       padding: 12px;
+      /* Убедимся что кнопки оценки достаточно большие */
+    }
+    
+    .btn {
+        min-height: 44px; /* Увеличенная область клика для кнопок */
     }
 
     .big-score {
@@ -456,6 +392,18 @@
     .eval-slider::-webkit-slider-thumb { width: 32px; height: 32px; }
     .eval-slider::-moz-range-thumb { width: 32px; height: 32px; }
   }
+  
+  /* Сообщение о скрытом контенте */
+  .privacy-blocker {
+      text-align: center; 
+      padding: 60px 20px; 
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 50vh;
+  }
 
 </style>
 </head>
@@ -498,14 +446,28 @@
     </div>
   </div>
 
-  <!-- Podium -->
-  <div id="podiumSection" class="hidden">
-    <div class="podium-title">ПРИЗЁРЫ</div>
-    <div id="podiumWrapper" class="podium-wrapper"></div>
+  <!-- Content Container that will be hidden/shown -->
+  <div id="contentWrap">
+      <!-- Podium -->
+      <div id="podiumSection" class="hidden">
+        <div class="podium-title">ПРИЗЁРЫ</div>
+        <div id="podiumWrapper" class="podium-wrapper"></div>
+      </div>
+    
+      <!-- Grid -->
+      <div id="grid" class="grid"></div>
+  </div>
+  
+  <!-- Blocker Message -->
+  <div id="hiddenMessage" class="privacy-blocker" style="display:none;">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:20px; opacity:0.3;">
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+      </svg>
+      <h2 style="margin:0 0 12px 0; color:var(--text);">🔒 Конкурс закрыт</h2>
+      <p style="font-size:1.1rem;">Результаты доступны только судьям и администрации.</p>
   </div>
 
-  <!-- Grid -->
-  <div id="grid" class="grid"></div>
   <div id="loading" style="text-align:center; padding: 40px; color:var(--muted)">Загрузка...</div>
 </div>
 
@@ -542,7 +504,7 @@
 <script src="https://unpkg.com/skinview3d/bundles/skinview3d.bundle.js"></script>
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, getDocs, where } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, getDocs, where, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
   import { getAuth, onAuthStateChanged, signInWithPopup, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
   import { getStorage, ref, uploadBytesResumable, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
@@ -567,6 +529,10 @@
   let viewer = null;
   let entries = [];
   let scores = {};
+  
+  // Privacy State
+  let contestIsPrivate = false;
+  const CONTEST_ID = 'asia-festival';
 
   // DOM
   const grid = document.getElementById('grid');
@@ -575,11 +541,13 @@
   const modal = document.getElementById('modal');
   const viewerContainer = document.getElementById('viewerContainer');
   const authBtn = document.getElementById('authBtn');
+  const contentWrap = document.getElementById('contentWrap');
+  const hiddenMessage = document.getElementById('hiddenMessage');
 
   const MEDAL_LABELS = ['1 МЕСТО', '2 МЕСТО', '3 МЕСТО'];
   const MEDAL_CLASSES = ['medal-1', 'medal-2', 'medal-3'];
 
-  // --- AUTH ---
+  // --- AUTH ---\
   const provider = new GoogleAuthProvider();
   authBtn.addEventListener('click', async () => {
     if(!currentUser) await signInWithPopup(auth, provider);
@@ -593,6 +561,7 @@
     if(txtSpan) txtSpan.textContent = user ? 'Выйти' : 'Войти';
     
     document.getElementById('adminPanel').classList.toggle('hidden', !(user && user.email === ADMIN_EMAIL));
+    updatePrivacyButtonVisibility();
     
     if(user) {
       const snap = await getDoc(doc(db, 'judges', user.uid));
@@ -600,16 +569,31 @@
     } else {
       isJudge = false;
     }
+    
+    rebuildAll(); // Re-render when auth changes (to show hidden content if applicable)
     if(currentSkinId) updateModalUI();
   });
 
-  // --- DATA ---
+  // --- DATA ---\
+  // 1. Load Privacy Setting
+  onSnapshot(doc(db, 'contests', CONTEST_ID), (doc) => {
+      if(doc.exists()) {
+          contestIsPrivate = doc.data().isPrivate || false;
+      } else {
+          contestIsPrivate = false;
+      }
+      updatePrivacyUI();
+      rebuildAll();
+  });
+
+  // 2. Load Entries
   onSnapshot(query(collection(db, 'asia_entries'), orderBy('createdAt', 'desc')), snap => {
     entries = [];
     snap.forEach(d => entries.push({id: d.id, ...d.data()}));
     rebuildAll();
   });
 
+  // 3. Load Scores
   onSnapshot(collection(db, 'asia_scores'), snap => {
     scores = {};
     snap.forEach(d => {
@@ -621,8 +605,21 @@
     if(currentSkinId) updateModalStats(currentSkinId);
   });
 
-  // --- RENDER ---
+  // --- RENDER ---\
   function rebuildAll() {
+    const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
+    
+    // PRIVACY CHECK
+    if (contestIsPrivate && !isJudge && !isAdmin) {
+        document.getElementById('loading').style.display = 'none';
+        contentWrap.style.display = 'none';
+        hiddenMessage.style.display = 'flex';
+        return;
+    } else {
+        contentWrap.style.display = 'block';
+        hiddenMessage.style.display = 'none';
+    }
+
     document.getElementById('loading').style.display = 'none';
     
     const sorted = [...entries].map(e => {
@@ -695,7 +692,7 @@
     });
   }
 
-  // --- MODAL ---
+  // --- MODAL ---\
   function openModal(entry) {
     currentSkinId = entry.id;
     modal.classList.add('active');
@@ -780,7 +777,7 @@
     btn.disabled = false;
   });
 
-  // --- GENERATE HIGH-RES PREVIEW ---
+  // --- GENERATE HIGH-RES PREVIEW ---\
   async function generatePreview(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -845,26 +842,13 @@
 
 
 // ============================================
-// PRIVACY SYSTEM
+// PRIVACY SYSTEM INTEGRATION
 // ============================================
 const privacyToggleBtn = document.getElementById('privacyToggleBtn');
 const privacyStatusText = document.getElementById('privacyStatusText');
-let contestIsPrivate = false;
-const CONTEST_ID = 'asia-festival';
-
-async function loadPrivacyStatus() {
-    try {
-        const contestRef = doc(db, 'contests', CONTEST_ID);
-        const contestDoc = await getDoc(contestRef);
-        if (contestDoc.exists()) {
-            contestIsPrivate = contestDoc.data().isPrivate || false;
-            updatePrivacyUI();
-        }
-    } catch(e) { console.error('Privacy load error:', e); }
-}
 
 privacyToggleBtn.addEventListener('click', async () => {
-    if (!currentUser) return;
+    if (!currentUser || currentUser.email !== ADMIN_EMAIL) return;
     const newState = !contestIsPrivate;
     const confirmMsg = newState ? '🔒 Скрыть конкурс от публики?\n\nВидно только админу и судьям.' : '👁️ Сделать конкурс публичным?';
     if (!confirm(confirmMsg)) return;
@@ -881,13 +865,7 @@ privacyToggleBtn.addEventListener('click', async () => {
         } else {
             await setDoc(contestRef, { id: CONTEST_ID, name: 'Asia Festival', isPrivate: newState, createdAt: serverTimestamp() });
         }
-
-        contestIsPrivate = newState;
-        updatePrivacyUI();
-        alert(newState ? '✅ Конкурс скрыт' : '✅ Конкурс опубликован');
-        loadData();
-      updatePrivacyButtonVisibility();
-      checkContentVisibility();
+        // State will update via onSnapshot
     } catch(e) {
         alert('Ошибка: ' + e.message);
     } finally {
@@ -909,29 +887,9 @@ function updatePrivacyUI() {
     }
 }
 
-function checkContentVisibility() {
-    if (contestIsPrivate) {
-        const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
-        const isJudge = currentUser && judges.some(j => j.id === currentUser.uid);
-
-        if (!isAdmin && !isJudge) {
-            const contentWrap = document.getElementById('contentWrap');
-            if (contentWrap) contentWrap.style.display = 'none';
-
-            const msg = document.createElement('div');
-            msg.style.cssText = 'text-align: center; padding: 60px 20px; color: var(--muted);';
-            msg.innerHTML = '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:20px; opacity:0.3;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg><h2 style="margin:0 0 12px 0; color:var(--text);">🔒 Конкурс закрыт</h2><p style="font-size:1.1rem;">Результаты пока недоступны</p>';
-            document.querySelector('.wrap').appendChild(msg);
-            return false;
-        }
-    }
-    return true;
-}
-
 function updatePrivacyButtonVisibility() {
     if (currentUser && currentUser.email === ADMIN_EMAIL) {
         privacyToggleBtn.style.display = 'inline-flex';
-        loadPrivacyStatus();
     } else {
         privacyToggleBtn.style.display = 'none';
     }
