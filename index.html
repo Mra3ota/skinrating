@@ -182,7 +182,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, getDocs, where, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signInWithRedirect, getRedirectResult, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+    import { getAuth, onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
     import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-storage.js";
 
     const firebaseConfig = {
@@ -282,12 +282,32 @@
 
     // Авторизация
     const provider = new GoogleAuthProvider();
+    // Обработка редиректа (для iOS)
+    getRedirectResult(auth).catch((error) => {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        console.error('Redirect error:', error);
+      }
+    });
+
+    // Кнопка входа
     signBtn.addEventListener('click', async () => {
       if (!currentUser) {
-        try { await signInWithPopup(auth, provider); } 
-        catch(e){ alert('Ошибка входа: ' + e.message); }
+        try {
+          // Пробуем popup (Desktop)
+          await signInWithPopup(auth, provider);
+        } catch(e) {
+          // Если не работает - redirect (iOS)
+          if (e.code === 'auth/popup-blocked' || e.code === 'auth/cancelled-popup-request') {
+            await signInWithRedirect(auth, provider);
+          } else {
+            alert('Ошибка входа: ' + e.message);
+          }
+        }
       } else {
-        await signOut(auth);
+        if (confirm('Выйти из аккаунта?')) {
+          await signOut(auth);
+          location.reload();
+        }
       }
     });
 
@@ -298,7 +318,7 @@
       signBtn.textContent = user ? (isAdmin ? '🔧 Админ' : 'Выйти') : 'Войти';
       adminWrap.classList.toggle('hidden', !isAdmin);
 
-      // === NICKNAME SYSTEM ===
+      // Система никнеймов
       if (user) {
           try {
               const userDocRef = doc(db, "users", user.uid);
@@ -708,7 +728,7 @@
   
 
     // ============================================
-    // NICKNAME MODAL SYSTEM
+    // NICKNAME SYSTEM
     // ============================================
     let nicknameModal = null;
 
@@ -726,7 +746,6 @@
                 align-items: center;
                 justify-content: center;
                 padding: 20px;
-                animation: fadeIn 0.2s ease;
             ">
                 <div style="
                     background: var(--card);
@@ -736,16 +755,12 @@
                     width: 100%;
                     border: 1px solid rgba(138,43,226,0.3);
                     box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-                    animation: slideUp 0.3s ease;
                 ">
                     <h2 style="
                         margin: 0 0 8px 0;
                         font-size: 1.6rem;
                         font-weight: 800;
-                        background: linear-gradient(135deg, #8a2be2, #da70d6);
-                        -webkit-background-clip: text;
-                        -webkit-text-fill-color: transparent;
-                        background-clip: text;
+                        color: var(--accent);
                     ">
                         ✏️ Изменить никнейм
                     </h2>
@@ -769,31 +784,17 @@
                             padding: 14px 16px;
                             border-radius: 12px;
                             font-size: 1rem;
-                            font-weight: 500;
                             margin-bottom: 20px;
-                            transition: all 0.3s ease;
-                            outline: none;
                             box-sizing: border-box;
                         "
                     />
                     <div style="display: flex; gap: 12px;">
-                        <button id="saveNicknameBtn" class="btn" style="
-                            flex: 1;
-                            background: linear-gradient(135deg, #8a2be2, #6a1bb2);
-                            box-shadow: 0 4px 12px rgba(138,43,226,0.3);
-                        ">
+                        <button id="saveNicknameBtn" class="btn" style="flex: 1;">
                             💾 Сохранить
                         </button>
-                        <button id="cancelNicknameBtn" style="
+                        <button id="cancelNicknameBtn" class="btn" style="
                             flex: 1;
                             background: rgba(255,255,255,0.05);
-                            color: var(--text);
-                            padding: 12px 18px;
-                            border-radius: 10px;
-                            border: 1px solid rgba(255,255,255,0.1);
-                            font-weight: 600;
-                            cursor: pointer;
-                            transition: all 0.2s;
                         ">
                             Отмена
                         </button>
@@ -826,50 +827,34 @@
             input.style.boxShadow = "none";
         });
 
-        cancelBtn.addEventListener("mouseenter", () => {
-            cancelBtn.style.background = "rgba(255,255,255,0.08)";
-        });
-        cancelBtn.addEventListener("mouseleave", () => {
-            cancelBtn.style.background = "rgba(255,255,255,0.05)";
-        });
-
         saveBtn.addEventListener("click", async () => {
             const newName = input.value.trim();
 
-            if (!newName) {
-                status.innerHTML = "❌ Никнейм не может быть пустым";
-                status.style.color = "#f87171";
-                return;
-            }
-
-            if (newName.length < 2) {
-                status.innerHTML = "❌ Минимум 2 символа";
+            if (!newName || newName.length < 2) {
+                status.textContent = "❌ Минимум 2 символа";
                 status.style.color = "#f87171";
                 return;
             }
 
             saveBtn.disabled = true;
             saveBtn.textContent = "⏳ Сохранение...";
-            status.textContent = "";
 
             try {
-                const userDocRef = doc(db, "users", currentUser.uid);
-                await updateDoc(userDocRef, {
+                await updateDoc(doc(db, "users", currentUser.uid), {
                     displayName: newName,
                     updatedAt: serverTimestamp()
                 });
 
                 currentUserDisplayName = newName;
-                status.innerHTML = "✅ Никнейм обновлен!";
+                status.textContent = "✅ Сохранено!";
                 status.style.color = "#4ade80";
 
                 setTimeout(() => {
                     closeNicknameModal();
                     location.reload();
-                }, 1200);
+                }, 1000);
             } catch (e) {
-                console.error("Ошибка:", e);
-                status.innerHTML = `❌ ${e.message}`;
+                status.textContent = "❌ " + e.message;
                 status.style.color = "#f87171";
                 saveBtn.disabled = false;
                 saveBtn.textContent = "💾 Сохранить";
@@ -877,37 +862,20 @@
         });
 
         cancelBtn.addEventListener("click", closeNicknameModal);
-
         nicknameModal.addEventListener("click", (e) => {
             if (e.target === nicknameModal) closeNicknameModal();
-        });
-
-        document.addEventListener("keydown", (e) => {
-            if (!nicknameModal || nicknameModal.style.display === "none") return;
-            if (e.key === "Enter") saveBtn.click();
-            else if (e.key === "Escape") closeNicknameModal();
         });
     }
 
     function openNicknameModal() {
         createNicknameModal();
-        const input = document.getElementById("nicknameInput");
-        const saveBtn = document.getElementById("saveNicknameBtn");
-        const status = document.getElementById("nicknameStatus");
-
-        input.value = currentUserDisplayName || "";
-        saveBtn.disabled = false;
-        saveBtn.textContent = "💾 Сохранить";
-        status.textContent = "";
-
+        document.getElementById("nicknameInput").value = currentUserDisplayName || "";
         nicknameModal.style.display = "flex";
-        setTimeout(() => input.focus(), 150);
+        setTimeout(() => document.getElementById("nicknameInput").focus(), 150);
     }
 
     function closeNicknameModal() {
-        if (nicknameModal) {
-            nicknameModal.style.display = "none";
-        }
+        if (nicknameModal) nicknameModal.style.display = "none";
     }
 
     function showNicknameButton() {
@@ -916,18 +884,8 @@
             btn = document.createElement("button");
             btn.id = "editNicknameBtn";
             btn.className = "btn";
-            btn.innerHTML = `
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 6px;">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                </svg>
-                <span class="nickname-text">${currentUserDisplayName}</span>
-            `;
-            btn.style.cssText = `
-                background: rgba(138,43,226,0.12);
-                border: 1px solid rgba(138,43,226,0.25);
-                color: var(--text);
-            `;
+            btn.innerHTML = `✏️ <span class="nickname-text">${currentUserDisplayName}</span>`;
+            btn.style.cssText = "background: rgba(138,43,226,0.12); border: 1px solid rgba(138,43,226,0.25);";
             btn.addEventListener("click", openNicknameModal);
             signBtn.parentNode.insertBefore(btn, signBtn);
         } else {
@@ -939,20 +897,6 @@
         const btn = document.getElementById("editNicknameBtn");
         if (btn) btn.remove();
     }
-
-    // CSS для анимаций
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    `;
-    document.head.appendChild(style);
 
 </script>
 </body>
