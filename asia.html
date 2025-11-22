@@ -457,6 +457,133 @@
     .eval-slider::-moz-range-thumb { width: 32px; height: 32px; }
   }
 
+
+  /* === УЛУЧШЕННАЯ МОБИЛЬНАЯ ОПТИМИЗАЦИЯ === */
+
+  /* Оптимизация модального окна для мобильных */
+  @media (max-width: 768px) {
+    #skinDetailModal {
+      padding: 0.5rem !important;
+      overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch !important;
+      align-items: flex-start !important;
+      padding-top: 2rem !important;
+    }
+
+    #skinDetailModal .modal-content {
+      width: 95vw !important;
+      max-width: 95vw !important;
+      max-height: 90vh !important;
+      overflow-y: auto !important;
+      padding: 1.5rem 1rem !important;
+      margin: 0 !important;
+      position: relative !important;
+    }
+
+    /* 3D превью скина */
+    .skin-3d-preview,
+    #skinPreview {
+      width: 200px !important;
+      height: 280px !important;
+      margin: 0 auto 1.5rem auto !important;
+    }
+
+    /* Элементы оценивания для судей */
+    #judgeRatingSection select,
+    .judge-rating select,
+    select[id*="judgeScore"] {
+      width: 100% !important;
+      font-size: 1.15rem !important;
+      padding: 0.9rem !important;
+      margin: 0.5rem 0 !important;
+      touch-action: manipulation !important;
+      border-radius: 0.75rem !important;
+    }
+
+    #judgeRatingSection button,
+    .judge-rating button,
+    button[onclick*="submitRating"] {
+      width: 100% !important;
+      font-size: 1.15rem !important;
+      padding: 1rem !important;
+      margin-top: 0.8rem !important;
+      touch-action: manipulation !important;
+      border-radius: 0.75rem !important;
+      min-height: 48px !important;
+    }
+
+    /* Кнопка закрытия модалки */
+    .modal-close,
+    button[onclick*="close"] {
+      font-size: 2rem !important;
+      padding: 0.4rem 0.8rem !important;
+      top: 0.5rem !important;
+      right: 0.5rem !important;
+      z-index: 10001 !important;
+      touch-action: manipulation !important;
+      min-width: 44px !important;
+      min-height: 44px !important;
+    }
+
+    /* Информация о скине */
+    .skin-info-detail h3,
+    #detailTitle {
+      font-size: 1.4rem !important;
+      line-height: 1.3 !important;
+      margin-bottom: 0.8rem !important;
+    }
+
+    .skin-info-detail p,
+    #detailAuthor,
+    #detailScore {
+      font-size: 1.1rem !important;
+      line-height: 1.5 !important;
+    }
+
+    /* Карточки в сетке */
+    .grid-card {
+      padding: 1rem !important;
+    }
+
+    .grid-card img {
+      width: 100% !important;
+      height: auto !important;
+    }
+  }
+
+  /* Экстра-малые экраны */
+  @media (max-width: 480px) {
+    #skinDetailModal .modal-content {
+      width: 98vw !important;
+      padding: 1.2rem 0.8rem !important;
+    }
+
+    .skin-3d-preview,
+    #skinPreview {
+      width: 160px !important;
+      height: 240px !important;
+    }
+
+    #judgeRatingSection select,
+    .judge-rating select {
+      font-size: 1.05rem !important;
+      padding: 0.8rem !important;
+    }
+
+    #judgeRatingSection button,
+    .judge-rating button {
+      font-size: 1.05rem !important;
+      padding: 0.9rem !important;
+    }
+  }
+
+  /* Фикс для предотвращения скролла body при открытой модалке */
+  body.modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+  }
+
 </style>
 </head>
 <body>
@@ -714,7 +841,10 @@
 
     updateModalUI();
     updateModalStats(entry.id);
-  }
+  
+    // Блокируем скролл body на мобильных
+    document.body.classList.add('modal-open');
+}
 
   function updateModalUI() {
     const controls = document.getElementById('judgeControls');
@@ -912,20 +1042,41 @@ function updatePrivacyUI() {
 function checkContentVisibility() {
     if (contestIsPrivate) {
         const isAdmin = currentUser && currentUser.email === ADMIN_EMAIL;
-        const isJudge = currentUser && judges.some(j => j.id === currentUser.uid);
 
-        if (!isAdmin && !isJudge) {
+        // Проверяем роль судьи через Firebase
+        if (currentUser && !isAdmin) {
+            checkIfJudge(currentUser.uid, (isJudge) => {
+                if (!isJudge) {
+                    const contentWrap = document.getElementById('contentWrap');
+                    if (contentWrap) contentWrap.style.display = 'none';
+
+                    const msg = document.createElement('div');
+                    msg.style.cssText = 'text-align: center; padding: 4rem 2rem; color: var(--muted);';
+                    msg.innerHTML = '<h2 style="color: var(--sakura); margin-bottom: 1rem; text-shadow: 0 2px 18px var(--neon-pink);">🔒 Конкурс временно закрыт</h2><p style="font-size: 1.15rem;">Результаты будут доступны позже</p>';
+
+                    const wrap = document.querySelector('.wrap');
+                    if (wrap && !wrap.querySelector('.privacy-message')) {
+                        msg.className = 'privacy-message';
+                        wrap.appendChild(msg);
+                    }
+                    return;
+                }
+            });
+        } else if (isAdmin) {
+            // Админ - всё видно
             const contentWrap = document.getElementById('contentWrap');
-            if (contentWrap) contentWrap.style.display = 'none';
+            if (contentWrap) contentWrap.style.display = 'block';
 
-            const msg = document.createElement('div');
-            msg.style.cssText = 'text-align: center; padding: 60px 20px; color: var(--muted);';
-            msg.innerHTML = '<svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:20px; opacity:0.3;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg><h2 style="margin:0 0 12px 0; color:var(--text);">🔒 Конкурс закрыт</h2><p style="font-size:1.1rem;">Результаты пока недоступны</p>';
-            document.querySelector('.wrap').appendChild(msg);
-            return false;
+            const privMsg = document.querySelector('.privacy-message');
+            if (privMsg) privMsg.remove();
         }
+    } else {
+        const contentWrap = document.getElementById('contentWrap');
+        if (contentWrap) contentWrap.style.display = 'block';
+
+        const privMsg = document.querySelector('.privacy-message');
+        if (privMsg) privMsg.remove();
     }
-    return true;
 }
 
 function updatePrivacyButtonVisibility() {
@@ -936,6 +1087,38 @@ function updatePrivacyButtonVisibility() {
         privacyToggleBtn.style.display = 'none';
     }
 }
+
+
+
+// Проверка роли судьи из Firebase Database
+function checkIfJudge(userId, callback) {
+    if (!userId) {
+        callback(false);
+        return;
+    }
+
+    // Проверяем роль в Firebase Realtime Database
+    const userRoleRef = firebase.database().ref('users/' + userId + '/role');
+    userRoleRef.once('value')
+        .then(snapshot => {
+            const role = snapshot.val();
+            const isJudge = (role === 'judges' || role === 'judge');
+            callback(isJudge);
+        })
+        .catch(err => {
+            console.error('Ошибка проверки роли судьи:', err);
+            callback(false);
+        });
+}
+
+
+
+// Универсальный обработчик закрытия модалки
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'skinDetailModal' || e.target.closest('.modal-close')) {
+        document.body.classList.remove('modal-open');
+    }
+});
 
 </script>
 </body>
